@@ -130,8 +130,22 @@ export const RepositoryTree = (props: RepositoryTreeProps) => {
   const selectedFile = useAppStore((s) => (s.selectedFileId ? s.repository?.fileById(s.selectedFileId) : null) ?? null);
   const expanded = useAppStore((s) => s.expandedFolders);
   const toggle = useAppStore((s) => s.toggleFolder);
+  const perfs = useAppStore((s) => s.perf);
 
   const tree = useMemo(() => (repository ? buildTree(repository.files()) : null), [repository]);
+
+  const diagnosticCounts = useMemo(() => {
+    const map = new Map<string, { warnings: number; unknowns: number }>();
+    if (!repository) return map;
+    for (const f of repository.files()) {
+      const tree = repository.getParseTree(f.id);
+      const graph = repository.getSemanticGraph(f.id);
+      const warnings = tree?.diagnostics.length ?? 0;
+      const unknowns = graph ? graph.nodes.filter((n) => n.kind === "unknown").length : 0;
+      map.set(f.id, { warnings, unknowns });
+    }
+    return map;
+  }, [repository, perfs]);
 
   if (!repository) {
     return (
@@ -158,6 +172,7 @@ export const RepositoryTree = (props: RepositoryTreeProps) => {
               expanded={expanded}
               onToggle={toggle}
               selectedPath={selectedFile?.path ?? null}
+              diagnosticCounts={diagnosticCounts}
               onSelect={props.onSelect}
             />
           ))
