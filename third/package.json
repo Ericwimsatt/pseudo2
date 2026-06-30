@@ -1,0 +1,21 @@
+{
+  "name": "source-narrator",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Local web application for exploring source code through alternate English representations.",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=@source-narrator/app",
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "clean": "rm -rf packages/*/dist packages/*/.tsbuildinfo"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4"
+  },
+  "engines": {
+    "node": ">=18.18"
+  }
+}

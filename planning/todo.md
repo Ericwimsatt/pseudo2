@@ -1,0 +1,1 @@
+Remove useVSCodeApi-replace with case by case abstraction(messaging)
