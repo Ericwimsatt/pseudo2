@@ -1,0 +1,66 @@
+{
+  "name": "pseudo",
+  "displayName": "Pseudo - TypeScript Plain English Viewer",
+  "version": "0.1.0",
+  "description": "A custom editor that renders TypeScript as plain-English descriptions for non-technical readers.",
+  "publisher": "pseudo",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "activationEvents": [
+    "onLanguage:typescript",
+    "onLanguage:typescriptreact",
+    "onCommand:pseudo.open"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "customEditors": [
+      {
+        "viewType": "pseudo.pseudoEditor",
+        "displayName": "Pseudo View",
+        "selector": [
+          {
+            "filenamePattern": "*.ts"
+          },
+          {
+            "filenamePattern": "*.tsx"
+          }
+        ]
+      }
+    ],
+    "commands": [
+      {
+        "command": "pseudo.open",
+        "title": "Open with Pseudo"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "pseudo.open",
+          "when": "resourceLangId == typescript || resourceLangId == typescriptreact",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "build": "npm run build:extension && npm run build:view",
+    "build:extension": "esbuild src/extension.ts --bundle --external:vscode --platform=node --format=cjs --outfile=out/extension.js",
+    "build:view": "esbuild src/view/reactApp/index.tsx --bundle --platform=browser --format=iife --outfile=out/view/bundle.js",
+    "watch": "esbuild src/extension.ts --bundle --external:vscode --platform=node --format=cjs --outfile=out/extension.js --watch",
+    "lint": "tsc --noEmit",
+    "vscode:prepublish": "npm run build"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@types/vscode": "^1.85.0",
+    "esbuild": "^0.19.0"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "typescript": "^5.3.0"
+  }
+}

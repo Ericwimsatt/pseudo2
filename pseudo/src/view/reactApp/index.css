@@ -1,0 +1,35 @@
+/* Pseudo custom styles.
+ * Tailwind utilities are available via the CDN link loaded in the webview HTML.
+ * VS Code theme variables are used for seamless editor integration. */
+
+body {
+  font-family: var(--vscode-editor-font-family, 'Fira Code', monospace);
+  font-size: var(--vscode-editor-font-size, 14px);
+  background-color: var(--vscode-editor-background, #1e1e1e);
+  color: var(--vscode-editor-foreground, #d4d4d4);
+  padding: 0;
+  margin: 0;
+}
+
+.pseudo-line {
+  border-bottom: 1px solid var(--vscode-panel-border, #333);
+}
+
+.pseudo-line:last-child {
+  border-bottom: none;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--vscode-scrollbarSlider-background, #424242);
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--vscode-scrollbarSlider-hoverBackground, #4f4f4f);
+}
