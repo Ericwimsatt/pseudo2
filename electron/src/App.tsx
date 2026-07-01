@@ -1,14 +1,33 @@
 import { useCallback, useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, useNavigate, useParams } from 'react-router-dom';
+import { HashRouter, Routes, Route, useNavigate, useParams } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import CodeTable from './components/CodeTable';
 import FolderBrowser from './components/FolderBrowser';
+
+declare global {
+  interface Window {
+    electronAPI: {
+      loadRepo: (path: string) => Promise<{ tree: FileNode[]; path: string }>;
+      getTree: () => Promise<{ tree: FileNode[] }>;
+      getFile: (path: string) => Promise<FileData>;
+      browseDirectory: (path?: string) => Promise<BrowseData>;
+      uploadFolder: (files: { path: string; content: string }[]) => Promise<{ tree: FileNode[]; path: string }>;
+      dialogOpenDirectory: () => Promise<string | null>;
+    };
+  }
+}
 
 interface FileNode {
   name: string;
   path: string;
   type: 'file' | 'directory';
   children?: FileNode[];
+}
+
+interface BrowseData {
+  currentPath: string;
+  parentPath: string | null;
+  directories: { name: string; path: string }[];
 }
 
 interface FileData {
@@ -28,20 +47,10 @@ function FileView({ tree, onFileSelect }: { tree: FileNode[]; onFileSelect: (pat
     if (path) {
       setFileData(null);
       setError(null);
-      fetch(`/api/file/${path}`)
-        .then(res => {
-          if (!res.ok) {
-            throw new Error(`HTTP error! status: ${res.status}`);
-          }
-          return res.json();
-        })
+      window.electronAPI.getFile(path)
         .then(data => {
           console.log('FileView: file data received', data);
-          if (data.error) {
-            setError(data.error);
-          } else {
-            setFileData(data);
-          }
+          setFileData(data);
         })
         .catch(err => {
           console.error('Failed to load file:', err);
@@ -126,21 +135,12 @@ function App() {
     setLoading(true);
     setLoadError(null);
     try {
-      const res = await fetch('/api/load-repo', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ path })
-      });
-      const data = await res.json();
-      if (!res.ok || data.error) {
-        setLoadError(data.error || 'Failed to load repository');
-        return;
-      }
+      const data = await window.electronAPI.loadRepo(path);
       setTree(data.tree);
-      setRepoPath(path);
-    } catch (err) {
+      setRepoPath(data.path);
+    } catch (err: any) {
       console.error('Failed to load repo:', err);
-      setLoadError('Failed to connect to server. Make sure the dev server is running.');
+      setLoadError(err.message || 'Failed to load repository');
     } finally {
       setLoading(false);
     }
@@ -178,20 +178,11 @@ function App() {
         return;
       }
 
-      const res = await fetch('/api/upload-folder', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ files: tsFiles })
-      });
-      const data = await res.json();
-      if (!res.ok || data.error) {
-        setLoadError(data.error || 'Failed to load dropped folder');
-        return;
-      }
+      const data = await window.electronAPI.uploadFolder(tsFiles);
       setTree(data.tree);
       setRepoPath(data.path);
-    } catch {
-      setLoadError('Failed to process dropped folder');
+    } catch (err: any) {
+      setLoadError(err.message || 'Failed to process dropped folder');
     } finally {
       setLoading(false);
     }
@@ -266,9 +257,9 @@ function App() {
 
 function AppWrapper() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <App />
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 
