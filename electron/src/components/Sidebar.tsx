@@ -64,7 +64,7 @@ function FileTreeItem({ node, onFileSelect, selectedFile, depth = 0 }: {
 
 export default function Sidebar({ tree, onFileSelect, selectedFile }: SidebarProps) {
   return (
-    <div className="w-64 bg-gray-50 border-r border-gray-200 overflow-y-auto h-screen">
+    <div className="w-64 bg-gray-50 border-r border-gray-200 overflow-y-auto h-full">
       <div className="p-3 border-b border-gray-200">
         <h2 className="font-semibold text-sm text-gray-700">Files</h2>
       </div>

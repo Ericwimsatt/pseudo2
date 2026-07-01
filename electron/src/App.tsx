@@ -60,7 +60,7 @@ function FileView({ tree, onFileSelect }: { tree: FileNode[]; onFileSelect: (pat
   }, [path]);
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-full">
       <Sidebar tree={tree} onFileSelect={onFileSelect} selectedFile={path || null} />
       {error ? (
         <div className="flex-1 flex items-center justify-center text-red-500">
@@ -118,6 +118,39 @@ function readEntry(entry: FileSystemEntry): Promise<{ path: string; content: str
   });
 }
 
+function CommandBar({ onLoadNewFolder }: { onLoadNewFolder: () => void }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  return (
+    <div className="flex items-center h-8 bg-gray-100 border-b border-gray-300 px-2 text-sm select-none shrink-0">
+      <div className="relative">
+        <button
+          onClick={() => setMenuOpen(!menuOpen)}
+          className={`px-3 py-0.5 rounded hover:bg-gray-200 ${menuOpen ? 'bg-gray-200' : ''}`}
+        >
+          File
+        </button>
+        {menuOpen && (
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
+            <div className="absolute top-full left-0 mt-0.5 bg-white border border-gray-300 rounded shadow-lg py-1 min-w-[180px] z-50">
+              <button
+                onClick={() => {
+                  setMenuOpen(false);
+                  onLoadNewFolder();
+                }}
+                className="w-full text-left px-4 py-1 text-sm hover:bg-blue-50"
+              >
+                Load New Folder
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const [tree, setTree] = useState<FileNode[]>([]);
   const [repoPath, setRepoPath] = useState('');
@@ -126,6 +159,13 @@ function App() {
   const [showBrowser, setShowBrowser] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const savedPath = localStorage.getItem('repoPath');
+    if (savedPath) {
+      loadRepo(savedPath);
+    }
+  }, []);
 
   const loadRepo = async (path: string) => {
     if (!path.trim()) {
@@ -138,11 +178,20 @@ function App() {
       const data = await window.electronAPI.loadRepo(path);
       setTree(data.tree);
       setRepoPath(data.path);
+      localStorage.setItem('repoPath', data.path);
     } catch (err: any) {
       console.error('Failed to load repo:', err);
       setLoadError(err.message || 'Failed to load repository');
+      localStorage.removeItem('repoPath');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLoadNewFolder = async () => {
+    const selectedPath = await window.electronAPI.dialogOpenDirectory();
+    if (selectedPath) {
+      loadRepo(selectedPath);
     }
   };
 
@@ -181,6 +230,7 @@ function App() {
       const data = await window.electronAPI.uploadFolder(tsFiles);
       setTree(data.tree);
       setRepoPath(data.path);
+      localStorage.setItem('repoPath', data.path);
     } catch (err: any) {
       setLoadError(err.message || 'Failed to process dropped folder');
     } finally {
@@ -248,10 +298,15 @@ function App() {
   }
 
   return (
-    <Routes>
-      <Route path="/file/*" element={<FileView tree={tree} onFileSelect={handleFileSelect} />} />
-      <Route path="*" element={<FileView tree={tree} onFileSelect={handleFileSelect} />} />
-    </Routes>
+    <div className="flex flex-col h-screen">
+      <CommandBar onLoadNewFolder={handleLoadNewFolder} />
+      <div className="flex-1 overflow-hidden">
+        <Routes>
+          <Route path="/file/*" element={<FileView tree={tree} onFileSelect={handleFileSelect} />} />
+          <Route path="*" element={<FileView tree={tree} onFileSelect={handleFileSelect} />} />
+        </Routes>
+      </div>
+    </div>
   );
 }
 

@@ -1,14 +1,10 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import { join, relative, resolve } from 'path';
-import { fileURLToPath } from 'url';
 import { homedir, tmpdir } from 'os';
 import { mkdir, mkdtemp, readdir, readFile, stat, writeFile } from 'fs/promises';
 import { makeAST } from './lib/makeAST';
 import { makeSemanticGraph } from './lib/makeSemanticGraph';
 import { translateGraph } from './lib/translationDictionary';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = join(__filename, '..');
 
 const isDev = !app.isPackaged;
 
@@ -158,7 +154,7 @@ function createWindow() {
     width: 1200,
     height: 800,
     webPreferences: {
-      preload: join(__dirname, 'preload.js'),
+      preload: join(__dirname, 'preload.cjs'),
       contextIsolation: true,
       nodeIntegration: false,
     },
