@@ -7,6 +7,8 @@ import { makeSemanticGraph } from './lib/makeSemanticGraph';
 import { translateGraph } from './lib/translationDictionary';
 
 const isDev = !app.isPackaged;
+const DEV_PORT = process.env.DEV_PORT || '5173';
+const DEV_URL = `http://localhost:${DEV_PORT}`;
 
 let repoPath = '';
 
@@ -196,7 +198,7 @@ function createWindow() {
   });
 
   if (isDev) {
-    win.loadURL('http://localhost:5173');
+    win.loadURL(DEV_URL);
     win.webContents.openDevTools();
   } else {
     win.loadFile(join(__dirname, '../dist/index.html'));

@@ -1,11 +1,11 @@
 {
-  "name": "constrained",
+  "name": "PseudoTranslator",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "main": "dist-electron/main.cjs",
   "scripts": {
-    "dev": "npm run build-electron && concurrently -k \"vite\" \"wait-on http://localhost:5173 && electron .\"",
+    "dev": "npm run build-electron && concurrently -k \"vite\" \"wait-on http://localhost:${DEV_PORT:-5173} && electron .\"",
     "build-electron": "node scripts/build-electron.mjs",
     "build": "npm run build-electron && vite build",
     "start": "node scripts/build-electron.mjs && electron .",

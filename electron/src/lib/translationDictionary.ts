@@ -67,7 +67,7 @@ const translations: Record<string, Translator> = {
 
   return: (node) => {
     if (node.metadata.hasJsx) {
-      return 'Render UI:';
+      return 'Render';
     }
     const value = node.metadata.value;
     if (value) {
@@ -112,8 +112,13 @@ export function translateNode(node: SemanticNode): string {
   return `[${node.type}]`;
 }
 
-export function translateGraph(nodes: SemanticNode[]): Record<number, string[]> {
-  const translationsByLine: Record<number, string[]> = {};
+export interface TranslationItem {
+  text: string;
+  endLine: number;
+}
+
+export function translateGraph(nodes: SemanticNode[]): Record<number, TranslationItem[]> {
+  const translationsByLine: Record<number, TranslationItem[]> = {};
 
   function processNode(node: SemanticNode) {
     const indent = '  '.repeat(node.indent);
@@ -123,7 +128,7 @@ export function translateGraph(nodes: SemanticNode[]): Record<number, string[]> 
     if (!translationsByLine[line]) {
       translationsByLine[line] = [];
     }
-    translationsByLine[line].push(text);
+    translationsByLine[line].push({ text, endLine: node.sourceEndLine });
 
     node.children.forEach(child => processNode(child));
   }

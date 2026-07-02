@@ -13,9 +13,14 @@ interface BrowseResult {
   directories: { name: string; path: string }[];
 }
 
+interface TranslationItem {
+  text: string;
+  endLine: number;
+}
+
 interface FileResult {
   sourceCode: string;
-  translationsByLine: Record<number, string[]>;
+  translationsByLine: Record<number, TranslationItem[]>;
   path: string;
 }
 

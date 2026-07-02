@@ -592,9 +592,7 @@ function processAttributes(
       if (value && ts.isStringLiteral(value)) {
         metadata.className = value.text;
         metadata.classNameDescription = translateClassName(value.text);
-        descriptions.push(metadata.classNameDescription);
       } else if (value && ts.isJsxExpression(value)) {
-        descriptions.push('with dynamic styles');
         metadata.classNameDescription = 'dynamic styles';
       }
       continue;
@@ -605,7 +603,6 @@ function processAttributes(
         const styleText = value.expression.getText();
         metadata.style = styleText;
         metadata.styleDescription = translateStyleObject(styleText);
-        descriptions.push(metadata.styleDescription);
       }
       continue;
     }
@@ -1111,25 +1108,29 @@ type Translator = (node: SemanticNode) => string;
 export const jsxTranslations: Record<string, Translator> = {
   'jsx-element': (node) => {
     const desc = node.metadata.tagDescription;
-    const attrDesc = node.metadata.attributeDescription;
-    const prefix = node.metadata.isComponent ? `Render ${desc}` : `Render a ${desc}`;
-    return attrDesc ? `${prefix}, ${attrDesc}` : prefix;
+    const styleParts: string[] = [];
+    if (node.metadata.classNameDescription) styleParts.push(node.metadata.classNameDescription);
+    if (node.metadata.styleDescription) styleParts.push(node.metadata.styleDescription);
+    const styleBlock = styleParts.length > 0 ? `; style{${styleParts.join(', ')}}` : '';
+    const otherDesc = node.metadata.attributeDescription;
+    const otherBlock = otherDesc ? `; ${otherDesc}` : '';
+    return `${desc}${styleBlock}${otherBlock}`;
   },
 
   'jsx-fragment': () => {
-    return 'Render a group of elements';
+    return 'Group:';
   },
 
   'jsx-list': (node) => {
     const collection = node.metadata.collection;
     const itemName = node.metadata.itemName;
-    return `For each ${itemName} in ${collection}, render:`;
+    return `For each ${itemName} in ${collection}:`;
   },
 
   'jsx-filter': (node) => {
     const collection = node.metadata.collection;
     const condition = node.metadata.condition;
-    return `Filter ${collection} where ${condition}, then render:`;
+    return `Filter ${collection} where ${condition}:`;
   },
 
   'jsx-conditional': (node) => {

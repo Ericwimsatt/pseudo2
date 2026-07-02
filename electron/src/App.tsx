@@ -31,9 +31,14 @@ interface BrowseData {
   directories: { name: string; path: string }[];
 }
 
+interface TranslationItem {
+  text: string;
+  endLine: number;
+}
+
 interface FileData {
   sourceCode: string;
-  translationsByLine: Record<number, string[]>;
+  translationsByLine: Record<number, TranslationItem[]>;
   path: string;
 }
 
