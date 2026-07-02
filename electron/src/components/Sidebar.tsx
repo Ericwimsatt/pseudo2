@@ -11,6 +11,8 @@ interface SidebarProps {
   tree: FileNode[];
   onFileSelect: (path: string) => void;
   selectedFile: string | null;
+  collapsed: boolean;
+  onToggleCollapse: () => void;
 }
 
 function FileTreeItem({ node, onFileSelect, selectedFile, depth = 0 }: {
@@ -62,13 +64,38 @@ function FileTreeItem({ node, onFileSelect, selectedFile, depth = 0 }: {
   );
 }
 
-export default function Sidebar({ tree, onFileSelect, selectedFile }: SidebarProps) {
-  return (
-    <div className="w-64 bg-gray-50 border-r border-gray-200 overflow-y-auto h-full">
-      <div className="p-3 border-b border-gray-200">
-        <h2 className="font-semibold text-sm text-gray-700">Files</h2>
+export default function Sidebar({ tree, onFileSelect, selectedFile, collapsed, onToggleCollapse }: SidebarProps) {
+  if (collapsed) {
+    return (
+      <div className="w-10 bg-gray-50 border-r border-gray-200 h-screen flex flex-col items-center pt-3 flex-shrink-0">
+        <button
+          onClick={onToggleCollapse}
+          className="text-gray-400 hover:text-gray-700 p-1 rounded hover:bg-gray-200 transition-colors"
+          title="Expand sidebar"
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M6 4l4 4-4 4V4z" />
+          </svg>
+        </button>
       </div>
-      <div className="py-2">
+    );
+  }
+
+  return (
+    <div className="w-64 bg-gray-50 border-r border-gray-200 overflow-y-auto h-screen flex-shrink-0 flex flex-col">
+      <div className="p-3 border-b border-gray-200 flex items-center justify-between">
+        <h2 className="font-semibold text-sm text-gray-700">Files</h2>
+        <button
+          onClick={onToggleCollapse}
+          className="text-gray-400 hover:text-gray-700 p-1 rounded hover:bg-gray-200 transition-colors"
+          title="Collapse sidebar"
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M10 4l-4 4 4 4V4z" />
+          </svg>
+        </button>
+      </div>
+      <div className="py-2 flex-1 overflow-y-auto">
         {tree.map(node => (
           <FileTreeItem
             key={node.path}

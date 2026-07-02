@@ -37,6 +37,12 @@ const api = {
 
   dialogOpenDirectory: (): Promise<string | null> =>
     ipcRenderer.invoke('dialog-open-directory'),
+
+  onMenuLoadFolder: (callback: (path: string) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, path: string) => callback(path);
+    ipcRenderer.on('menu-load-folder', handler);
+    return () => ipcRenderer.removeListener('menu-load-folder', handler);
+  },
 };
 
 contextBridge.exposeInMainWorld('electronAPI', api);

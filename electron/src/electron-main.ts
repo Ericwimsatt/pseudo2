@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog, Menu } from 'electron';
 import { join, relative, resolve } from 'path';
 import { homedir, tmpdir } from 'os';
 import { mkdir, mkdtemp, readdir, readFile, stat, writeFile } from 'fs/promises';
@@ -149,6 +149,41 @@ function setupIPC() {
   });
 }
 
+function setupMenu() {
+  const isMac = process.platform === 'darwin';
+
+  const template: Electron.MenuItemConstructorOptions[] = [
+    ...(isMac ? [{ role: 'appMenu' as const }] : []),
+    {
+      label: 'File',
+      submenu: [
+        {
+          label: 'Load New Folder',
+          accelerator: 'CmdOrCtrl+O',
+          click: async (_menuItem, browserWindow) => {
+            if (!browserWindow) return;
+            const result = await dialog.showOpenDialog(browserWindow, {
+              properties: ['openDirectory']
+            });
+            if (!result.canceled && result.filePaths.length > 0) {
+              browserWindow.webContents.send('menu-load-folder', result.filePaths[0]);
+            }
+          }
+        },
+        ...(isMac ? [{ role: 'close' as const }] : [
+          { role: 'quit' as const }
+        ])
+      ]
+    },
+    { role: 'editMenu' },
+    { role: 'viewMenu' },
+    { role: 'windowMenu' }
+  ];
+
+  const menu = Menu.buildFromTemplate(template);
+  Menu.setApplicationMenu(menu);
+}
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 1200,
@@ -169,6 +204,7 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  setupMenu();
   setupIPC();
   createWindow();
 

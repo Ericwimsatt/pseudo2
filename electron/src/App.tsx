@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { HashRouter, Routes, Route, useNavigate, useParams } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import CodeTable from './components/CodeTable';
@@ -13,6 +13,7 @@ declare global {
       browseDirectory: (path?: string) => Promise<BrowseData>;
       uploadFolder: (files: { path: string; content: string }[]) => Promise<{ tree: FileNode[]; path: string }>;
       dialogOpenDirectory: () => Promise<string | null>;
+      onMenuLoadFolder: (callback: (path: string) => void) => () => void;
     };
   }
 }
@@ -41,6 +42,7 @@ function FileView({ tree, onFileSelect }: { tree: FileNode[]; onFileSelect: (pat
   const path = params['*'];
   const [fileData, setFileData] = useState<FileData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     console.log('FileView: path changed to', path);
@@ -60,8 +62,14 @@ function FileView({ tree, onFileSelect }: { tree: FileNode[]; onFileSelect: (pat
   }, [path]);
 
   return (
-    <div className="flex h-full">
-      <Sidebar tree={tree} onFileSelect={onFileSelect} selectedFile={path || null} />
+    <div className="flex h-screen">
+      <Sidebar
+        tree={tree}
+        onFileSelect={onFileSelect}
+        selectedFile={path || null}
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+      />
       {error ? (
         <div className="flex-1 flex items-center justify-center text-red-500">
           Error: {error}
@@ -118,39 +126,6 @@ function readEntry(entry: FileSystemEntry): Promise<{ path: string; content: str
   });
 }
 
-function CommandBar({ onLoadNewFolder }: { onLoadNewFolder: () => void }) {
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  return (
-    <div className="flex items-center h-8 bg-gray-100 border-b border-gray-300 px-2 text-sm select-none shrink-0">
-      <div className="relative">
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          className={`px-3 py-0.5 rounded hover:bg-gray-200 ${menuOpen ? 'bg-gray-200' : ''}`}
-        >
-          File
-        </button>
-        {menuOpen && (
-          <>
-            <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
-            <div className="absolute top-full left-0 mt-0.5 bg-white border border-gray-300 rounded shadow-lg py-1 min-w-[180px] z-50">
-              <button
-                onClick={() => {
-                  setMenuOpen(false);
-                  onLoadNewFolder();
-                }}
-                className="w-full text-left px-4 py-1 text-sm hover:bg-blue-50"
-              >
-                Load New Folder
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
 function App() {
   const [tree, setTree] = useState<FileNode[]>([]);
   const [repoPath, setRepoPath] = useState('');
@@ -188,12 +163,15 @@ function App() {
     }
   };
 
-  const handleLoadNewFolder = async () => {
-    const selectedPath = await window.electronAPI.dialogOpenDirectory();
-    if (selectedPath) {
-      loadRepo(selectedPath);
-    }
-  };
+  const loadRepoRef = useRef(loadRepo);
+  loadRepoRef.current = loadRepo;
+
+  useEffect(() => {
+    const cleanup = window.electronAPI.onMenuLoadFolder((path) => {
+      loadRepoRef.current(path);
+    });
+    return cleanup;
+  }, []);
 
   const handleFileSelect = (path: string) => {
     navigate(`/file/${path}`);
@@ -298,15 +276,10 @@ function App() {
   }
 
   return (
-    <div className="flex flex-col h-screen">
-      <CommandBar onLoadNewFolder={handleLoadNewFolder} />
-      <div className="flex-1 overflow-hidden">
-        <Routes>
-          <Route path="/file/*" element={<FileView tree={tree} onFileSelect={handleFileSelect} />} />
-          <Route path="*" element={<FileView tree={tree} onFileSelect={handleFileSelect} />} />
-        </Routes>
-      </div>
-    </div>
+    <Routes>
+      <Route path="/file/*" element={<FileView tree={tree} onFileSelect={handleFileSelect} />} />
+      <Route path="*" element={<FileView tree={tree} onFileSelect={handleFileSelect} />} />
+    </Routes>
   );
 }
 
