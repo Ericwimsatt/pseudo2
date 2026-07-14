@@ -6,7 +6,6 @@ import { TokenLayer } from './tokens/TokenLayer';
 interface Props {
   line: LineRenderable;
   bucketStyle: string;
-  isHovered: boolean;
   isInterface: boolean;
   onResizeStart: (e: React.MouseEvent) => void;
   sourcePct: number;
@@ -15,7 +14,6 @@ interface Props {
 export function LineRow({
   line,
   bucketStyle,
-  isHovered,
   isInterface,
   onResizeStart,
   sourcePct,
@@ -27,7 +25,6 @@ export function LineRow({
       className={cx(
         'hover:bg-gray-50/40 transition-colors',
         bucketStyle,
-        isHovered && 'ring-1 ring-blue-400 ring-inset'
       )}
       data-bucket={BUCKET_LABELS[line.bucket]}
     >

@@ -3,23 +3,20 @@ import type { HoverContent } from '../lib/renderable/types';
 
 export interface HoverState {
   hover: HoverContent | null;
-  rect: DOMRect | null;
-  sourceStartLine: number;
-  sourceEndLine: number;
+  trigger: HTMLElement | null;
 }
 
 export interface HoverContextValue {
   hovered: HoverState;
-  setHovered: (update: Partial<HoverState> | null) => void;
+  setHovered: (update: HoverState | null) => void;
   scheduleHide: () => void;
   cancelClear: () => void;
+  registerPopupEl: (el: HTMLElement | null) => void;
 }
 
 export const EMPTY_HOVER: HoverState = {
   hover: null,
-  rect: null,
-  sourceStartLine: 0,
-  sourceEndLine: 0,
+  trigger: null,
 };
 
 export const HoverContext = createContext<HoverContextValue | null>(null);
@@ -29,6 +26,7 @@ const NOOP_VALUE: HoverContextValue = {
   setHovered: () => {},
   scheduleHide: () => {},
   cancelClear: () => {},
+  registerPopupEl: () => {},
 };
 
 export function useHover(): HoverContextValue {

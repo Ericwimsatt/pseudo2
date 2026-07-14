@@ -3,7 +3,7 @@ import type { SemanticNode } from '../lib/makeSemanticGraph';
 import { buildViewModel } from '../lib/renderable/viewModel';
 import { BUCKET_STYLES } from '../lib/renderable/bucket';
 import { HoverProvider } from './HoverContext';
-import { HoverContext, useHover } from './useHover';
+import { HoverContext } from './useHover';
 import { LineRow } from './LineRow';
 import { HoverPopover } from './HoverPopover';
 
@@ -31,7 +31,6 @@ function CodeTableInner({
   const containerRef = useRef<HTMLDivElement>(null);
   const [sourcePct, setSourcePct] = useState(50);
   const [isResizing, setIsResizing] = useState(false);
-  const { hovered } = useHover();
 
   const viewModel = useMemo(
     () => buildViewModel(semanticNodes as unknown as SemanticNode[], sourceCode),
@@ -71,14 +70,6 @@ function CodeTableInner({
     };
   }, [isResizing]);
 
-  const coversLine = (lineNumber: number): boolean => {
-    return (
-      hovered.sourceStartLine > 0 &&
-      hovered.sourceStartLine <= lineNumber &&
-      hovered.sourceEndLine >= lineNumber
-    );
-  };
-
   return (
     <div ref={containerRef} className="flex-1 overflow-y-auto overflow-x-hidden bg-white">
       <div className="sticky top-0 bg-gray-50 border-b border-gray-200 px-4 py-2 z-10">
@@ -101,7 +92,6 @@ function CodeTableInner({
               key={line.lineNumber}
               line={line}
               bucketStyle={BUCKET_STYLES[line.bucket]}
-              isHovered={coversLine(line.lineNumber)}
               isInterface={line.bucket === 'jsx'}
               onResizeStart={handleResizeStart}
               sourcePct={sourcePct}

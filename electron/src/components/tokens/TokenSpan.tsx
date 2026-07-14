@@ -1,4 +1,4 @@
-import { type MouseEvent } from 'react';
+import { type MouseEvent, useRef } from 'react';
 import type { InlineToken } from '../../lib/renderable/types';
 import { VARIANT_CLASSES, cx } from '../../lib/renderable/styleHelpers';
 import { useHover } from '../useHover';
@@ -9,23 +9,26 @@ interface Props {
 }
 
 export function TokenSpan({ token, onClick }: Props) {
-  const { setHovered } = useHover();
+  const { setHovered, scheduleHide } = useHover();
+  const elRef = useRef<HTMLSpanElement>(null);
   const variant = token.variant;
   const classes = cx(VARIANT_CLASSES[variant ?? ''], token.classes);
 
-  const handleEnter = (e: MouseEvent<HTMLSpanElement>) => {
-    if (token.hover) {
+  const handleEnter = () => {
+    if (token.hover && elRef.current) {
       setHovered({
         hover: token.hover,
-        rect: e.currentTarget.getBoundingClientRect(),
+        trigger: elRef.current,
       });
     }
   };
 
   return (
     <span
+      ref={elRef}
       className={cx(classes, token.hover && 'cursor-help underline decoration-dotted underline-offset-2')}
       onMouseEnter={handleEnter}
+      onMouseLeave={scheduleHide}
       onClick={onClick}
     >
       {token.text}

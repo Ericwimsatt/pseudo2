@@ -4,12 +4,12 @@ import { EMPTY_HOVER, type HoverContextValue, type HoverState } from './useHover
 interface ProviderProps {
   context: Context<HoverContextValue | null>;
   children: ReactNode;
-  hideDelayMs?: number;
 }
 
-export function HoverProvider({ context: Ctx, children, hideDelayMs = 250 }: ProviderProps) {
+export function HoverProvider({ context: Ctx, children }: ProviderProps) {
   const [hovered, setHoveredState] = useState<HoverState>(EMPTY_HOVER);
   const clearTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const popupElRef = useRef<HTMLElement | null>(null);
 
   const cancelClear = useCallback(() => {
     if (clearTimer.current) {
@@ -19,12 +19,12 @@ export function HoverProvider({ context: Ctx, children, hideDelayMs = 250 }: Pro
   }, []);
 
   const setHovered = useCallback(
-    (update: Partial<HoverState> | null) => {
+    (update: HoverState | null) => {
       cancelClear();
       if (update === null) {
         setHoveredState(EMPTY_HOVER);
       } else {
-        setHoveredState((prev) => ({ ...prev, ...update }));
+        setHoveredState(update);
       }
     },
     [cancelClear]
@@ -35,11 +35,15 @@ export function HoverProvider({ context: Ctx, children, hideDelayMs = 250 }: Pro
     clearTimer.current = setTimeout(() => {
       setHoveredState(EMPTY_HOVER);
       clearTimer.current = null;
-    }, hideDelayMs);
-  }, [cancelClear, hideDelayMs]);
+    }, 60);
+  }, [cancelClear]);
+
+  const registerPopupEl = useCallback((el: HTMLElement | null) => {
+    popupElRef.current = el;
+  }, []);
 
   return (
-    <Ctx.Provider value={{ hovered, setHovered, scheduleHide, cancelClear }}>
+    <Ctx.Provider value={{ hovered, setHovered, scheduleHide, cancelClear, registerPopupEl }}>
       {children}
     </Ctx.Provider>
   );
