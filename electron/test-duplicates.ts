@@ -1,6 +1,5 @@
 import { makeAST } from './src/lib/makeAST';
 import { makeSemanticGraph } from './src/lib/makeSemanticGraph';
-import { translateGraph } from './src/lib/translationDictionary';
 import { buildViewModel } from './src/lib/renderable/viewModel';
 
 const test1 = `
@@ -26,14 +25,6 @@ function dumpGraph(nodes, depth = 0) {
   }
 }
 dumpGraph(graph1);
-
-console.log('\n=== Translations ===');
-const translations1 = translateGraph(graph1);
-for (const line in translations1) {
-  for (const item of translations1[line]) {
-    console.log(`L${line}: ${item.text} (ends at L${item.endLine})`);
-  }
-}
 
 console.log('\n=== View Model ===');
 const vm = buildViewModel(graph1, test1);

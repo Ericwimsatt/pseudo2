@@ -4,7 +4,7 @@ import { homedir, tmpdir } from 'os';
 import { mkdir, mkdtemp, readdir, readFile, stat, writeFile } from 'fs/promises';
 import { makeAST } from './lib/makeAST';
 import { makeSemanticGraph } from './lib/makeSemanticGraph';
-import { translateGraph } from './lib/translationDictionary';
+import { buildViewModel } from './lib/renderable/viewModel';
 
 const isDev = !app.isPackaged;
 const DEV_PORT = process.env.DEV_PORT || '5173';
@@ -87,27 +87,16 @@ function setupIPC() {
     const sourceCode = await readFile(fullPath, 'utf-8');
 
     const isTranslatable = filePath.endsWith('.ts') || filePath.endsWith('.tsx');
-    const translationsByLine: Record<number, never[]> = {};
 
     if (isTranslatable) {
       const ast = makeAST(sourceCode, filePath);
       const semanticGraph = makeSemanticGraph(ast);
-      const translations = translateGraph(semanticGraph);
-      Object.assign(translationsByLine, translations);
-      return {
-        sourceCode,
-        translationsByLine,
-        semanticNodes: semanticGraph,
-        path: filePath
-      };
+      const viewModel = buildViewModel(semanticGraph, sourceCode);
+      return { viewModel, path: filePath };
     }
 
-    return {
-      sourceCode,
-      translationsByLine,
-      semanticNodes: [],
-      path: filePath
-    };
+    const viewModel = buildViewModel([], sourceCode);
+    return { viewModel, path: filePath };
   });
 
   ipcMain.handle('browse-directory', async (_event, requestedPath?: string) => {

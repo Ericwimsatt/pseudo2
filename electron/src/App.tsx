@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { HashRouter, Routes, Route, useNavigate, useParams } from 'react-router-dom';
+import type { ViewModel } from './lib/renderable/types';
 import Sidebar from './components/Sidebar';
 import CodeTable from './components/CodeTable';
 import FolderBrowser from './components/FolderBrowser';
@@ -31,25 +32,30 @@ interface BrowseData {
   directories: { name: string; path: string }[];
 }
 
-interface TranslationItem {
-  text: string;
-  endLine: number;
-}
-
-interface SemanticNodeDto {
-  type: string;
-  name?: string;
-  children: SemanticNodeDto[];
-  metadata: Record<string, any>;
-  indent: number;
-  sourceStartLine: number;
-  sourceEndLine: number;
-}
-
 interface FileData {
-  sourceCode: string;
-  translationsByLine: Record<number, TranslationItem[]>;
-  semanticNodes: SemanticNodeDto[];
+  viewModel: {
+    lines: Array<{
+      lineNumber: number;
+      sourceText: string;
+      bucket: string;
+      nodes: Array<{
+        sourceStartLine: number;
+        sourceEndLine: number;
+        indent: number;
+        bucket: string;
+        tokens: Array<{
+          text: string;
+          variant?: string;
+          classes?: string[];
+          hover?: { title: string; body?: string; metadata?: Record<string, unknown> };
+        }>;
+        hover?: { title: string; body?: string; metadata?: Record<string, unknown> };
+      }>;
+      spanningBuckets: string[];
+      translationRowSpan?: number;
+      skipTranslation?: boolean;
+    }>;
+  };
   path: string;
 }
 
@@ -92,10 +98,8 @@ function FileView({ tree, onFileSelect }: { tree: FileNode[]; onFileSelect: (pat
         </div>
       ) : fileData ? (
         <CodeTable
-          sourceCode={fileData.sourceCode}
-          semanticNodes={fileData.semanticNodes}
+          viewModel={fileData.viewModel as ViewModel}
           fileName={fileData.path}
-          translationsSupported={fileData.path.endsWith('.ts') || fileData.path.endsWith('.tsx')}
         />
       ) : (
         <div className="flex-1 flex items-center justify-center text-gray-500">

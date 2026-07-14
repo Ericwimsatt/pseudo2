@@ -1,41 +1,23 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import type { SemanticNode } from '../lib/makeSemanticGraph';
-import { buildViewModel } from '../lib/renderable/viewModel';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import type { ViewModel } from '../lib/renderable/types';
 import { BUCKET_STYLES } from '../lib/renderable/bucket';
 import { HoverProvider } from './HoverContext';
 import { HoverContext } from './useHover';
 import { LineRow } from './LineRow';
 import { HoverPopover } from './HoverPopover';
 
-export interface SemanticNodeDto {
-  type: string;
-  name?: string;
-  children: SemanticNodeDto[];
-  metadata: Record<string, any>;
-  indent: number;
-  sourceStartLine: number;
-  sourceEndLine: number;
-}
-
 interface CodeTableProps {
-  sourceCode: string;
-  semanticNodes: SemanticNodeDto[];
+  viewModel: ViewModel;
   fileName: string;
 }
 
 function CodeTableInner({
-  sourceCode,
-  semanticNodes,
+  viewModel,
   fileName,
 }: CodeTableProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [sourcePct, setSourcePct] = useState(50);
   const [isResizing, setIsResizing] = useState(false);
-
-  const viewModel = useMemo(
-    () => buildViewModel(semanticNodes as unknown as SemanticNode[], sourceCode),
-    [semanticNodes, sourceCode]
-  );
 
   const handleResizeStart = useCallback((e: React.MouseEvent) => {
     e.preventDefault();

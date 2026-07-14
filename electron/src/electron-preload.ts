@@ -13,23 +13,30 @@ interface BrowseResult {
   directories: { name: string; path: string }[];
 }
 
-interface TranslationItem {
-  text: string;
-  endLine: number;
-}
-
 interface FileResult {
-  sourceCode: string;
-  translationsByLine: Record<number, TranslationItem[]>;
-  semanticNodes: Array<{
-    type: string;
-    name?: string;
-    children: any[];
-    metadata: Record<string, any>;
-    indent: number;
-    sourceStartLine: number;
-    sourceEndLine: number;
-  }>;
+  viewModel: {
+    lines: Array<{
+      lineNumber: number;
+      sourceText: string;
+      bucket: string;
+      nodes: Array<{
+        sourceStartLine: number;
+        sourceEndLine: number;
+        indent: number;
+        bucket: string;
+        tokens: Array<{
+          text: string;
+          variant?: string;
+          classes?: string[];
+          hover?: { title: string; body?: string; metadata?: Record<string, unknown> };
+        }>;
+        hover?: { title: string; body?: string; metadata?: Record<string, unknown> };
+      }>;
+      spanningBuckets: string[];
+      translationRowSpan?: number;
+      skipTranslation?: boolean;
+    }>;
+  };
   path: string;
 }
 

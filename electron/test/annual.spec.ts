@@ -1,6 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { makeSemanticGraph } from '../src/lib/makeSemanticGraph';
 import { makeAST } from '../src/lib/makeAST';
+import { buildViewModel } from '../src/lib/renderable/viewModel';
 
 const SOURCE = `function AnnualSummary() {
   const years = useMemo(() => {
@@ -17,12 +18,8 @@ const SOURCE = `function AnnualSummary() {
 function buildFileData() {
   const ast = makeAST(SOURCE, 'AnnualSummary.tsx');
   const semanticNodes = makeSemanticGraph(ast);
-  return {
-    sourceCode: SOURCE,
-    semanticNodes,
-    translationsByLine: {} as Record<number, never[]>,
-    path: 'AnnualSummary.tsx',
-  };
+  const viewModel = buildViewModel(semanticNodes, SOURCE);
+  return { viewModel, path: 'AnnualSummary.tsx' };
 }
 
 async function loadAppWithFile(page: Page) {
@@ -129,9 +126,7 @@ test.describe('AnnualSummary translation', () => {
 }
 `;
     const fileData = {
-      sourceCode: jsxSource,
-      semanticNodes: makeSemanticGraph(makeAST(jsxSource, 'App.tsx')),
-      translationsByLine: {} as Record<number, never[]>,
+      viewModel: buildViewModel(makeSemanticGraph(makeAST(jsxSource, 'App.tsx')), jsxSource),
       path: 'App.tsx',
     };
     await page.addInitScript((data) => {
@@ -173,9 +168,7 @@ test.describe('AnnualSummary translation', () => {
 );
 `;
     const fileData = {
-      sourceCode: filterBarSrc,
-      semanticNodes: makeSemanticGraph(makeAST(filterBarSrc, 'FilterBar.tsx')),
-      translationsByLine: {} as Record<number, never[]>,
+      viewModel: buildViewModel(makeSemanticGraph(makeAST(filterBarSrc, 'FilterBar.tsx')), filterBarSrc),
       path: 'FilterBar.tsx',
     };
     await page.addInitScript((data) => {
