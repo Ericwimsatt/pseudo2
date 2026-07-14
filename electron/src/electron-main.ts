@@ -39,7 +39,7 @@ async function buildFileTree(dirPath: string, basePath: string): Promise<FileNod
         type: 'directory',
         children
       });
-    } else if (entry.name.endsWith('.ts') || entry.name.endsWith('.tsx')) {
+    } else {
       nodes.push({
         name: entry.name,
         path: relativePath,
@@ -86,13 +86,26 @@ function setupIPC() {
     const fullPath = join(repoPath, filePath);
     const sourceCode = await readFile(fullPath, 'utf-8');
 
-    const ast = makeAST(sourceCode, filePath);
-    const semanticGraph = makeSemanticGraph(ast);
-    const translationsByLine = translateGraph(semanticGraph);
+    const isTranslatable = filePath.endsWith('.ts') || filePath.endsWith('.tsx');
+    const translationsByLine: Record<number, never[]> = {};
+
+    if (isTranslatable) {
+      const ast = makeAST(sourceCode, filePath);
+      const semanticGraph = makeSemanticGraph(ast);
+      const translations = translateGraph(semanticGraph);
+      Object.assign(translationsByLine, translations);
+      return {
+        sourceCode,
+        translationsByLine,
+        semanticNodes: semanticGraph,
+        path: filePath
+      };
+    }
 
     return {
       sourceCode,
       translationsByLine,
+      semanticNodes: [],
       path: filePath
     };
   });

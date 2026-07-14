@@ -36,9 +36,20 @@ interface TranslationItem {
   endLine: number;
 }
 
+interface SemanticNodeDto {
+  type: string;
+  name?: string;
+  children: SemanticNodeDto[];
+  metadata: Record<string, any>;
+  indent: number;
+  sourceStartLine: number;
+  sourceEndLine: number;
+}
+
 interface FileData {
   sourceCode: string;
   translationsByLine: Record<number, TranslationItem[]>;
+  semanticNodes: SemanticNodeDto[];
   path: string;
 }
 
@@ -82,8 +93,9 @@ function FileView({ tree, onFileSelect }: { tree: FileNode[]; onFileSelect: (pat
       ) : fileData ? (
         <CodeTable
           sourceCode={fileData.sourceCode}
-          translationsByLine={fileData.translationsByLine}
+          semanticNodes={fileData.semanticNodes}
           fileName={fileData.path}
+          translationsSupported={fileData.path.endsWith('.ts') || fileData.path.endsWith('.tsx')}
         />
       ) : (
         <div className="flex-1 flex items-center justify-center text-gray-500">
@@ -203,14 +215,13 @@ function App() {
     setLoadError(null);
     try {
       const files = await readEntry(dirEntry);
-      const tsFiles = files.filter(f => f.path.endsWith('.ts') || f.path.endsWith('.tsx'));
 
-      if (tsFiles.length === 0) {
-        setLoadError('No TypeScript files found in the dropped folder');
+      if (files.length === 0) {
+        setLoadError('No files found in the dropped folder');
         return;
       }
 
-      const data = await window.electronAPI.uploadFolder(tsFiles);
+      const data = await window.electronAPI.uploadFolder(files);
       setTree(data.tree);
       setRepoPath(data.path);
       localStorage.setItem('repoPath', data.path);

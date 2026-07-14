@@ -860,22 +860,24 @@ function processTernary(expr: ts.ConditionalExpression, indent: number, sourceFi
     const child = processJsxNode(trueExpr, indent + 1, sourceFile);
     if (child) trueChildren.push(child);
   } else if (ts.isStringLiteral(trueExpr)) {
+    const childLines = getNodeLineRange(trueExpr, sourceFile);
     trueChildren.push({
       type: 'jsx-text',
       children: [],
       metadata: { text: trueExpr.text },
       indent: indent + 1,
-      sourceStartLine: 0,
-      sourceEndLine: 0,
+      sourceStartLine: childLines.start,
+      sourceEndLine: childLines.end,
     });
   } else if (trueExpr.kind !== ts.SyntaxKind.NullKeyword && trueExpr.getText() !== 'null' && trueExpr.getText() !== 'undefined') {
+    const childLines = getNodeLineRange(trueExpr, sourceFile);
     trueChildren.push({
       type: 'jsx-expression',
       children: [],
       metadata: { expression: trueExpr.getText() },
       indent: indent + 1,
-      sourceStartLine: 0,
-      sourceEndLine: 0,
+      sourceStartLine: childLines.start,
+      sourceEndLine: childLines.end,
     });
   }
 
@@ -883,22 +885,24 @@ function processTernary(expr: ts.ConditionalExpression, indent: number, sourceFi
     const child = processJsxNode(falseExpr, indent + 1, sourceFile);
     if (child) falseChildren.push(child);
   } else if (ts.isStringLiteral(falseExpr)) {
+    const childLines = getNodeLineRange(falseExpr, sourceFile);
     falseChildren.push({
       type: 'jsx-text',
       children: [],
       metadata: { text: falseExpr.text },
       indent: indent + 1,
-      sourceStartLine: 0,
-      sourceEndLine: 0,
+      sourceStartLine: childLines.start,
+      sourceEndLine: childLines.end,
     });
   } else if (falseExpr.kind !== ts.SyntaxKind.NullKeyword && falseExpr.getText() !== 'null' && falseExpr.getText() !== 'undefined') {
+    const childLines = getNodeLineRange(falseExpr, sourceFile);
     falseChildren.push({
       type: 'jsx-expression',
       children: [],
       metadata: { expression: falseExpr.getText() },
       indent: indent + 1,
-      sourceStartLine: 0,
-      sourceEndLine: 0,
+      sourceStartLine: childLines.start,
+      sourceEndLine: childLines.end,
     });
   }
 

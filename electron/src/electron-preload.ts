@@ -21,6 +21,15 @@ interface TranslationItem {
 interface FileResult {
   sourceCode: string;
   translationsByLine: Record<number, TranslationItem[]>;
+  semanticNodes: Array<{
+    type: string;
+    name?: string;
+    children: any[];
+    metadata: Record<string, any>;
+    indent: number;
+    sourceStartLine: number;
+    sourceEndLine: number;
+  }>;
   path: string;
 }
 

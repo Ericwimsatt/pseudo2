@@ -108,7 +108,7 @@ function processImport(node: ts.ImportDeclaration, indent: number, sourceFile: t
     },
     indent,
     sourceStartLine: lines.start,
-    sourceEndLine: lines.end
+    sourceEndLine: lines.end,
   };
 }
 
@@ -134,7 +134,7 @@ function processExport(node: ts.ExportDeclaration, indent: number, sourceFile: t
     },
     indent,
     sourceStartLine: lines.start,
-    sourceEndLine: lines.end
+    sourceEndLine: lines.end,
   };
 }
 
@@ -161,7 +161,7 @@ function processFunction(node: ts.FunctionDeclaration, indent: number, sourceFil
     },
     indent,
     sourceStartLine: lines.start,
-    sourceEndLine: lines.end
+    sourceEndLine: lines.end,
   };
 }
 
@@ -195,7 +195,7 @@ function processFunctionVariable(
     },
     indent,
     sourceStartLine: lines.start,
-    sourceEndLine: lines.end
+    sourceEndLine: lines.end,
   };
 }
 
@@ -221,7 +221,7 @@ function processClass(node: ts.ClassDeclaration, indent: number, sourceFile: ts.
     },
     indent,
     sourceStartLine: lines.start,
-    sourceEndLine: lines.end
+    sourceEndLine: lines.end,
   };
 }
 
@@ -248,7 +248,7 @@ function processMethod(node: ts.MethodDeclaration, indent: number, sourceFile: t
     },
     indent,
     sourceStartLine: lines.start,
-    sourceEndLine: lines.end
+    sourceEndLine: lines.end,
   };
 }
 
@@ -265,7 +265,7 @@ function processProperty(node: ts.PropertyDeclaration, indent: number, sourceFil
     },
     indent,
     sourceStartLine: lines.start,
-    sourceEndLine: lines.end
+    sourceEndLine: lines.end,
   };
 }
 
@@ -298,7 +298,7 @@ function processInterface(node: ts.InterfaceDeclaration, indent: number, sourceF
     metadata: {},
     indent,
     sourceStartLine: lines.start,
-    sourceEndLine: lines.end
+    sourceEndLine: lines.end,
   };
 }
 
@@ -313,7 +313,7 @@ function processTypeAlias(node: ts.TypeAliasDeclaration, indent: number, sourceF
     },
     indent,
     sourceStartLine: lines.start,
-    sourceEndLine: lines.end
+    sourceEndLine: lines.end,
   };
 }
 
@@ -329,7 +329,7 @@ function processVariable(node: ts.VariableDeclaration, indent: number, sourceFil
     },
     indent,
     sourceStartLine: lines.start,
-    sourceEndLine: lines.end
+    sourceEndLine: lines.end,
   };
 }
 
@@ -354,7 +354,7 @@ function processReturn(node: ts.ReturnStatement, indent: number, sourceFile: ts.
     },
     indent,
     sourceStartLine: lines.start,
-    sourceEndLine: lines.end
+    sourceEndLine: lines.end,
   };
 }
 
@@ -376,7 +376,7 @@ function processIf(node: ts.IfStatement, indent: number, sourceFile: ts.SourceFi
     },
     indent,
     sourceStartLine: lines.start,
-    sourceEndLine: lines.end
+    sourceEndLine: lines.end,
   };
 }
 
@@ -399,7 +399,7 @@ function processLoop(node: ts.ForStatement | ts.ForOfStatement | ts.ForInStateme
     },
     indent,
     sourceStartLine: lines.start,
-    sourceEndLine: lines.end
+    sourceEndLine: lines.end,
   };
 }
 
@@ -414,7 +414,7 @@ function processCallExpression(node: ts.CallExpression, indent: number, sourceFi
     },
     indent,
     sourceStartLine: lines.start,
-    sourceEndLine: lines.end
+    sourceEndLine: lines.end,
   };
 }
 
