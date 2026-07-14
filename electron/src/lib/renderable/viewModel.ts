@@ -35,26 +35,20 @@ function buildLineRenderable(
 function applyRowSpans(lines: LineRenderable[]): void {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    if (line.skipTranslation) continue;
     if (line.nodes.length === 0) continue;
+    const lineNumber = i + 1;
     const maxEnd = Math.min(
       Math.max(...line.nodes.map((n) => n.sourceEndLine)),
-      lines.length
+      lines.length,
     );
-    if (maxEnd <= i + 1) continue;
-    for (let j = i + 1; j <= maxEnd && j < lines.length; j++) {
-      if (lines[j].nodes.length > 0) {
-        line.translationRowSpan = j - i;
-        for (let k = i + 1; k < j; k++) {
-          lines[k].skipTranslation = true;
-        }
-        break;
-      }
-      if (j === maxEnd) {
-        line.translationRowSpan = maxEnd - i;
-        for (let k = i + 1; k <= maxEnd; k++) {
-          lines[k].skipTranslation = true;
-        }
+    let j = i + 1;
+    while (j < lines.length && lines[j].nodes.length === 0) j++;
+    const nextStartLine = j < lines.length ? j + 1 : lines.length + 1;
+    const span = Math.min(nextStartLine - lineNumber, maxEnd - lineNumber + 1);
+    if (span > 1) {
+      line.translationRowSpan = span;
+      for (let k = i + 1; k < i + span; k++) {
+        lines[k].skipTranslation = true;
       }
     }
   }

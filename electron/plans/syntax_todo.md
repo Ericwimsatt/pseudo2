@@ -6,6 +6,9 @@ Define interface `Props`
   onExportYear: (year: string) => void;
   `onExportYear` is a (year: string) => void -> 'onExportYear is a function that takes a string called year as an argument and returns nothing.
 }
+Needs to handle optional fields
+
+
 Add Mouseovers: explain special keywords:
 UseContext, UseEffect, UseState,
 
@@ -24,3 +27,9 @@ Current limitations I noticed
 2. PascalCase component tags (Badge, Input) have no entry in TAG_DESCRIPTIONS, so they render with the raw identifier rather than a friendly noun.
 3. Supabase query chains (.from().select().eq().order()) collapse into one big "Call" string with the entire chain as the function name, which is noisy. processCallExpression (makeSemanticGraph.ts:406) just takes node.expression.getText().
 4. Ternary className templates (PlantRow line 18-22) are passed verbatim to translateClassName; the translator handles static classes well but the conditional ${...} interpolation produces a partial/literal description.
+
+Include comments/docstrings in the translation
+
+Handle constant variables definition differently.
+
+Style of indents

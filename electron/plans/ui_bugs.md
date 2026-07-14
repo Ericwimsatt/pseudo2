@@ -1,1 +1,0 @@
-Mousing voer a row of table shows the outline of the cells.

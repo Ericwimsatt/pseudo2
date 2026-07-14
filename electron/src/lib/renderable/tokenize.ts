@@ -176,20 +176,23 @@ function loopTokens(node: SemanticNode): InlineToken[] {
 
 function callTokens(node: SemanticNode): InlineToken[] {
   const fn = String(node.metadata.function ?? '');
-  const args = (node.metadata.arguments as string[]) ?? [];
-  if (args.length > 0) {
-    return [
-      pad(node.indent),
-      { text: 'Call ', variant: 'kw' },
-      { text: fn, variant: 'fn-name' },
-      { text: ' with ', variant: 'ident' },
-      { text: args.join(', '), variant: 'ident' },
-    ];
+  const isNew = !!node.metadata.isNew;
+  const allArgs = (node.metadata.arguments as string[]) ?? [];
+  const displayArgs = allArgs.filter((a) => a !== '<function>');
+  const fnCount = allArgs.length - displayArgs.length;
+  const verb = isNew ? 'Instantiate' : 'Call';
+  let argPart = '';
+  if (displayArgs.length > 0 || fnCount > 0) {
+    const parts: string[] = [];
+    if (displayArgs.length > 0) parts.push(displayArgs.join(', '));
+    if (fnCount > 0) parts.push(`${fnCount} function${fnCount > 1 ? 's' : ''}`);
+    argPart = ` with ${parts.join(' and ')}`;
   }
   return [
     pad(node.indent),
-    { text: 'Call ', variant: 'kw' },
+    { text: `${verb} `, variant: 'kw' },
     { text: fn, variant: 'fn-name' },
+    { text: argPart, variant: 'ident' },
   ];
 }
 
