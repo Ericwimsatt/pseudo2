@@ -17,3 +17,10 @@ UseContext, UseEffect, UseState,
   const [loading, setLoading] = useState(true); Pattern should say "Loading and setLoading are defined by calling useState(true)" Mousing over Loading/setLoading should show the variable's inferred/explicit type. Mousing over useState should be an explanation of useState
 
 Need a way to show blocks better. A function, then everything called as part of the function is indented or something. Same with the pattern for rendering jsx. Say render, then show the block. Should be visually obvious that there's the closure there.
+
+
+Current limitations I noticed
+1. Anonymous arrow functions as arguments (e.g. queryFn: async () => {...} in useAcclimatingData.ts) aren't wrapped in a function node — their body statements become loose siblings. makeSemanticGraph.ts:48-52 only treats arrow functions as function nodes when the parent is a VariableDeclaration.
+2. PascalCase component tags (Badge, Input) have no entry in TAG_DESCRIPTIONS, so they render with the raw identifier rather than a friendly noun.
+3. Supabase query chains (.from().select().eq().order()) collapse into one big "Call" string with the entire chain as the function name, which is noisy. processCallExpression (makeSemanticGraph.ts:406) just takes node.expression.getText().
+4. Ternary className templates (PlantRow line 18-22) are passed verbatim to translateClassName; the translator handles static classes well but the conditional ${...} interpolation produces a partial/literal description.
