@@ -1,7 +1,6 @@
 import type { SemanticNode } from '../makeSemanticGraph';
-import type { LineRenderable, NodeRenderable, ViewModel } from './types';
-import { tokenize } from './tokenize';
-import { pickLineBucket } from './bucket';
+import type { LineRenderable, ViewModel } from './types';
+import { bucketForNode, pickLineBucket } from './bucket';
 
 function flattenNodes(nodes: SemanticNode[]): SemanticNode[] {
   const out: SemanticNode[] = [];
@@ -16,19 +15,19 @@ function flattenNodes(nodes: SemanticNode[]): SemanticNode[] {
 function buildLineRenderable(
   lineNumber: number,
   sourceText: string,
-  renderables: NodeRenderable[]
+  allNodes: SemanticNode[]
 ): LineRenderable {
-  const starting = renderables.filter((r) => r.sourceStartLine === lineNumber);
-  const spanning = renderables.filter(
+  const starting = allNodes.filter((r) => r.sourceStartLine === lineNumber);
+  const spanning = allNodes.filter(
     (r) => r.sourceStartLine < lineNumber && r.sourceEndLine >= lineNumber
   );
-  const allBuckets = [...starting, ...spanning].map((r) => r.bucket);
+  const buckets = [...starting, ...spanning].map((n) => bucketForNode(n));
   return {
     lineNumber,
     sourceText,
-    bucket: pickLineBucket(allBuckets),
+    bucket: pickLineBucket(buckets),
     nodes: starting,
-    spanningBuckets: spanning.map((r) => r.bucket),
+    spanningBuckets: spanning.map((n) => bucketForNode(n)),
   };
 }
 
@@ -58,13 +57,10 @@ export function buildViewModel(
   nodes: SemanticNode[],
   sourceCode: string
 ): ViewModel {
-  const flat = flattenNodes(nodes);
-  const renderables: NodeRenderable[] = flat
-    .map(tokenize)
-    .filter((r) => r.sourceStartLine > 0);
-  const lines = sourceCode.split('\n');
-  const out: LineRenderable[] = lines.map((text, i) =>
-    buildLineRenderable(i + 1, text, renderables)
+  const flat = flattenNodes(nodes).filter((n) => n.sourceStartLine > 0);
+  const sourceLines = sourceCode.split('\n');
+  const out: LineRenderable[] = sourceLines.map((text, i) =>
+    buildLineRenderable(i + 1, text, flat)
   );
   applyRowSpans(out);
   return { lines: out };

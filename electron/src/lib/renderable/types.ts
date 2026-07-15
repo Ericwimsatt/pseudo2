@@ -1,3 +1,5 @@
+import type { SemanticNode } from '../makeSemanticGraph';
+
 export type NodeBucket =
   | 'import'
   | 'interface'
@@ -23,27 +25,11 @@ export interface HoverContent {
   metadata?: Record<string, unknown>;
 }
 
-export interface InlineToken {
-  text: string;
-  variant?: NodeVariant;
-  classes?: string[];
-  hover?: HoverContent;
-}
-
-export interface NodeRenderable {
-  sourceStartLine: number;
-  sourceEndLine: number;
-  indent: number;
-  bucket: NodeBucket;
-  tokens: InlineToken[];
-  hover?: HoverContent;
-}
-
 export interface LineRenderable {
   lineNumber: number;
   sourceText: string;
   bucket: NodeBucket;
-  nodes: NodeRenderable[];
+  nodes: SemanticNode[];
   spanningBuckets: NodeBucket[];
   translationRowSpan?: number;
   skipTranslation?: boolean;

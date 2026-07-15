@@ -1,4 +1,5 @@
 import type { NodeBucket } from './types';
+import type { SemanticNode } from '../makeSemanticGraph';
 
 export const TYPE_TO_BUCKET: Record<string, NodeBucket> = {
   import: 'import',
@@ -53,6 +54,13 @@ export const BUCKET_LABELS: Record<NodeBucket, string> = {
 
 export function bucketForType(type: string): NodeBucket {
   return TYPE_TO_BUCKET[type] ?? 'standard';
+}
+
+export function bucketForNode(node: SemanticNode): NodeBucket {
+  if (node.type === 'return' && node.metadata.hasJsx) {
+    return 'jsx';
+  }
+  return bucketForType(node.type);
 }
 
 export function pickLineBucket(buckets: NodeBucket[]): NodeBucket {

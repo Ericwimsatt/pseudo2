@@ -1,7 +1,7 @@
 import type { LineRenderable } from '../lib/renderable/types';
 import { BUCKET_LABELS } from '../lib/renderable/bucket';
 import { cx } from '../lib/renderable/styleHelpers';
-import { TokenLayer } from './tokens/TokenLayer';
+import { NodeLayer } from './nodes/NodeLayer';
 
 interface Props {
   line: LineRenderable;
@@ -56,7 +56,7 @@ export function LineRow({
           className="px-4 py-1 align-top"
           rowSpan={rowSpan && rowSpan > 1 ? rowSpan : undefined}
         >
-          <TokenLayer nodes={line.nodes} />
+          <NodeLayer nodes={line.nodes as any} />
         </td>
       )}
     </tr>

@@ -20,17 +20,13 @@ interface FileResult {
       sourceText: string;
       bucket: string;
       nodes: Array<{
+        type: string;
+        name?: string;
+        children: unknown[];
+        metadata: Record<string, unknown>;
+        indent: number;
         sourceStartLine: number;
         sourceEndLine: number;
-        indent: number;
-        bucket: string;
-        tokens: Array<{
-          text: string;
-          variant?: string;
-          classes?: string[];
-          hover?: { title: string; body?: string; metadata?: Record<string, unknown> };
-        }>;
-        hover?: { title: string; body?: string; metadata?: Record<string, unknown> };
       }>;
       spanningBuckets: string[];
       translationRowSpan?: number;
