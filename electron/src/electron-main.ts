@@ -1,10 +1,11 @@
 import { app, BrowserWindow, ipcMain, dialog, Menu } from 'electron';
+import * as ts from 'typescript';
 import { join, relative, resolve } from 'path';
 import { homedir, tmpdir } from 'os';
 import { mkdir, mkdtemp, readdir, readFile, stat, writeFile } from 'fs/promises';
-import { makeAST } from './lib/makeAST';
 import { makeSemanticGraph } from './lib/makeSemanticGraph';
 import { buildViewModel } from './lib/renderable/viewModel';
+
 
 const isDev = !app.isPackaged;
 const DEV_PORT = process.env.DEV_PORT || '5173';
@@ -89,7 +90,13 @@ function setupIPC() {
     const isTranslatable = filePath.endsWith('.ts') || filePath.endsWith('.tsx');
 
     if (isTranslatable) {
-      const ast = makeAST(sourceCode, filePath);
+      const ast = ts.createSourceFile(
+        filePath,
+        sourceCode,
+        ts.ScriptTarget.Latest,
+        true,
+        filePath.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS
+      );
       const semanticGraph = makeSemanticGraph(ast);
       const viewModel = buildViewModel(semanticGraph, sourceCode);
       return { viewModel, path: filePath };

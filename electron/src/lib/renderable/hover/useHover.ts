@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import type { HoverContent } from '../lib/renderable/types';
+import type { HoverContent } from '../types';
 
 export interface HoverState {
   hover: HoverContent | null;

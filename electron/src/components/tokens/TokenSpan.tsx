@@ -1,7 +1,7 @@
 import { type MouseEvent, useRef } from 'react';
 import type { InlineToken } from '../../lib/renderable/types';
 import { VARIANT_CLASSES, cx } from '../../lib/renderable/styleHelpers';
-import { useHover } from '../useHover';
+import { useHover } from '../../lib/renderable/hover/useHover';
 
 interface Props {
   token: InlineToken;

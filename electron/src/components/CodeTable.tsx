@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { ViewModel } from '../lib/renderable/types';
 import { BUCKET_STYLES } from '../lib/renderable/bucket';
-import { HoverProvider } from './HoverContext';
-import { HoverContext } from './useHover';
+import { HoverProvider } from '../lib/renderable/hover/HoverContext';
+import { HoverContext } from '../lib/renderable/hover/useHover';
 import { LineRow } from './LineRow';
-import { HoverPopover } from './HoverPopover';
+import { HoverPopover } from '../lib/renderable/hover/HoverPopover';
 
 interface CodeTableProps {
   viewModel: ViewModel;

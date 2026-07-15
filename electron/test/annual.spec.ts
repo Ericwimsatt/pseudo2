@@ -154,6 +154,52 @@ test.describe('AnnualSummary translation', () => {
     expect(spanTexts.filter((t) => t.includes('<span>')).length).toBe(1);
   });
 
+  test('interface properties are translated to plain English', async ({ page }) => {
+    const source = `import type { Expense } from './types';
+
+interface Props {
+  expenses: Expense[];
+  onExportYear: (year: string) => void;
+  isPaid?: boolean;
+  limit?: number;
+  label: string;
+  items: Array<Expense>;
+}
+`;
+    const fileData = {
+      viewModel: buildViewModel(makeSemanticGraph(makeAST(source, 'Props.tsx')), source),
+      path: 'Props.tsx',
+    };
+    await page.addInitScript((data) => {
+      localStorage.setItem('repoPath', '/tmp/annual');
+      const tree = [{ name: 'Props.tsx', path: 'Props.tsx', type: 'file' as const }];
+      (window as any).electronAPI = {
+        loadRepo: async () => ({ tree, path: '/tmp/annual' }),
+        getTree: async () => ({ tree }),
+        getFile: async () => data,
+        browseDirectory: async () => ({ currentPath: '/tmp', parentPath: null, directories: [] }),
+        uploadFolder: async () => ({ tree, path: '/tmp/annual' }),
+        dialogOpenDirectory: async () => null,
+        onMenuLoadFolder: () => () => {},
+      };
+    }, fileData);
+    await page.goto('http://localhost:5174/');
+    await page.getByText('Props.tsx', { exact: false }).first().click();
+
+    await expect(page.locator('body')).toContainText('Define interface');
+
+    const allTexts = await page.locator('table tbody td:last-child div > div').allTextContents();
+    const joined = allTexts.join('\n');
+
+    expect(joined).toContain('Define interface Props');
+    expect(joined).toContain('list of');
+    expect(joined).toContain('a function that expects parameters');
+    expect(joined).toContain('returns nothing');
+    expect(joined).toContain("optional,");
+    expect(joined).toContain("'true' or 'false'");
+    expect(joined).toContain('text');
+  });
+
   test('arrow function with parenthesized JSX body renders the body', async ({ page }) => {
     const filterBarSrc = `const FilterBar = ({
   period,

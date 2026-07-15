@@ -1,6 +1,6 @@
 import type { SemanticNode } from '../makeSemanticGraph';
 import type { InlineToken } from './types';
-import { buildHover } from './hoverContent';
+import { buildHover } from './hover/Tooltip';
 
 function indent(prefix: string, count: number): InlineToken {
   return { text: prefix.repeat(count), variant: 'punct' };

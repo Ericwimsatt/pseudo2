@@ -219,6 +219,7 @@ function processInterface(node: ts.InterfaceDeclaration, indent: number, sourceF
       const childLines = getNodeLineRange(member, sourceFile);
       children.push(makeNode('property', member.name.getText(), childLines, indent + 1, {
         type: member.type?.getText() || 'any',
+        optional: !!member.questionToken,
       }));
     }
   }

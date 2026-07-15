@@ -1,4 +1,4 @@
-import type { HoverContent } from './types';
+import type { HoverContent } from '../types';
 
 export function buildHover(
   title: string,

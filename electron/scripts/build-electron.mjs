@@ -1,24 +1,45 @@
-import { build } from 'esbuild';
+import { build, context } from 'esbuild';
 import { mkdir } from 'fs/promises';
+
+const watchMode = process.argv.includes('--watch');
 
 await mkdir('dist-electron', { recursive: true });
 
-await build({
+const mainOptions = {
   entryPoints: ['src/electron-main.ts'],
   outfile: 'dist-electron/main.cjs',
   bundle: true,
   platform: 'node',
   format: 'cjs',
   external: ['electron', 'typescript'],
-});
+};
 
-await build({
+const preloadOptions = {
   entryPoints: ['src/electron-preload.ts'],
   outfile: 'dist-electron/preload.cjs',
   bundle: true,
   platform: 'node',
   format: 'cjs',
   external: ['electron'],
-});
+};
 
-console.log('Electron main + preload built successfully');
+if (watchMode) {
+  const mainCtx = await context({
+    ...mainOptions,
+    plugins: [{
+      name: 'rebuild-notify',
+      setup(build) {
+        build.onEnd(() => {
+          console.log('Electron main + preload built successfully');
+        });
+      },
+    }],
+  });
+  const preloadCtx = await context(preloadOptions);
+  await Promise.all([mainCtx.watch(), preloadCtx.watch()]);
+  console.log('Watching for changes...');
+} else {
+  await build(mainOptions);
+  await build(preloadOptions);
+  console.log('Electron main + preload built successfully');
+}
