@@ -62,10 +62,10 @@ function ImportNode({ node }: { node: SemanticNode }) {
     const verb = names.includes(',') ? 'are imported from' : 'is imported from';
     return (
         <>
-            <StyledSpan text="import " variant="kw" />
-            <StyledSpan text={names} variant="ident" />
-            <StyledSpan text={` ${verb} `} variant="ident" />
-            <StyledSpan text={module} variant="string" hoverTitle="Module" hoverBody={module} />
+            <StyledSpan text="import " />
+            <StyledSpan text={names} />
+            <StyledSpan text={` ${verb} `} />
+            <StyledSpan text={module} hoverTitle="Module" hoverBody={module} />
         </>
     );
 }
@@ -77,18 +77,18 @@ function ExportNode({ node }: { node: SemanticNode }) {
     if (module) {
         return (
             <>
-                <StyledSpan text="export " variant="kw" />
-                <StyledSpan text={names} variant="ident" />
-                <StyledSpan text={` ${verb} re-exported from `} variant="ident" />
-                <StyledSpan text={module} variant="string" hoverTitle="Module" hoverBody={module} />
+                <StyledSpan text="export " />
+                <StyledSpan text={names} />
+                <StyledSpan text={` ${verb} re-exported from `} />
+                <StyledSpan text={module} hoverTitle="Module" hoverBody={module} />
             </>
         );
     }
     return (
         <>
-            <StyledSpan text="export " variant="kw" />
-            <StyledSpan text={names} variant="ident" />
-            <StyledSpan text={` ${verb} exported`} variant="ident" />
+            <StyledSpan text="export " />
+            <StyledSpan text={names} />
+            <StyledSpan text={` ${verb} exported`} />
         </>
     );
 }
@@ -99,9 +99,9 @@ function FunctionNode({ node }: { node: SemanticNode }) {
     const verb = node.type === 'method' ? 'method' : 'function';
     return (
         <>
-            <StyledSpan text={`Define ${verb} `} variant="kw" />
-            <StyledSpan text={node.name ?? 'anonymous'} variant="fn-name" />
-            <StyledSpan text={`. ${paramText}`} variant="ident" />
+            <StyledSpan text={`Define ${verb} `} />
+            <StyledSpan text={node.name ?? 'anonymous'} />
+            <StyledSpan text={`. ${paramText}`} />
         </>
     );
 }
@@ -110,9 +110,9 @@ function ClassNode({ node }: { node: SemanticNode }) {
     const extendsText = node.metadata.extends ? ` (extends ${node.metadata.extends})` : '';
     return (
         <>
-            <StyledSpan text="Define class " variant="kw" />
-            <StyledSpan text={node.name ?? 'anonymous'} variant="fn-name" />
-            {extendsText ? <StyledSpan text={extendsText} variant="ident" /> : null}
+            <StyledSpan text="Define class " />
+            <StyledSpan text={node.name ?? 'anonymous'} />
+            {extendsText ? <StyledSpan text={extendsText} /> : null}
         </>
     );
 }
@@ -120,8 +120,8 @@ function ClassNode({ node }: { node: SemanticNode }) {
 function InterfaceNode({ node }: { node: SemanticNode }) {
     return (
         <>
-            <StyledSpan text="Define interface " variant="kw" />
-            <StyledSpan text={node.name ?? 'anonymous'} variant="fn-name" />
+            <StyledSpan text="Define interface " />
+            <StyledSpan text={node.name ?? 'anonymous'} />
         </>
     );
 }
@@ -129,10 +129,10 @@ function InterfaceNode({ node }: { node: SemanticNode }) {
 function TypeAliasNode({ node }: { node: SemanticNode }) {
     return (
         <>
-            <StyledSpan text="Define type " variant="kw" />
-            <StyledSpan text={node.name ?? 'anonymous'} variant="fn-name" />
-            <StyledSpan text=" as " variant="ident" />
-            <StyledSpan text={String(node.metadata.type ?? '')} variant="ident" />
+            <StyledSpan text="Define type " />
+            <StyledSpan text={node.name ?? 'anonymous'} />
+            <StyledSpan text=" as " />
+            <StyledSpan text={String(node.metadata.type ?? '')} />
         </>
     );
 }
@@ -144,12 +144,12 @@ function PropertyNode({ node }: { node: SemanticNode }) {
     const initText = init ? `, initialized to ${init}` : '';
     return (
         <>
-            {optional ? <StyledSpan text="optional, " variant="kw" /> : null}
-            <StyledSpan text="`" variant="punct" />
-            <StyledSpan text={node.name ?? 'anonymous'} variant="ident" />
-            <StyledSpan text="` is " variant="ident" />
-            <StyledSpan text={translateType(type)} variant="ident" />
-            {initText ? <StyledSpan text={initText} variant="ident" /> : null}
+            {optional ? <StyledSpan text="optional, " /> : null}
+            <StyledSpan text="`" />
+            <StyledSpan text={node.name ?? 'anonymous'} />
+            <StyledSpan text="` is " />
+            <StyledSpan text={translateType(type)} />
+            {initText ? <StyledSpan text={initText} /> : null}
         </>
     );
 }
@@ -158,14 +158,14 @@ function VariableNode({ node }: { node: SemanticNode }) {
     const init = node.metadata.initializer as string | null;
     return (
         <>
-            <StyledSpan text="Declare variable " variant="kw" />
-            <StyledSpan text="`" variant="punct" />
-            <StyledSpan text={node.name ?? 'anonymous'} variant="ident" />
-            <StyledSpan text="`" variant="punct" />
+            <StyledSpan text="Declare variable " />
+            <StyledSpan text="`" />
+            <StyledSpan text={node.name ?? 'anonymous'} />
+            <StyledSpan text="`" />
             {init ? (
                 <>
-                    <StyledSpan text=" = " variant="ident" />
-                    <StyledSpan text={init} variant="ident" />
+                    <StyledSpan text=" = " />
+                    <StyledSpan text={init} />
                 </>
             ) : null}
         </>
@@ -174,24 +174,24 @@ function VariableNode({ node }: { node: SemanticNode }) {
 
 function ReturnNode({ node }: { node: SemanticNode }) {
     if (node.metadata.hasJsx) {
-        return <StyledSpan text="Render" variant="kw" />;
+        return <StyledSpan text="Render" />;
     }
     const value = node.metadata.value as string | null;
     if (value) {
         return (
             <>
-                <StyledSpan text="return " variant="kw" />
-                <StyledSpan text="`" variant="punct" />
-                <StyledSpan text={value} variant="ident" />
-                <StyledSpan text="`" variant="punct" />
+                <StyledSpan text="return " />
+                <StyledSpan text="`" />
+                <StyledSpan text={value} />
+                <StyledSpan text="`" />
             </>
         );
     }
-    return <StyledSpan text="return" variant="kw" />;
+    return <StyledSpan text="return" />;
 }
 
 function IfNode({ node }: { node: SemanticNode }) {
-    return <StyledSpan text={`If ${node.metadata.condition}`} variant="kw" />;
+    return <StyledSpan text={`If ${node.metadata.condition}`} />;
 }
 
 function LoopNode({ node }: { node: SemanticNode }) {
@@ -200,7 +200,7 @@ function LoopNode({ node }: { node: SemanticNode }) {
     if (t === 'forOf') text = 'For each item';
     else if (t === 'forIn') text = 'For each key';
     else text = 'Loop';
-    return <StyledSpan text={text} variant="kw" />;
+    return <StyledSpan text={text} />;
 }
 
 function CallNode({ node }: { node: SemanticNode }) {
@@ -224,9 +224,9 @@ function CallNode({ node }: { node: SemanticNode }) {
 
     return (
         <>
-            <StyledSpan text={`${verb} `} variant="kw" />
-            <StyledSpan text={fn} variant="fn-name" hoverTitle={hoverTitle} hoverBody={hoverBody} />
-            {argPart ? <StyledSpan text={argPart} variant="ident" /> : null}
+            <StyledSpan text={`${verb} `} />
+            <StyledSpan text={fn} hoverTitle={hoverTitle} hoverBody={hoverBody} />
+            {argPart ? <StyledSpan text={argPart} /> : null}
         </>
     );
 }
@@ -239,13 +239,13 @@ function JsxElementNode({ node }: { node: SemanticNode }) {
 
     function AttrSpan({ name, value }: { name: string; value: unknown }) {
         if (value === true) {
-            return <StyledSpan text={` ${name}`} variant="attr-name" />;
+            return <StyledSpan text={` ${name}`} />;
         }
         return (
             <>
-                <StyledSpan text={` ${name}`} variant="attr-name" />
-                <StyledSpan text="=" variant="punct" />
-                <StyledSpan text={`"${value}"`} variant="string" />
+                <StyledSpan text={` ${name}`} />
+                <StyledSpan text="=" />
+                <StyledSpan text={`"${value}"`} />
             </>
         );
     }
@@ -256,10 +256,9 @@ function JsxElementNode({ node }: { node: SemanticNode }) {
             <>
                 {meta.className ? (
                     <>
-                        <StyledSpan text=" className=" variant="punct" />
+                        <StyledSpan text=" className=" />
                         <StyledSpan
                             text={`"${meta.className}"`}
-                            variant="attr-value"
                             hoverTitle="className"
                             hoverBody={String(meta.classNameDescription ?? '')}
                             hoverMeta={meta.className ? { classes: meta.className } : undefined}
@@ -269,10 +268,9 @@ function JsxElementNode({ node }: { node: SemanticNode }) {
 
                 {meta.classNameDescription && !meta.className ? (
                     <>
-                        <StyledSpan text=" className=" variant="punct" />
+                        <StyledSpan text=" className=" />
                         <StyledSpan
                             text={`"${meta.classNameDescription}"`}
-                            variant="attr-value"
                             hoverTitle="className"
                             hoverBody={String(meta.classNameDescription)}
                         />
@@ -288,19 +286,18 @@ function JsxElementNode({ node }: { node: SemanticNode }) {
                 {meta.events && Array.isArray(meta.events)
                     ? (meta.events as EventItem[]).map((ev) => (
                           <span key={ev.name}>
-                              <StyledSpan text={` ${ev.name}`} variant="attr-name" />
-                              <StyledSpan text="=" variant="punct" />
-                              <StyledSpan text="{...}" variant="ident" />
+                              <StyledSpan text={` ${ev.name}`} />
+                              <StyledSpan text="=" />
+                              <StyledSpan text="{...}" />
                           </span>
                       ))
                     : null}
 
                 {meta.href ? (
                     <>
-                        <StyledSpan text=" href=" variant="punct" />
+                        <StyledSpan text=" href=" />
                         <StyledSpan
                             text={`"${meta.href}"`}
-                            variant="string"
                             hoverTitle="href"
                             hoverBody={String(meta.href)}
                         />
@@ -309,10 +306,9 @@ function JsxElementNode({ node }: { node: SemanticNode }) {
 
                 {meta.src ? (
                     <>
-                        <StyledSpan text=" src=" variant="punct" />
+                        <StyledSpan text=" src=" />
                         <StyledSpan
                             text={`"${meta.src}"`}
-                            variant="string"
                             hoverTitle="src"
                             hoverBody={String(meta.src)}
                         />
@@ -321,8 +317,8 @@ function JsxElementNode({ node }: { node: SemanticNode }) {
 
                 {meta.alt ? (
                     <>
-                        <StyledSpan text=" alt=" variant="punct" />
-                        <StyledSpan text={`"${meta.alt}"`} variant="string" />
+                        <StyledSpan text=" alt=" />
+                        <StyledSpan text={`"${meta.alt}"`} />
                     </>
                 ) : null}
             </>
@@ -332,21 +328,20 @@ function JsxElementNode({ node }: { node: SemanticNode }) {
     const selfClosing = node.metadata.selfClosing;
     return (
         <>
-            <StyledSpan text="<" variant="punct" />
+            <StyledSpan text="<" />
             <StyledSpan
                 text={node.name!}
-                variant="tag-name"
                 hoverTitle={node.name!}
                 hoverBody={String(node.metadata.tagDescription ?? '')}
             />
             <JsxAttrs node={node} />
             {selfClosing ? (
                 <>
-                    <StyledSpan text=" " variant="punct" />
-                    <StyledSpan text="/>" variant="punct" />
+                    <StyledSpan text=" " />
+                    <StyledSpan text="/>" />
                 </>
             ) : (
-                <StyledSpan text=">" variant="punct" />
+                <StyledSpan text=">" />
             )}
         </>
     );
@@ -355,9 +350,9 @@ function JsxElementNode({ node }: { node: SemanticNode }) {
 function JsxFragmentNode() {
     return (
         <>
-            <StyledSpan text="<>" variant="punct" />
-            <StyledSpan text="…" variant="punct" />
-            <StyledSpan text="</>" variant="punct" />
+            <StyledSpan text="<>" />
+            <StyledSpan text="…" />
+            <StyledSpan text="</>" />
         </>
     );
 }
@@ -366,7 +361,6 @@ function JsxListNode({ node }: { node: SemanticNode }) {
     return (
         <StyledSpan
             text={`For each ${node.metadata.itemName} in ${node.metadata.collection}:`}
-            variant="kw"
         />
     );
 }
@@ -375,33 +369,32 @@ function JsxFilterNode({ node }: { node: SemanticNode }) {
     return (
         <StyledSpan
             text={`Filter ${node.metadata.collection} where ${node.metadata.condition}:`}
-            variant="kw"
         />
     );
 }
 
 function JsxConditionalNode({ node }: { node: SemanticNode }) {
     if (node.type === 'jsx-conditional-alt') {
-        return <StyledSpan text="Otherwise, show:" variant="kw" />;
+        return <StyledSpan text="Otherwise, show:" />;
     }
     const text =
         node.metadata.variant === 'ternary'
             ? `If ${node.metadata.condition}, show:`
             : `When ${node.metadata.condition}, show:`;
-    return <StyledSpan text={text} variant="kw" />;
+    return <StyledSpan text={text} />;
 }
 
 function JsxTextNode({ node }: { node: SemanticNode }) {
     const text = String(node.metadata.text);
     const display = text.length > 60 ? `${text.slice(0, 57)}...` : text;
-    return <StyledSpan text={`Show text: "${display}"`} variant="string" />;
+    return <StyledSpan text={`Show text: "${display}"`} />;
 }
 
 function JsxExpressionNode({ node }: { node: SemanticNode }) {
     if (node.metadata.isTemplate) {
-        return <StyledSpan text={`Show dynamic text: ${node.metadata.expression}`} variant="ident" />;
+        return <StyledSpan text={`Show dynamic text: ${node.metadata.expression}`} />;
     }
-    return <StyledSpan text={`Show: ${node.metadata.expression}`} variant="ident" />;
+    return <StyledSpan text={`Show: ${node.metadata.expression}`} />;
 }
 
 function FallbackNode({ node }: { node: SemanticNode }) {

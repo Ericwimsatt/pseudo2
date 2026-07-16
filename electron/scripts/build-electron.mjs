@@ -12,6 +12,7 @@ const mainOptions = {
   platform: 'node',
   format: 'cjs',
   external: ['electron', 'typescript'],
+  sourcemap: true,
 };
 
 const preloadOptions = {
@@ -21,6 +22,7 @@ const preloadOptions = {
   platform: 'node',
   format: 'cjs',
   external: ['electron'],
+  sourcemap: true,
 };
 
 if (watchMode) {
