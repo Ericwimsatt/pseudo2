@@ -1,0 +1,1 @@
+// React component, pulls content from one of the ../dictionaries
