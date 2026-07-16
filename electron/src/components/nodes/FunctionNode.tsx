@@ -7,7 +7,7 @@ export function FunctionNode({ node }: { node: SemanticNode }) {
   const verb = node.type === 'method' ? 'method' : 'function';
   return (
     <>
-      <StyledSpan text={`Define ${verb} `} variant="kw" />
+      {/* <StyledSpan text={`Define ${verb} `} variant="kw" /> */}
       <StyledSpan text={node.name ?? 'anonymous'} variant="fn-name" />
       <StyledSpan text={`. ${paramText}`} variant="ident" />
     </>

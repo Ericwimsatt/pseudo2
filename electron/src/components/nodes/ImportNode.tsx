@@ -8,8 +8,8 @@ export function ImportNode({ node }: { node: SemanticNode }) {
   return (
     <>
       <StyledSpan text="import " variant="kw" />
-      <StyledSpan text={names} variant="ident" />
-      <StyledSpan text={` ${verb} `} variant="ident" />
+      <StyledSpan text={`{${names}}`} variant="ident" />
+      <StyledSpan text={" from "} variant="ident" />
       <StyledSpan
         text={module}
         variant="string"

@@ -11,13 +11,13 @@ import { ReturnNode } from './ReturnNode';
 import { IfNode } from './IfNode';
 import { LoopNode } from './LoopNode';
 import { CallNode } from './CallNode';
-import { JsxElementNode } from './JsxElementNode';
-import { JsxFragmentNode } from './JsxFragmentNode';
-import { JsxListNode } from './JsxListNode';
-import { JsxFilterNode } from './JsxFilterNode';
-import { JsxConditionalNode } from './JsxConditionalNode';
-import { JsxTextNode } from './JsxTextNode';
-import { JsxExpressionNode } from './JsxExpressionNode';
+import { JsxElementNode } from './jsxNodes/JsxElementNode';
+import { JsxFragmentNode } from './jsxNodes/JsxFragmentNode';
+import { JsxListNode } from './jsxNodes/JsxListNode';
+import { JsxFilterNode } from './jsxNodes/JsxFilterNode';
+import { JsxConditionalNode } from './jsxNodes/JsxConditionalNode';
+import { JsxTextNode } from './jsxNodes/JsxTextNode';
+import { JsxExpressionNode } from './jsxNodes/JsxExpressionNode';
 
 interface Props {
   node: SemanticNode;

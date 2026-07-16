@@ -1,5 +1,5 @@
-import type { SemanticNode } from '../../lib/makeSemanticGraph';
-import { StyledSpan } from './StyledSpan';
+import type { SemanticNode } from '../../../lib/makeSemanticGraph';
+import { StyledSpan } from '../StyledSpan';
 
 export function JsxListNode({ node }: { node: SemanticNode }) {
   return (

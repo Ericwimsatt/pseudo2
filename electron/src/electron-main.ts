@@ -3,11 +3,23 @@ import * as ts from 'typescript';
 import { join, relative, resolve } from 'path';
 import { homedir, tmpdir } from 'os';
 import { mkdir, mkdtemp, readdir, readFile, stat, writeFile } from 'fs/promises';
-import { makeSemanticGraph } from './lib/makeSemanticGraph';
+import { makeSemanticGraph, SemanticNode } from './lib/makeSemanticGraph';
 import { buildViewModel } from './lib/renderable/viewModel';
 
 
 const isDev = !app.isPackaged;
+
+function verbosePrintTree(nodes: SemanticNode[], depth = 0): void {
+  const indent = '  '.repeat(depth);
+  for (const node of nodes) {
+    const namePart = node.name ? ` [${node.name}]` : '';
+    const linesPart = ` L${node.sourceStartLine}-${node.sourceEndLine}`;
+    console.log(`${indent}${node.type}${namePart}${linesPart}`);
+    if (node.children.length > 0) {
+      verbosePrintTree(node.children, depth + 1);
+    }
+  }
+}
 const DEV_PORT = process.env.DEV_PORT || '5173';
 const DEV_URL = `http://localhost:${DEV_PORT}`;
 
@@ -98,6 +110,11 @@ function setupIPC() {
         filePath.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS
       );
       const semanticGraph = makeSemanticGraph(ast);
+      if (process.env.VERBOSE) {
+        console.log(`\n--- Semantic Tree: ${filePath} ---`);
+        verbosePrintTree(semanticGraph);
+        console.log(`--- End Semantic Tree: ${filePath} ---\n`);
+      }
       const viewModel = buildViewModel(semanticGraph, sourceCode);
       return { viewModel, path: filePath };
     }

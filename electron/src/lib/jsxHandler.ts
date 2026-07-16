@@ -1,10 +1,8 @@
-import * as ts from 'typescript';
+import { SyntaxKind, ts } from 'ts-morph';
 import type { SemanticNode } from './makeSemanticGraph';
 
-function getNodeLineRange(node: ts.Node, sourceFile: ts.SourceFile): { start: number; end: number } {
-  const start = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
-  const end = sourceFile.getLineAndCharacterOfPosition(node.getEnd());
-  return { start: start.line + 1, end: end.line + 1 };
+function getNodeLineRange(node: { getStartLineNumber(): number; getEndLineNumber(): number }): { start: number; end: number } {
+  return { start: node.getStartLineNumber(), end: node.getEndLineNumber() };
 }
 
 const TAG_DESCRIPTIONS: Record<string, string> = {
@@ -493,34 +491,45 @@ function translateStyleObject(styleText: string): string {
   return `with inline styles: ${descriptions.join(', ')}`;
 }
 
-function describeEventHandler(name: string, value: ts.JsxAttributeValue): string {
+function describeEventHandler(name: string, value: any): string {
   const eventDesc = EVENT_DESCRIPTIONS[name] || name.replace(/^on/, 'when ').replace(/([A-Z])/g, ' $1').toLowerCase();
 
   if (!value) return eventDesc;
 
-  if (ts.isStringLiteral(value)) {
-    return `${eventDesc}, calls ${value.text}`;
+  if (value.getKind && value.getKind() === SyntaxKind.StringLiteral) {
+    return `${eventDesc}, calls ${value.getText()}`;
   }
 
-  if (ts.isJsxExpression(value) && value.expression) {
-    const expr = value.expression;
-    if (ts.isIdentifier(expr)) {
-      return `${eventDesc}, calls ${expr.text}`;
+  if (value.getKind && value.getKind() === SyntaxKind.JsxExpression) {
+    const expr = value.getExpression();
+    if (!expr) return eventDesc;
+    const exprKind = expr.getKind();
+
+    if (exprKind === SyntaxKind.Identifier) {
+      return `${eventDesc}, calls ${expr.getText()}`;
     }
-    if (ts.isArrowFunction(expr) || ts.isFunctionExpression(expr)) {
-      const body = expr.body;
-      if (ts.isCallExpression(body)) {
-        return `${eventDesc}, calls ${body.expression.getText()}${body.arguments.length > 0 ? ' with ' + body.arguments.map(a => a.getText()).join(', ') : ''}`;
+    if (exprKind === SyntaxKind.ArrowFunction || exprKind === SyntaxKind.FunctionExpression) {
+      const body = expr.getBody();
+      if (body.getKind && body.getKind() === SyntaxKind.CallExpression) {
+        const args = body.getArguments();
+        const argsText = args.length > 0 ? ' with ' + args.map((a: any) => a.getText()).join(', ') : '';
+        return `${eventDesc}, calls ${(body.getExpression() as any).getText()}${argsText}`;
       }
-      if (ts.isBlock(body) && body.statements.length === 1 && ts.isExpressionStatement(body.statements[0])) {
-        const stmt = body.statements[0].expression;
-        if (ts.isCallExpression(stmt)) {
-          return `${eventDesc}, calls ${stmt.expression.getText()}${stmt.arguments.length > 0 ? ' with ' + stmt.arguments.map(a => a.getText()).join(', ') : ''}`;
+      if (body.getKind && body.getKind() === SyntaxKind.Block) {
+        const statements = body.getStatements();
+        if (statements.length === 1) {
+          const stmt = statements[0];
+          if (stmt.getExpression && stmt.getExpression().getKind() === SyntaxKind.CallExpression) {
+            const callExpr = stmt.getExpression();
+            const callArgs = callExpr.getArguments ? callExpr.getArguments() : [];
+            const argsText = callArgs.length > 0 ? ' with ' + callArgs.map((a: any) => a.getText()).join(', ') : '';
+            return `${eventDesc}, calls ${(callExpr.getExpression() as any).getText()}${argsText}`;
+          }
         }
       }
       return `${eventDesc}, executes handler`;
     }
-    if (ts.isPropertyAccessExpression(expr)) {
+    if (exprKind === SyntaxKind.PropertyAccessExpression) {
       return `${eventDesc}, calls ${expr.getText()}`;
     }
     return `${eventDesc}, executes handler`;
@@ -529,11 +538,12 @@ function describeEventHandler(name: string, value: ts.JsxAttributeValue): string
   return eventDesc;
 }
 
-function getTagName(tagName: ts.JsxTagNameExpression): string {
-  if (ts.isIdentifier(tagName)) {
-    return tagName.text;
+function getTagName(tagName: any): string {
+  const kind = tagName.getKind();
+  if (kind === SyntaxKind.Identifier) {
+    return tagName.getText();
   }
-  if (ts.isPropertyAccessExpression(tagName)) {
+  if (kind === SyntaxKind.PropertyAccessExpression) {
     return tagName.getText();
   }
   return tagName.getText();
@@ -556,7 +566,7 @@ interface AttributeResult {
 }
 
 function processAttributes(
-  attrs: ts.JsxAttributes,
+  attrsArray: any[],
   _tagName: string
 ): AttributeResult {
   const descriptions: string[] = [];
@@ -575,103 +585,116 @@ function processAttributes(
     testId: null,
   };
 
-  for (const attr of attrs.properties) {
-    if (ts.isJsxSpreadAttribute(attr)) {
-      descriptions.push(`passes through all props from ${attr.expression.getText()}`);
+  for (const attr of attrsArray) {
+    const attrKind = attr.getKind();
+    if (attrKind === SyntaxKind.JsxSpreadAttribute) {
+      descriptions.push(`passes through all props from ${attr.getExpression().getText()}`);
       continue;
     }
 
-    if (!ts.isJsxAttribute(attr)) continue;
+    if (attrKind !== SyntaxKind.JsxAttribute) continue;
 
-    const name = attr.name.getText();
-    const value = attr.initializer;
+    const name = attr.getNameNode().getText();
+    const value = attr.getInitializer();
 
     if (name === 'key' || name === 'ref') continue;
 
     if (name === 'className' || name === 'class') {
-      if (value && ts.isStringLiteral(value)) {
-        metadata.className = value.text;
-        metadata.classNameDescription = translateClassName(value.text);
-      } else if (value && ts.isJsxExpression(value)) {
+      if (value && value.getKind() === SyntaxKind.StringLiteral) {
+        metadata.className = value.getText();
+        metadata.classNameDescription = translateClassName(value.getText());
+      } else if (value && value.getKind() === SyntaxKind.JsxExpression) {
         metadata.classNameDescription = 'dynamic styles';
       }
       continue;
     }
 
     if (name === 'style') {
-      if (value && ts.isJsxExpression(value) && value.expression) {
-        const styleText = value.expression.getText();
-        metadata.style = styleText;
-        metadata.styleDescription = translateStyleObject(styleText);
+      if (value && value.getKind() === SyntaxKind.JsxExpression) {
+        const expr = value.getExpression();
+        if (expr) {
+          const styleText = expr.getText();
+          metadata.style = styleText;
+          metadata.styleDescription = translateStyleObject(styleText);
+        }
       }
       continue;
     }
 
     if (name.startsWith('on') && name.length > 2 && /[A-Z]/.test(name[2])) {
-      const eventDesc = describeEventHandler(name, value!);
+      const eventDesc = describeEventHandler(name, value);
       metadata.events.push({ name, description: eventDesc });
       descriptions.push(eventDesc);
       continue;
     }
 
     if (name === 'href') {
-      if (value && ts.isStringLiteral(value)) {
-        metadata.href = value.text;
-        descriptions.push(`pointing to ${value.text}`);
-      } else if (value && ts.isJsxExpression(value) && value.expression) {
-        metadata.href = value.expression.getText();
-        descriptions.push(`pointing to ${value.expression.getText()}`);
+      if (value && value.getKind() === SyntaxKind.StringLiteral) {
+        metadata.href = value.getText();
+        descriptions.push(`pointing to ${value.getText()}`);
+      } else if (value && value.getKind() === SyntaxKind.JsxExpression) {
+        const expr = value.getExpression();
+        if (expr) {
+          metadata.href = expr.getText();
+          descriptions.push(`pointing to ${expr.getText()}`);
+        }
       }
       continue;
     }
 
     if (name === 'src') {
-      if (value && ts.isStringLiteral(value)) {
-        metadata.src = value.text;
-        descriptions.push(`with source ${value.text}`);
-      } else if (value && ts.isJsxExpression(value) && value.expression) {
-        metadata.src = value.expression.getText();
-        descriptions.push(`with source from ${value.expression.getText()}`);
+      if (value && value.getKind() === SyntaxKind.StringLiteral) {
+        metadata.src = value.getText();
+        descriptions.push(`with source ${value.getText()}`);
+      } else if (value && value.getKind() === SyntaxKind.JsxExpression) {
+        const expr = value.getExpression();
+        if (expr) {
+          metadata.src = expr.getText();
+          descriptions.push(`with source from ${expr.getText()}`);
+        }
       }
       continue;
     }
 
     if (name === 'alt') {
-      if (value && ts.isStringLiteral(value)) {
-        metadata.alt = value.text;
-        descriptions.push(`described as "${value.text}"`);
-      } else if (value && ts.isJsxExpression(value) && value.expression) {
-        metadata.alt = value.expression.getText();
-        descriptions.push(`described by ${value.expression.getText()}`);
+      if (value && value.getKind() === SyntaxKind.StringLiteral) {
+        metadata.alt = value.getText();
+        descriptions.push(`described as "${value.getText()}"`);
+      } else if (value && value.getKind() === SyntaxKind.JsxExpression) {
+        const expr = value.getExpression();
+        if (expr) {
+          metadata.alt = expr.getText();
+          descriptions.push(`described by ${expr.getText()}`);
+        }
       }
       continue;
     }
 
     if (name === 'aria-label') {
-      if (value && ts.isStringLiteral(value)) {
-        metadata.ariaLabel = value.text;
-        descriptions.push(`accessible label "${value.text}"`);
+      if (value && value.getKind() === SyntaxKind.StringLiteral) {
+        metadata.ariaLabel = value.getText();
+        descriptions.push(`accessible label "${value.getText()}"`);
       }
       continue;
     }
 
     if (name === 'role') {
-      if (value && ts.isStringLiteral(value)) {
-        metadata.role = value.text;
-        descriptions.push(`role: ${value.text}`);
+      if (value && value.getKind() === SyntaxKind.StringLiteral) {
+        metadata.role = value.getText();
+        descriptions.push(`role: ${value.getText()}`);
       }
       continue;
     }
 
     if (name === 'data-testid') {
-      if (value && ts.isStringLiteral(value)) {
-        metadata.testId = value.text;
+      if (value && value.getKind() === SyntaxKind.StringLiteral) {
+        metadata.testId = value.getText();
       }
       continue;
     }
 
     if (name === 'disabled') {
-      if (!value || (ts.isJsxExpression(value) && value.expression && value.expression.getText() !== 'false')) {
+      if (!value || (value.getKind() === SyntaxKind.JsxExpression && value.getExpression() && value.getExpression().getText() !== 'false')) {
         descriptions.push('disabled');
       }
       continue;
@@ -688,35 +711,41 @@ function processAttributes(
     }
 
     if (name === 'placeholder') {
-      if (value && ts.isStringLiteral(value)) {
-        descriptions.push(`placeholder "${value.text}"`);
-      } else if (value && ts.isJsxExpression(value) && value.expression) {
-        descriptions.push(`placeholder from ${value.expression.getText()}`);
+      if (value && value.getKind() === SyntaxKind.StringLiteral) {
+        descriptions.push(`placeholder "${value.getText()}"`);
+      } else if (value && value.getKind() === SyntaxKind.JsxExpression) {
+        const expr = value.getExpression();
+        if (expr) {
+          descriptions.push(`placeholder from ${expr.getText()}`);
+        }
       }
       continue;
     }
 
     if (name === 'type') {
-      if (value && ts.isStringLiteral(value)) {
-        metadata.props[name] = value.text;
+      if (value && value.getKind() === SyntaxKind.StringLiteral) {
+        metadata.props[name] = value.getText();
         continue;
       }
     }
 
     if (name === 'id' || name === 'name' || name === 'htmlFor') {
-      if (value && ts.isStringLiteral(value)) {
-        metadata.props[name] = value.text;
+      if (value && value.getKind() === SyntaxKind.StringLiteral) {
+        metadata.props[name] = value.getText();
         continue;
       }
     }
 
     if (value) {
-      if (ts.isStringLiteral(value)) {
-        metadata.props[name] = value.text;
-        descriptions.push(`${name}: "${value.text}"`);
-      } else if (ts.isJsxExpression(value) && value.expression) {
-        metadata.props[name] = value.expression.getText();
-        descriptions.push(`${name} from ${value.expression.getText()}`);
+      if (value.getKind() === SyntaxKind.StringLiteral) {
+        metadata.props[name] = value.getText();
+        descriptions.push(`${name}: "${value.getText()}"`);
+      } else if (value.getKind() === SyntaxKind.JsxExpression) {
+        const expr = value.getExpression();
+        if (expr) {
+          metadata.props[name] = expr.getText();
+          descriptions.push(`${name} from ${expr.getText()}`);
+        }
       }
     } else {
       metadata.props[name] = true;
@@ -730,84 +759,94 @@ function processAttributes(
   };
 }
 
-function unwrapExpression(expr: ts.Expression): ts.Expression {
-  if (ts.isParenthesizedExpression(expr)) {
-    return unwrapExpression(expr.expression);
+function unwrapExpression(expr: any): any {
+  let current = expr;
+  let kind = current.getKind ? current.getKind() : -1;
+  while (kind === SyntaxKind.ParenthesizedExpression && current.getExpression()) {
+    current = current.getExpression();
+    kind = current.getKind();
   }
-  if (ts.isAsExpression(expr)) {
-    return unwrapExpression(expr.expression);
-  }
-  return expr;
+  return current;
 }
 
-function processMapCall(call: ts.CallExpression, indent: number, sourceFile: ts.SourceFile): SemanticNode | null {
-  const expr = call.expression;
-  if (!ts.isPropertyAccessExpression(expr)) return null;
-  if (expr.name.text !== 'map') return null;
+function processMapCall(call: any, indent: number, sourceFile: any): SemanticNode | null {
+  const expr = call.getExpression();
+  if (!expr || expr.getKind() !== SyntaxKind.PropertyAccessExpression) return null;
+  const propAccess = expr;
+  if (propAccess.getName() !== 'map') return null;
 
-  const collection = expr.expression.getText();
-  const callback = call.arguments[0];
+  const collection = propAccess.getExpression().getText();
+  const callback = call.getArguments()[0];
   if (!callback) return null;
 
   let itemName = 'item';
   let indexName = '';
-  let bodyExpr: ts.Expression | null = null;
 
-  if (ts.isArrowFunction(callback) || ts.isFunctionExpression(callback)) {
-    if (callback.parameters.length > 0) {
-      itemName = callback.parameters[0].name.getText();
+  const callbackKind = callback.getKind();
+  if (callbackKind === SyntaxKind.ArrowFunction || callbackKind === SyntaxKind.FunctionExpression) {
+    const params = callback.getParameters();
+    if (params.length > 0) {
+      itemName = params[0].getName();
     }
-    if (callback.parameters.length > 1) {
-      indexName = callback.parameters[1].name.getText();
+    if (params.length > 1) {
+      indexName = params[1].getName();
     }
 
-    const body = callback.body;
-    if (ts.isBlock(body)) {
-      const returnStmt = body.statements.find(ts.isReturnStatement);
-      if (returnStmt && returnStmt.expression) {
-        bodyExpr = unwrapExpression(returnStmt.expression);
+    const body = callback.getBody();
+    const bodyKind = body.getKind();
+    let bodyExpr: any = null;
+
+    if (bodyKind === SyntaxKind.Block) {
+      const statements = body.getStatements();
+      const returnStmt = statements.find((s: any) => s.getKind() === SyntaxKind.ReturnStatement);
+      if (returnStmt && returnStmt.getExpression()) {
+        bodyExpr = unwrapExpression(returnStmt.getExpression());
       }
     } else {
       bodyExpr = unwrapExpression(body);
     }
+
+    const children: SemanticNode[] = [];
+    if (bodyExpr && isJsxNode(bodyExpr)) {
+      const child = processJsxNode(bodyExpr, indent + 1, sourceFile);
+      if (child) children.push(child);
+    }
+
+    const lines = getNodeLineRange(call);
+    return {
+      type: 'jsx-list',
+      name: collection,
+      children,
+      metadata: {
+        collection,
+        itemName,
+        indexName,
+      },
+      indent,
+      sourceStartLine: lines.start,
+      sourceEndLine: lines.end,
+    };
   }
 
-  const children: SemanticNode[] = [];
-  if (bodyExpr && isJsxNode(bodyExpr)) {
-    const child = processJsxNode(bodyExpr, indent + 1, sourceFile);
-    if (child) children.push(child);
-  }
-
-  const lines = getNodeLineRange(call, sourceFile);
-  return {
-    type: 'jsx-list',
-    name: collection,
-    children,
-    metadata: {
-      collection,
-      itemName,
-      indexName,
-    },
-    indent,
-    sourceStartLine: lines.start,
-    sourceEndLine: lines.end,
-  };
+  return null;
 }
 
-function processFilterCall(call: ts.CallExpression, indent: number, sourceFile: ts.SourceFile): SemanticNode | null {
-  const expr = call.expression;
-  if (!ts.isPropertyAccessExpression(expr)) return null;
-  if (expr.name.text !== 'filter') return null;
+function processFilterCall(call: any, indent: number, sourceFile: any): SemanticNode | null {
+  const expr = call.getExpression();
+  if (!expr || expr.getKind() !== SyntaxKind.PropertyAccessExpression) return null;
+  const propAccess = expr;
+  if (propAccess.getName() !== 'filter') return null;
 
-  const collection = expr.expression.getText();
-  const callback = call.arguments[0];
+  const collection = propAccess.getExpression().getText();
+  const callback = call.getArguments()[0];
   let condition = '';
 
-  if (callback && (ts.isArrowFunction(callback) || ts.isFunctionExpression(callback))) {
-    condition = callback.body.getText();
+  const callbackKind = callback.getKind();
+  if (callback && (callbackKind === SyntaxKind.ArrowFunction || callbackKind === SyntaxKind.FunctionExpression)) {
+    condition = callback.getBody().getText();
   }
 
-  const lines = getNodeLineRange(call, sourceFile);
+  const lines = getNodeLineRange(call);
   return {
     type: 'jsx-filter',
     name: collection,
@@ -822,19 +861,19 @@ function processFilterCall(call: ts.CallExpression, indent: number, sourceFile: 
   };
 }
 
-function processConditionalAnd(expr: ts.BinaryExpression, indent: number, sourceFile: ts.SourceFile): SemanticNode | null {
-  if (expr.operatorToken.kind !== ts.SyntaxKind.AmpersandAmpersandToken) return null;
+function processConditionalAnd(expr: any, indent: number, sourceFile: any): SemanticNode | null {
+  if (expr.getOperatorToken().getKind() !== SyntaxKind.AmpersandAmpersandToken) return null;
 
-  const condition = expr.left.getText();
+  const condition = expr.getLeft().getText();
   const children: SemanticNode[] = [];
 
-  const right = unwrapExpression(expr.right);
+  const right = unwrapExpression(expr.getRight());
   if (isJsxNode(right)) {
     const child = processJsxNode(right, indent + 1, sourceFile);
     if (child) children.push(child);
   }
 
-  const lines = getNodeLineRange(expr, sourceFile);
+  const lines = getNodeLineRange(expr);
   return {
     type: 'jsx-conditional',
     children,
@@ -848,29 +887,29 @@ function processConditionalAnd(expr: ts.BinaryExpression, indent: number, source
   };
 }
 
-function processTernary(expr: ts.ConditionalExpression, indent: number, sourceFile: ts.SourceFile): SemanticNode {
-  const condition = expr.condition.getText();
+function processTernary(expr: any, indent: number, sourceFile: any): SemanticNode {
+  const condition = expr.getCondition().getText();
   const trueChildren: SemanticNode[] = [];
   const falseChildren: SemanticNode[] = [];
 
-  const trueExpr = unwrapExpression(expr.whenTrue);
-  const falseExpr = unwrapExpression(expr.whenFalse);
+  const trueExpr = unwrapExpression(expr.getWhenTrue());
+  const falseExpr = unwrapExpression(expr.getWhenFalse());
 
   if (isJsxNode(trueExpr)) {
     const child = processJsxNode(trueExpr, indent + 1, sourceFile);
     if (child) trueChildren.push(child);
-  } else if (ts.isStringLiteral(trueExpr)) {
-    const childLines = getNodeLineRange(trueExpr, sourceFile);
+  } else if (trueExpr.getKind() === SyntaxKind.StringLiteral) {
+    const childLines = getNodeLineRange(trueExpr);
     trueChildren.push({
       type: 'jsx-text',
       children: [],
-      metadata: { text: trueExpr.text },
+      metadata: { text: trueExpr.getText() },
       indent: indent + 1,
       sourceStartLine: childLines.start,
       sourceEndLine: childLines.end,
     });
-  } else if (trueExpr.kind !== ts.SyntaxKind.NullKeyword && trueExpr.getText() !== 'null' && trueExpr.getText() !== 'undefined') {
-    const childLines = getNodeLineRange(trueExpr, sourceFile);
+  } else if (trueExpr.getKind() !== SyntaxKind.NullKeyword && trueExpr.getText() !== 'null' && trueExpr.getText() !== 'undefined') {
+    const childLines = getNodeLineRange(trueExpr);
     trueChildren.push({
       type: 'jsx-expression',
       children: [],
@@ -884,18 +923,18 @@ function processTernary(expr: ts.ConditionalExpression, indent: number, sourceFi
   if (isJsxNode(falseExpr)) {
     const child = processJsxNode(falseExpr, indent + 1, sourceFile);
     if (child) falseChildren.push(child);
-  } else if (ts.isStringLiteral(falseExpr)) {
-    const childLines = getNodeLineRange(falseExpr, sourceFile);
+  } else if (falseExpr.getKind() === SyntaxKind.StringLiteral) {
+    const childLines = getNodeLineRange(falseExpr);
     falseChildren.push({
       type: 'jsx-text',
       children: [],
-      metadata: { text: falseExpr.text },
+      metadata: { text: falseExpr.getText() },
       indent: indent + 1,
       sourceStartLine: childLines.start,
       sourceEndLine: childLines.end,
     });
-  } else if (falseExpr.kind !== ts.SyntaxKind.NullKeyword && falseExpr.getText() !== 'null' && falseExpr.getText() !== 'undefined') {
-    const childLines = getNodeLineRange(falseExpr, sourceFile);
+  } else if (falseExpr.getKind() !== SyntaxKind.NullKeyword && falseExpr.getText() !== 'null' && falseExpr.getText() !== 'undefined') {
+    const childLines = getNodeLineRange(falseExpr);
     falseChildren.push({
       type: 'jsx-expression',
       children: [],
@@ -906,7 +945,7 @@ function processTernary(expr: ts.ConditionalExpression, indent: number, sourceFi
     });
   }
 
-  const lines = getNodeLineRange(expr, sourceFile);
+  const lines = getNodeLineRange(expr);
   return {
     type: 'jsx-conditional',
     children: [...trueChildren, ...falseChildren.map(c => ({ ...c, type: 'jsx-conditional-alt' as string }))],
@@ -921,81 +960,84 @@ function processTernary(expr: ts.ConditionalExpression, indent: number, sourceFi
   };
 }
 
-function processJsxExpression(node: ts.JsxExpression, indent: number, sourceFile: ts.SourceFile): SemanticNode | null {
-  if (!node.expression) return null;
+function processJsxExpression(node: any, indent: number, sourceFile: any): SemanticNode | null {
+  const expr = node.getExpression();
+  if (!expr) return null;
 
-  const expr = unwrapExpression(node.expression);
+  const unwrapped = unwrapExpression(expr);
+  const unwrappedKind = unwrapped.getKind();
 
-  if (ts.isCallExpression(expr)) {
-    const propAccess = expr.expression;
-    if (ts.isPropertyAccessExpression(propAccess)) {
-      if (propAccess.name.text === 'map') {
-        return processMapCall(expr, indent, sourceFile);
+  if (unwrappedKind === SyntaxKind.CallExpression) {
+    const propAccess = unwrapped.getExpression();
+    if (propAccess.getKind() === SyntaxKind.PropertyAccessExpression) {
+      const methodName = propAccess.getName();
+      if (methodName === 'map') {
+        return processMapCall(unwrapped, indent, sourceFile);
       }
-      if (propAccess.name.text === 'filter') {
-        const filterNode = processFilterCall(expr, indent, sourceFile);
+      if (methodName === 'filter') {
+        const filterNode = processFilterCall(unwrapped, indent, sourceFile);
         if (filterNode) return filterNode;
       }
     }
-    const lines = getNodeLineRange(node, sourceFile);
+    const lines = getNodeLineRange(node);
     return {
       type: 'jsx-expression',
       children: [],
-      metadata: { expression: expr.getText() },
+      metadata: { expression: unwrapped.getText() },
       indent,
       sourceStartLine: lines.start,
       sourceEndLine: lines.end,
     };
   }
 
-  if (ts.isBinaryExpression(expr)) {
-    const conditional = processConditionalAnd(expr, indent, sourceFile);
+  if (unwrappedKind === SyntaxKind.BinaryExpression) {
+    const conditional = processConditionalAnd(unwrapped, indent, sourceFile);
     if (conditional) return conditional;
   }
 
-  if (ts.isConditionalExpression(expr)) {
-    return processTernary(expr, indent, sourceFile);
+  if (unwrappedKind === SyntaxKind.ConditionalExpression) {
+    return processTernary(unwrapped, indent, sourceFile);
   }
 
-  if (ts.isStringLiteral(expr) || ts.isNumericLiteral(expr)) {
-    const lines = getNodeLineRange(node, sourceFile);
+  if (unwrappedKind === SyntaxKind.StringLiteral || unwrappedKind === SyntaxKind.NumericLiteral) {
+    const lines = getNodeLineRange(node);
     return {
       type: 'jsx-text',
       children: [],
-      metadata: { text: expr.text },
+      metadata: { text: unwrapped.getText() },
       indent,
       sourceStartLine: lines.start,
       sourceEndLine: lines.end,
     };
   }
 
-  if (ts.isTemplateExpression(expr)) {
-    const lines = getNodeLineRange(node, sourceFile);
+  if (unwrappedKind === SyntaxKind.TemplateExpression) {
+    const lines = getNodeLineRange(node);
     return {
       type: 'jsx-expression',
       children: [],
-      metadata: { expression: expr.getText(), isTemplate: true },
+      metadata: { expression: unwrapped.getText(), isTemplate: true },
       indent,
       sourceStartLine: lines.start,
       sourceEndLine: lines.end,
     };
   }
 
-  const lines = getNodeLineRange(node, sourceFile);
+  const lines = getNodeLineRange(node);
   return {
     type: 'jsx-expression',
     children: [],
-    metadata: { expression: expr.getText() },
+    metadata: { expression: unwrapped.getText() },
     indent,
     sourceStartLine: lines.start,
     sourceEndLine: lines.end,
   };
 }
 
-function processJsxText(node: ts.JsxText, indent: number, sourceFile: ts.SourceFile): SemanticNode | null {
-  const text = node.text.replace(/\s+/g, ' ').trim();
+function processJsxText(node: any, indent: number, sourceFile: any): SemanticNode | null {
+  const text = node.getText().replace(/\s+/g, ' ').trim();
   if (!text) return null;
-  const lines = getNodeLineRange(node, sourceFile);
+  const lines = getNodeLineRange(node);
   return {
     type: 'jsx-text',
     children: [],
@@ -1006,21 +1048,22 @@ function processJsxText(node: ts.JsxText, indent: number, sourceFile: ts.SourceF
   };
 }
 
-function processChildren(children: readonly ts.JsxChild[], indent: number, sourceFile: ts.SourceFile): SemanticNode[] {
+function processChildren(children: any[], indent: number, sourceFile: any): SemanticNode[] {
   const result: SemanticNode[] = [];
 
   for (const child of children) {
-    if (ts.isJsxText(child)) {
+    const childKind = child.getKind();
+    if (childKind === SyntaxKind.JsxText) {
       const node = processJsxText(child, indent, sourceFile);
       if (node) result.push(node);
-    } else if (ts.isJsxElement(child)) {
+    } else if (childKind === SyntaxKind.JsxElement) {
       result.push(processElement(child, indent, sourceFile));
-    } else if (ts.isJsxSelfClosingElement(child)) {
+    } else if (childKind === SyntaxKind.JsxSelfClosingElement) {
       result.push(processSelfClosing(child, indent, sourceFile));
-    } else if (ts.isJsxExpression(child)) {
+    } else if (childKind === SyntaxKind.JsxExpression) {
       const node = processJsxExpression(child, indent, sourceFile);
       if (node) result.push(node);
-    } else if (ts.isJsxFragment(child)) {
+    } else if (childKind === SyntaxKind.JsxFragment) {
       result.push(processFragment(child, indent, sourceFile));
     }
   }
@@ -1028,14 +1071,14 @@ function processChildren(children: readonly ts.JsxChild[], indent: number, sourc
   return result;
 }
 
-function processElement(node: ts.JsxElement, indent: number, sourceFile: ts.SourceFile): SemanticNode {
-  const tagName = getTagName(node.openingElement.tagName);
+function processElement(node: any, indent: number, sourceFile: any): SemanticNode {
+  const tagName = getTagName(node.getOpeningElement().getTagNameNode());
   const tagDesc = describeTag(tagName);
   const isComp = isComponentTag(tagName);
-  const { description: attrDesc, metadata: attrMeta } = processAttributes(node.openingElement.attributes, tagName);
-  const children = processChildren(node.children, indent + 1, sourceFile);
+  const { description: attrDesc, metadata: attrMeta } = processAttributes(node.getOpeningElement().getAttributes(), tagName);
+  const children = processChildren(node.getChildren().filter((c: any) => c.getKind !== SyntaxKind.JsxAttributes), indent + 1, sourceFile);
 
-  const lines = getNodeLineRange(node, sourceFile);
+  const lines = getNodeLineRange(node);
   return {
     type: 'jsx-element',
     name: tagName,
@@ -1052,13 +1095,13 @@ function processElement(node: ts.JsxElement, indent: number, sourceFile: ts.Sour
   };
 }
 
-function processSelfClosing(node: ts.JsxSelfClosingElement, indent: number, sourceFile: ts.SourceFile): SemanticNode {
-  const tagName = getTagName(node.tagName);
+function processSelfClosing(node: any, indent: number, sourceFile: any): SemanticNode {
+  const tagName = getTagName(node.getTagName());
   const tagDesc = describeTag(tagName);
   const isComp = isComponentTag(tagName);
-  const { description: attrDesc, metadata: attrMeta } = processAttributes(node.attributes, tagName);
+  const { description: attrDesc, metadata: attrMeta } = processAttributes(node.getAttributes(), tagName);
 
-  const lines = getNodeLineRange(node, sourceFile);
+  const lines = getNodeLineRange(node);
   return {
     type: 'jsx-element',
     name: tagName,
@@ -1076,9 +1119,9 @@ function processSelfClosing(node: ts.JsxSelfClosingElement, indent: number, sour
   };
 }
 
-function processFragment(node: ts.JsxFragment, indent: number, sourceFile: ts.SourceFile): SemanticNode {
-  const children = processChildren(node.children, indent + 1, sourceFile);
-  const lines = getNodeLineRange(node, sourceFile);
+function processFragment(node: any, indent: number, sourceFile: any): SemanticNode {
+  const children = processChildren(node.getChildren(), indent + 1, sourceFile);
+  const lines = getNodeLineRange(node);
   return {
     type: 'jsx-fragment',
     children,
@@ -1089,18 +1132,21 @@ function processFragment(node: ts.JsxFragment, indent: number, sourceFile: ts.So
   };
 }
 
-export function isJsxNode(node: ts.Node): boolean {
-  return ts.isJsxElement(node) || ts.isJsxSelfClosingElement(node) || ts.isJsxFragment(node);
+export function isJsxNode(node: any): boolean {
+  if (!node || !node.getKind) return false;
+  const kind = node.getKind();
+  return kind === SyntaxKind.JsxElement || kind === SyntaxKind.JsxSelfClosingElement || kind === SyntaxKind.JsxFragment;
 }
 
-export function processJsxNode(node: ts.Node, indent: number, sourceFile: ts.SourceFile): SemanticNode | null {
-  if (ts.isJsxElement(node)) return processElement(node, indent, sourceFile);
-  if (ts.isJsxSelfClosingElement(node)) return processSelfClosing(node, indent, sourceFile);
-  if (ts.isJsxFragment(node)) return processFragment(node, indent, sourceFile);
+export function processJsxNode(node: any, indent: number, sourceFile: any): SemanticNode | null {
+  const kind = node.getKind();
+  if (kind === SyntaxKind.JsxElement) return processElement(node, indent, sourceFile);
+  if (kind === SyntaxKind.JsxSelfClosingElement) return processSelfClosing(node, indent, sourceFile);
+  if (kind === SyntaxKind.JsxFragment) return processFragment(node, indent, sourceFile);
   return null;
 }
 
-export function getJsxFromExpression(expr: ts.Expression | undefined): ts.Node | null {
+export function getJsxFromExpression(expr: any): any {
   if (!expr) return null;
   const unwrapped = unwrapExpression(expr);
   if (isJsxNode(unwrapped)) return unwrapped;

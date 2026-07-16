@@ -1,5 +1,5 @@
-import * as ts from 'typescript';
-import { isJsxNode, processJsxNode, getJsxFromExpression } from './jsxHandler';
+import { Project, SyntaxKind, ts } from 'ts-morph';
+import { processJsxNode, isJsxNode, getJsxFromExpression } from './jsxHandler';
 
 export interface SemanticNode {
   type: string;
@@ -11,10 +11,8 @@ export interface SemanticNode {
   sourceEndLine: number;
 }
 
-function getNodeLineRange(node: ts.Node, sourceFile: ts.SourceFile): { start: number; end: number } {
-  const start = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
-  const end = sourceFile.getLineAndCharacterOfPosition(node.getEnd());
-  return { start: start.line + 1, end: end.line + 1 };
+function getNodeLineRange(node: { getStartLineNumber(): number; getEndLineNumber(): number }): { start: number; end: number } {
+  return { start: node.getStartLineNumber(), end: node.getEndLineNumber() };
 }
 
 function truncate(text: string, max = 80): string {
@@ -41,66 +39,64 @@ function makeNode(
   };
 }
 
-/**
- * Build a semantic graph that mirrors the AST's parent/child structure.
- *
- * The graph is a forest: each top-level statement becomes a root node, and
- * every node owns its children. Statement bodies (function/method/if/loop
- * bodies) are descended into explicitly; expression subtrees are only
- * descended into for block-bodied arrow/function arguments, so a single
- * call never explodes into many flat nodes. There is no generic
- * `forEachChild` re-descent, so a node is never emitted twice.
- */
 export function makeSemanticGraph(sourceFile: ts.SourceFile): SemanticNode[] {
+  const project = new Project({ useInMemoryFileSystem: true });
+  const morphSourceFile = project.createSourceFile(
+    sourceFile.fileName,
+    sourceFile.getFullText(),
+  );
+
   const out: SemanticNode[] = [];
-  for (const stmt of sourceFile.statements) {
-    out.push(...processStatement(stmt, 0, sourceFile));
+  for (const stmt of morphSourceFile.getStatements()) {
+    out.push(...processStatement(stmt, 0, morphSourceFile));
   }
   return out;
 }
 
-function processStatement(node: ts.Node, indent: number, sourceFile: ts.SourceFile): SemanticNode[] {
-  if (ts.isImportDeclaration(node)) {
-    return [processImport(node, indent, sourceFile)];
+function processStatement(node: any, indent: number, sourceFile: any): SemanticNode[] {
+  const kind = node.getKind();
+
+  if (kind === SyntaxKind.ImportDeclaration) {
+    return [processImport(node, indent)];
   }
-  if (ts.isExportDeclaration(node)) {
-    return [processExport(node, indent, sourceFile)];
+  if (kind === SyntaxKind.ExportDeclaration) {
+    return [processExport(node, indent)];
   }
-  if (ts.isFunctionDeclaration(node)) {
+  if (kind === SyntaxKind.FunctionDeclaration) {
     return [processFunction(node, indent, sourceFile)];
   }
-  if (ts.isClassDeclaration(node)) {
+  if (kind === SyntaxKind.ClassDeclaration) {
     return [processClass(node, indent, sourceFile)];
   }
-  if (ts.isInterfaceDeclaration(node)) {
+  if (kind === SyntaxKind.InterfaceDeclaration) {
     return [processInterface(node, indent, sourceFile)];
   }
-  if (ts.isTypeAliasDeclaration(node)) {
+  if (kind === SyntaxKind.TypeAliasDeclaration) {
     return [processTypeAlias(node, indent, sourceFile)];
   }
-  if (ts.isVariableStatement(node)) {
+  if (kind === SyntaxKind.VariableStatement) {
     const nodes: SemanticNode[] = [];
-    for (const decl of node.declarationList.declarations) {
+    for (const decl of node.getDeclarationList().getDeclarations()) {
       nodes.push(...processVariableDeclaration(decl, indent, sourceFile));
     }
     return nodes;
   }
-  if (ts.isReturnStatement(node)) {
+  if (kind === SyntaxKind.ReturnStatement) {
     return [processReturn(node, indent, sourceFile)];
   }
-  if (ts.isIfStatement(node)) {
+  if (kind === SyntaxKind.IfStatement) {
     return [processIf(node, indent, sourceFile)];
   }
-  if (ts.isForStatement(node) || ts.isForOfStatement(node) || ts.isForInStatement(node)) {
+  if (kind === SyntaxKind.ForStatement || kind === SyntaxKind.ForOfStatement || kind === SyntaxKind.ForInStatement) {
     return [processLoop(node, indent, sourceFile)];
   }
-  if (ts.isWhileStatement(node) || ts.isDoStatement(node)) {
+  if (kind === SyntaxKind.WhileStatement || kind === SyntaxKind.DoStatement) {
     return [processWhile(node, indent, sourceFile)];
   }
-  if (ts.isBlock(node)) {
+  if (kind === SyntaxKind.Block) {
     return processBlock(node, indent, sourceFile);
   }
-  if (ts.isExpressionStatement(node)) {
+  if (kind === SyntaxKind.ExpressionStatement) {
     return processExpressionStatement(node, indent, sourceFile);
   }
   if (isJsxNode(node)) {
@@ -110,227 +106,262 @@ function processStatement(node: ts.Node, indent: number, sourceFile: ts.SourceFi
   return [];
 }
 
-function processBlock(block: ts.Block, indent: number, sourceFile: ts.SourceFile): SemanticNode[] {
+function processBlock(block: any, indent: number, sourceFile: any): SemanticNode[] {
   const out: SemanticNode[] = [];
-  for (const stmt of block.statements) {
+  for (const stmt of block.getStatements()) {
     out.push(...processStatement(stmt, indent, sourceFile));
   }
   return out;
 }
 
-function processImport(node: ts.ImportDeclaration, indent: number, sourceFile: ts.SourceFile): SemanticNode {
-  const moduleSpecifier = node.moduleSpecifier.getText();
-  const importClause = node.importClause;
+function processImport(node: any, indent: number): SemanticNode {
+  const moduleSpecifier = node.getModuleSpecifier().getText();
+  const importClause = node.getImportClause();
+
   let importedNames: string[] = [];
 
   if (importClause) {
-    if (importClause.name) {
-      importedNames.push(importClause.name.text);
+    const defaultImport = importClause.getDefaultImport();
+    if (defaultImport) {
+      importedNames.push(defaultImport.getText());
     }
-    if (importClause.namedBindings) {
-      if (ts.isNamedImports(importClause.namedBindings)) {
-        importClause.namedBindings.elements.forEach(el => {
-          importedNames.push(el.name.text);
-        });
-      }
+    const namedImports = importClause.getNamedImports();
+    for (const el of namedImports) {
+      importedNames.push(el.getName());
     }
   }
 
-  const lines = getNodeLineRange(node, sourceFile);
+  const lines = getNodeLineRange(node);
   return makeNode('import', importedNames.join(', '), lines, indent, {
     module: moduleSpecifier.replace(/['"]/g, ''),
     importedNames,
   });
 }
 
-function processExport(node: ts.ExportDeclaration, indent: number, sourceFile: ts.SourceFile): SemanticNode {
-  const moduleSpecifier = node.moduleSpecifier?.getText().replace(/['"]/g, '') || '';
-  const exportClause = node.exportClause;
+function processExport(node: any, indent: number): SemanticNode {
+  const moduleSpecifier = node.getModuleSpecifier()?.getText().replace(/['"]/g, '') || '';
+  const exportClause = node.getExportClause();
   let exportedNames: string[] = [];
 
-  if (exportClause && ts.isNamedExports(exportClause)) {
-    exportClause.elements.forEach(el => {
-      exportedNames.push(el.name.text);
-    });
+  if (exportClause && exportClause.getElements) {
+    for (const el of exportClause.getElements()) {
+      exportedNames.push(el.getName().getText());
+    }
   }
 
-  const lines = getNodeLineRange(node, sourceFile);
+  const lines = getNodeLineRange(node);
   return makeNode('export', exportedNames.join(', '), lines, indent, {
     module: moduleSpecifier,
     exportedNames,
   });
 }
 
-function processFunction(node: ts.FunctionDeclaration, indent: number, sourceFile: ts.SourceFile): SemanticNode {
-  const name = node.name?.text || 'anonymous';
-  const params = node.parameters.map(p => p.name.getText());
-  const children = node.body ? processBlock(node.body, indent + 1, sourceFile) : [];
-  const lines = getNodeLineRange(node, sourceFile);
+function processFunction(node: any, indent: number, sourceFile: any): SemanticNode {
+  const name = node.getName() || 'anonymous';
+  const params = node.getParameters().map((p: any) => p.getName());
+  const body = node.getBody();
+  const children = body ? processBlock(body, indent + 1, sourceFile) : [];
+  const lines = getNodeLineRange(node);
   return makeNode('function', name, lines, indent, {
     parameters: params,
-    returnType: node.type?.getText() || 'void',
+    returnType: node.getReturnType().getText() || 'void',
   }, children);
 }
 
-function processClass(node: ts.ClassDeclaration, indent: number, sourceFile: ts.SourceFile): SemanticNode {
-  const name = node.name?.text || 'anonymous';
+function processClass(node: any, indent: number, sourceFile: any): SemanticNode {
+  const name = node.getName() || 'anonymous';
   const children: SemanticNode[] = [];
 
-  for (const member of node.members) {
-    if (ts.isMethodDeclaration(member)) {
+  for (const member of node.getMembers()) {
+    const memberKind = member.getKind();
+    if (memberKind === SyntaxKind.MethodDeclaration) {
       children.push(processMethod(member, indent + 1, sourceFile));
-    } else if (ts.isPropertyDeclaration(member)) {
+    } else if (memberKind === SyntaxKind.PropertyDeclaration) {
       children.push(processProperty(member, indent + 1, sourceFile));
     }
   }
 
-  const lines = getNodeLineRange(node, sourceFile);
+  const lines = getNodeLineRange(node);
+  const extendsClause = node.getExtendsHeritageClause();
+  const extendsType = extendsClause?.getTypes()[0]?.getExpression().getText() || null;
   return makeNode('class', name, lines, indent, {
-    extends: node.heritageClauses?.[0]?.types[0]?.expression.getText() || null,
+    extends: extendsType,
   }, children);
 }
 
-function processMethod(node: ts.MethodDeclaration, indent: number, sourceFile: ts.SourceFile): SemanticNode {
-  const name = node.name.getText();
-  const params = node.parameters.map(p => p.name.getText());
-  const children = node.body ? processBlock(node.body, indent + 1, sourceFile) : [];
-  const lines = getNodeLineRange(node, sourceFile);
+function processMethod(node: any, indent: number, sourceFile: any): SemanticNode {
+  const name = node.getName();
+  const params = node.getParameters().map((p: any) => p.getName());
+  const body = node.getBody();
+  const children = body ? processBlock(body, indent + 1, sourceFile) : [];
+  const lines = getNodeLineRange(node);
   return makeNode('method', name, lines, indent, {
     parameters: params,
-    returnType: node.type?.getText() || 'void',
+    returnType: node.getReturnType().getText() || 'void',
   }, children);
 }
 
-function processProperty(node: ts.PropertyDeclaration, indent: number, sourceFile: ts.SourceFile): SemanticNode {
-  const name = node.name.getText();
-  const lines = getNodeLineRange(node, sourceFile);
+function processProperty(node: any, indent: number, sourceFile: any): SemanticNode {
+  const name = node.getName();
+  const lines = getNodeLineRange(node);
   return makeNode('property', name, lines, indent, {
-    type: node.type?.getText() || 'any',
-    initializer: node.initializer?.getText() || null,
+    type: node.getType().getText() || 'any',
+    initializer: node.getInitializer()?.getText() || null,
   });
 }
 
-function processInterface(node: ts.InterfaceDeclaration, indent: number, sourceFile: ts.SourceFile): SemanticNode {
-  const name = node.name.text;
+function processInterface(node: any, indent: number, sourceFile: any): SemanticNode {
+  const name = node.getName();
   const children: SemanticNode[] = [];
 
-  for (const member of node.members) {
-    if (ts.isPropertySignature(member)) {
-      const childLines = getNodeLineRange(member, sourceFile);
-      children.push(makeNode('property', member.name.getText(), childLines, indent + 1, {
-        type: member.type?.getText() || 'any',
-        optional: !!member.questionToken,
+  for (const member of node.getMembers()) {
+    if (member.getKind() === SyntaxKind.PropertySignature) {
+      const childLines = getNodeLineRange(member);
+      children.push(makeNode('property', member.getName(), childLines, indent + 1, {
+        type: member.getType().getText() || 'any',
+        optional: !!member.compilerNode.questionToken,
       }));
     }
   }
 
-  const lines = getNodeLineRange(node, sourceFile);
+  const lines = getNodeLineRange(node);
   return makeNode('interface', name, lines, indent, {}, children);
 }
 
-function processTypeAlias(node: ts.TypeAliasDeclaration, indent: number, sourceFile: ts.SourceFile): SemanticNode {
-  const lines = getNodeLineRange(node, sourceFile);
-  return makeNode('typeAlias', node.name.text, lines, indent, {
-    type: node.type.getText(),
+function processTypeAlias(node: any, indent: number, sourceFile: any): SemanticNode {
+  const lines = getNodeLineRange(node);
+  return makeNode('typeAlias', node.getName().getText(), lines, indent, {
+    type: node.getType().getText(),
   });
 }
 
 function processVariableDeclaration(
-  decl: ts.VariableDeclaration,
+  decl: any,
   indent: number,
-  sourceFile: ts.SourceFile,
+  sourceFile: any,
 ): SemanticNode[] {
-  const name = decl.name.getText();
-  const lines = getNodeLineRange(decl, sourceFile);
-  const initializer = decl.initializer;
+  const name = decl.getName();
+  const lines = getNodeLineRange(decl);
+  const initializer = decl.getInitializer();
+  const nameNode = decl.getNameNode();
+  const isArrayDestructure = nameNode.getKind() === SyntaxKind.ArrayBindingPattern;
+  const isObjectDestructure = nameNode.getKind() === SyntaxKind.ObjectBindingPattern;
+  const isDestructured = isArrayDestructure || isObjectDestructure;
+  const names = extractBindingNames(nameNode);
 
   if (initializer) {
     const unwrapped = unwrapExpression(initializer);
-    if (ts.isArrowFunction(unwrapped) || ts.isFunctionExpression(unwrapped)) {
+    const unwrappedKind = unwrapped.getKind();
+    if (unwrappedKind === SyntaxKind.ArrowFunction || unwrappedKind === SyntaxKind.FunctionExpression) {
       const fn = processArrowFunction(unwrapped, indent, sourceFile);
-      const fnLines = getNodeLineRange(decl, sourceFile);
+      const fnLines = lines;
       const fnMeta = { ...fn.metadata, anonymous: false };
       return [makeNode('function', name, fnLines, indent, fnMeta, fn.children)];
     }
   }
 
   const child = initializer ? processExpression(initializer, indent + 1, sourceFile) : null;
-  const children = child ? [child] : [];
+  let children = child ? [child] : [];
   const initText = child ? null : (initializer ? truncate(initializer.getText()) : null);
-  return [makeNode('variable', name, lines, indent, {
-    type: decl.type?.getText() || 'any',
+  const metadata: Record<string, any> = {
+    type: decl.getType().getText() || 'any',
     initializer: initText,
-  }, children)];
+  };
+
+  if (isDestructured) {
+    metadata.destructured = true;
+    metadata.destructureKind = isArrayDestructure ? 'array' : 'object';
+    metadata.names = names;
+    if (child && child.type === 'call') {
+      metadata.initializer = null;
+      metadata.initializerCall = {
+        function: child.metadata.function,
+        arguments: child.metadata.arguments,
+        argCount: child.metadata.argCount,
+        isNew: child.metadata.isNew,
+      };
+      children = [];
+    }
+  }
+
+  return [makeNode('variable', name, lines, indent, metadata, children)];
 }
 
-function processReturn(node: ts.ReturnStatement, indent: number, sourceFile: ts.SourceFile): SemanticNode {
+function processReturn(node: any, indent: number, sourceFile: any): SemanticNode {
   const children: SemanticNode[] = [];
   let hasJsx = false;
 
-  const jsxNode = getJsxFromExpression(node.expression);
+  const expression = node.getExpression();
+  const jsxNode = getJsxFromExpression(expression);
   if (jsxNode) {
     hasJsx = true;
     const result = processJsxNode(jsxNode, indent + 1, sourceFile);
     if (result) children.push(result);
   }
 
-  const lines = getNodeLineRange(node, sourceFile);
+  const lines = getNodeLineRange(node);
   return makeNode('return', undefined, lines, indent, {
-    value: hasJsx ? null : (node.expression ? truncate(node.expression.getText()) : null),
+    value: hasJsx ? null : (expression ? truncate(expression.getText()) : null),
     hasJsx,
   }, children);
 }
 
-function processIf(node: ts.IfStatement, indent: number, sourceFile: ts.SourceFile): SemanticNode {
+function processIf(node: any, indent: number, sourceFile: any): SemanticNode {
   const children: SemanticNode[] = [];
-  children.push(...processBody(node.thenStatement, indent + 1, sourceFile));
-  if (node.elseStatement) {
-    if (ts.isIfStatement(node.elseStatement)) {
-      children.push(...processIf(node.elseStatement, indent + 1, sourceFile));
+  children.push(...processBody(node.getThenStatement(), indent + 1, sourceFile));
+  const elseStatement = node.getElseStatement();
+  if (elseStatement) {
+    if (elseStatement.getKind() === SyntaxKind.IfStatement) {
+      children.push(...processIf(elseStatement, indent + 1, sourceFile));
     } else {
-      children.push(...processBody(node.elseStatement, indent + 1, sourceFile));
+      children.push(...processBody(elseStatement, indent + 1, sourceFile));
     }
   }
 
-  const lines = getNodeLineRange(node, sourceFile);
+  const lines = getNodeLineRange(node);
   return makeNode('if', undefined, lines, indent, {
-    condition: truncate(node.expression.getText()),
-    hasElse: !!node.elseStatement,
+    condition: truncate(node.getExpression().getText()),
+    hasElse: !!elseStatement,
   }, children);
 }
 
 function processLoop(
-  node: ts.ForStatement | ts.ForOfStatement | ts.ForInStatement,
+  node: any,
   indent: number,
-  sourceFile: ts.SourceFile,
+  sourceFile: any,
 ): SemanticNode {
-  const statement = node.statement;
+  const statement = node.getStatement();
   const children = processBody(statement, indent + 1, sourceFile);
-  const lines = getNodeLineRange(node, sourceFile);
+  const lines = getNodeLineRange(node);
+  const kind = node.getKind();
+  let loopType = 'for';
+  if (kind === SyntaxKind.ForOfStatement) loopType = 'forOf';
+  else if (kind === SyntaxKind.ForInStatement) loopType = 'forIn';
+
   return makeNode('loop', undefined, lines, indent, {
-    loopType: ts.isForStatement(node) ? 'for' : ts.isForOfStatement(node) ? 'forOf' : 'forIn',
+    loopType,
     condition: truncate(node.getText().split('{')[0] || ''),
   }, children);
 }
 
-function processWhile(node: ts.WhileStatement | ts.DoStatement, indent: number, sourceFile: ts.SourceFile): SemanticNode {
-  const statement = ts.isWhileStatement(node) ? node.statement : node.statement;
+function processWhile(node: any, indent: number, sourceFile: any): SemanticNode {
+  const statement = node.getStatement();
   const children = processBody(statement, indent + 1, sourceFile);
-  const lines = getNodeLineRange(node, sourceFile);
+  const lines = getNodeLineRange(node);
   return makeNode('loop', undefined, lines, indent, {
     loopType: 'while',
-    condition: truncate(node.expression.getText()),
+    condition: truncate(node.getExpression().getText()),
   }, children);
 }
 
-function processBody(body: ts.Statement, indent: number, sourceFile: ts.SourceFile): SemanticNode[] {
+function processBody(body: any, indent: number, sourceFile: any): SemanticNode[] {
   if (!body) return [];
-  if (ts.isBlock(body)) return processBlock(body, indent, sourceFile);
+  if (body.getKind() === SyntaxKind.Block) return processBlock(body, indent, sourceFile);
   return processStatement(body, indent, sourceFile);
 }
 
-function processExpressionStatement(node: ts.ExpressionStatement, indent: number, sourceFile: ts.SourceFile): SemanticNode[] {
-  const expr = node.expression;
+function processExpressionStatement(node: any, indent: number, sourceFile: any): SemanticNode[] {
+  const expr = node.getExpression();
   if (isJsxNode(expr)) {
     const result = processJsxNode(expr, indent, sourceFile);
     return result ? [result] : [];
@@ -339,51 +370,51 @@ function processExpressionStatement(node: ts.ExpressionStatement, indent: number
   return child ? [child] : [];
 }
 
-/**
- * Translate an expression into a single semantic node (with optional children
- * for block-bodied arrow/function arguments). Non-block arguments are kept
- * as short metadata text, so a call never explodes into many flat nodes.
- */
-function processExpression(expr: ts.Expression, indent: number, sourceFile: ts.SourceFile): SemanticNode | null {
+function processExpression(expr: any, indent: number, sourceFile: any): SemanticNode | null {
   const unwrapped = unwrapExpression(expr);
   if (isJsxNode(unwrapped)) {
     return processJsxNode(unwrapped, indent, sourceFile);
   }
-  if (ts.isCallExpression(unwrapped) || ts.isNewExpression(unwrapped)) {
+  const exprKind = unwrapped.getKind();
+  if (exprKind === SyntaxKind.CallExpression || exprKind === SyntaxKind.NewExpression) {
     return processCall(unwrapped, indent, sourceFile);
   }
-  if (ts.isArrowFunction(unwrapped) || ts.isFunctionExpression(unwrapped)) {
+  if (exprKind === SyntaxKind.ArrowFunction || exprKind === SyntaxKind.FunctionExpression) {
     return processArrowFunction(unwrapped, indent, sourceFile);
   }
   return null;
 }
 
 function processCall(
-  node: ts.CallExpression | ts.NewExpression,
+  node: any,
   indent: number,
-  sourceFile: ts.SourceFile,
+  sourceFile: any,
 ): SemanticNode {
-  const isNew = ts.isNewExpression(node);
-  const callee = node.expression;
+  const isNew = node.getKind() === SyntaxKind.NewExpression;
+  const callee = node.getExpression();
   const calleeText = truncate(callee.getText(), 100);
-  const args = node.arguments ?? [];
+  const args = node.getArguments() ?? [];
   const children: SemanticNode[] = [];
   const argSummaries: string[] = [];
 
   for (const arg of args) {
     const unwrapped = unwrapExpression(arg);
-    if ((ts.isArrowFunction(unwrapped) || ts.isFunctionExpression(unwrapped)) && ts.isBlock((unwrapped as ts.ArrowFunction | ts.FunctionExpression).body)) {
-      const child = processArrowFunction(unwrapped as ts.ArrowFunction | ts.FunctionExpression, indent + 1, sourceFile);
-      if (child) {
-        children.push(child);
-        argSummaries.push('<function>');
-        continue;
+    const unwrappedKind = unwrapped.getKind();
+    if ((unwrappedKind === SyntaxKind.ArrowFunction || unwrappedKind === SyntaxKind.FunctionExpression)) {
+      const body = unwrapped.getBody();
+      if (body && body.getKind() === SyntaxKind.Block) {
+        const child = processArrowFunction(unwrapped, indent + 1, sourceFile);
+        if (child) {
+          children.push(child);
+          argSummaries.push('<function>');
+          continue;
+        }
       }
     }
     argSummaries.push(truncate(arg.getText(), 80));
   }
 
-  const lines = getNodeLineRange(node, sourceFile);
+  const lines = getNodeLineRange(node);
   return makeNode('call', undefined, lines, indent, {
     function: calleeText,
     arguments: argSummaries,
@@ -393,37 +424,30 @@ function processCall(
 }
 
 function processArrowFunction(
-  node: ts.ArrowFunction | ts.FunctionExpression,
+  node: any,
   indent: number,
-  sourceFile: ts.SourceFile,
+  sourceFile: any,
 ): SemanticNode {
-  const params = node.parameters.map(p => summarizeParamName(p));
+  const params = node.getParameters().map((p: any) => summarizeParamName(p));
   const children: SemanticNode[] = [];
-  if (node.body) {
-    if (ts.isBlock(node.body)) {
-      children.push(...processBlock(node.body, indent + 1, sourceFile));
+  const body = node.getBody();
+  if (body) {
+    if (body.getKind() === SyntaxKind.Block) {
+      children.push(...processBlock(body, indent + 1, sourceFile));
     } else {
-      // Expression body (e.g. `() => <div/>` or `() => value`). Wrap it in a
-      // synthetic return node so the rendered tree mirrors the implicit
-      // return and JSX bodies are picked up by processJsxNode.
-      const ret = processImplicitReturn(node.body, indent + 1, sourceFile);
+      const ret = processImplicitReturn(body, indent + 1, sourceFile);
       if (ret) children.push(ret);
     }
   }
-  const lines = getNodeLineRange(node, sourceFile);
+  const lines = getNodeLineRange(node);
   return makeNode('function', undefined, lines, indent, {
     parameters: params,
-    returnType: node.type?.getText() || 'void',
+    returnType: node.getReturnType().getText() || 'void',
     anonymous: true,
   }, children);
 }
 
-/**
- * Build a synthetic `return` node for an arrow/function-expression with a
- * non-block body. Mirrors processReturn so JSX expression bodies render as
- * nested JSX children and other expression bodies show as returned values.
- */
-function processImplicitReturn(expr: ts.Expression, indent: number, sourceFile: ts.SourceFile): SemanticNode | null {
+function processImplicitReturn(expr: any, indent: number, sourceFile: any): SemanticNode | null {
   const children: SemanticNode[] = [];
   let hasJsx = false;
 
@@ -434,38 +458,48 @@ function processImplicitReturn(expr: ts.Expression, indent: number, sourceFile: 
     if (result) children.push(result);
   }
 
-  const lines = getNodeLineRange(expr, sourceFile);
+  const lines = getNodeLineRange(expr);
   return makeNode('return', undefined, lines, indent, {
     value: hasJsx ? null : (expr ? truncate(expr.getText()) : null),
     hasJsx,
   }, children);
 }
 
-/**
- * Collapse a parameter name to a single line so destructured object patterns
- * (`{ a, b, c }`) don't dump their multi-line source into the translation.
- */
-function summarizeParamName(p: ts.ParameterDeclaration, max = 80): string {
-  const name = p.name;
-  if (ts.isObjectBindingPattern(name) || ts.isArrayBindingPattern(name)) {
+function summarizeParamName(p: any, max = 80): string {
+  const name = p.getNameNode();
+  const kind = name.getKind();
+  if (kind === SyntaxKind.ObjectBindingPattern || kind === SyntaxKind.ArrayBindingPattern) {
     const parts: string[] = [];
-    for (const el of name.elements) {
-      if (ts.isBindingElement(el)) {
-        const propName = el.propertyName ? el.propertyName.getText() : el.name.getText();
-        parts.push(propName);
-      }
+    for (const el of name.getElements()) {
+      const propName = el.compilerNode.propertyName?.getText();
+      const elName = el.getName();
+      parts.push(propName ?? elName);
     }
     const joined = parts.join(', ');
-    const summary = ts.isObjectBindingPattern(name) ? `{ ${joined} }` : `[ ${joined} ]`;
+    const summary = kind === SyntaxKind.ObjectBindingPattern ? `{ ${joined} }` : `[ ${joined} ]`;
     return truncate(summary, max);
   }
-  return truncate(p.name.getText(), max);
+  return truncate(name.getText(), max);
 }
 
-function unwrapExpression(expr: ts.Expression): ts.Expression {
+function extractBindingNames(name: any): string[] {
+  const kind = name.getKind();
+  if (kind === SyntaxKind.ObjectBindingPattern || kind === SyntaxKind.ArrayBindingPattern) {
+    const names: string[] = [];
+    for (const el of name.getElements()) {
+      names.push(el.getName());
+    }
+    return names;
+  }
+  return [name.getText()];
+}
+
+function unwrapExpression(expr: any): any {
   let current = expr;
-  while (ts.isParenthesizedExpression(current) && current.expression) {
-    current = current.expression;
+  let kind = current.getKind();
+  while (kind === SyntaxKind.ParenthesizedExpression && current.getExpression()) {
+    current = current.getExpression();
+    kind = current.getKind();
   }
   return current;
 }
