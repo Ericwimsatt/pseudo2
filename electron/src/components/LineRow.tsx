@@ -1,6 +1,6 @@
 import type { LineRenderable } from '../lib/renderable/types';
 import { BUCKET_LABELS } from '../lib/renderable/bucket';
-import { cx } from '../lib/renderable/styleHelpers';
+import { cx } from './nodes/styleHelpers';
 import { NodeLayer } from './nodes/NodeLayer';
 
 interface Props {

@@ -1,12 +1,10 @@
 import { useRef } from 'react';
-import type { NodeVariant } from '../../lib/renderable/types';
-import { VARIANT_CLASSES, cx } from '../../lib/renderable/styleHelpers';
+import { cx } from './styleHelpers';
 import { useHover } from '../../lib/renderable/hover/useHover';
 import { buildHover } from '../../lib/renderable/hover/Tooltip';
 
 interface Props {
   text: string;
-  variant?: NodeVariant;
   classes?: string[];
   hoverTitle?: string;
   hoverBody?: string;
@@ -16,7 +14,6 @@ interface Props {
 
 export function StyledSpan({
   text,
-  variant,
   classes,
   hoverTitle,
   hoverBody,
@@ -25,8 +22,6 @@ export function StyledSpan({
 }: Props) {
   const { setHovered, scheduleHide } = useHover();
   const elRef = useRef<HTMLSpanElement>(null);
-  const variantClasses = VARIANT_CLASSES[variant ?? ''];
-  const finalClasses = cx(variantClasses, classes);
 
   let hover = undefined;
   if (hoverTitle || hoverBody || hoverMeta) {
@@ -42,7 +37,7 @@ export function StyledSpan({
   return (
     <span
       ref={elRef}
-      className={cx(finalClasses, hover && 'cursor-help underline decoration-dotted underline-offset-2')}
+      className={cx(classes, hover && 'cursor-help underline decoration-dotted underline-offset-2')}
       onMouseEnter={handleEnter}
       onMouseLeave={scheduleHide}
       onClick={onClick}
