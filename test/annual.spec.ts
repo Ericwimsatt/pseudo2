@@ -1,7 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { makeSemanticGraph } from '../src/lib/makeSemanticGraph';
-import { makeAST } from '../src/lib/makeAST';
-import { buildViewModel } from '../src/lib/renderable/viewModel';
+import { buildFileData } from '../src/lib/buildFileData';
 
 const SOURCE = `function AnnualSummary() {
   const years = useMemo(() => {
@@ -15,15 +13,12 @@ const SOURCE = `function AnnualSummary() {
 `;
 
 // Pre-compute the semantic graph in node, exactly as the main process would.
-function buildFileData() {
-  const ast = makeAST(SOURCE, 'AnnualSummary.tsx');
-  const semanticNodes = makeSemanticGraph(ast);
-  const viewModel = buildViewModel(semanticNodes, SOURCE);
-  return { viewModel, path: 'AnnualSummary.tsx' };
+function buildFileDataForTest() {
+  return buildFileData(SOURCE, 'AnnualSummary.tsx');
 }
 
 async function loadAppWithFile(page: Page) {
-  const fileData = buildFileData();
+  const fileData = buildFileDataForTest();
   await page.addInitScript((data) => {
     localStorage.setItem('repoPath', '/tmp/annual');
     const tree = [{ name: 'AnnualSummary.tsx', path: 'AnnualSummary.tsx', type: 'file' as const }];
@@ -126,7 +121,7 @@ test.describe('AnnualSummary translation', () => {
 }
 `;
     const fileData = {
-      viewModel: buildViewModel(makeSemanticGraph(makeAST(jsxSource, 'App.tsx')), jsxSource),
+      viewModel: buildFileData(jsxSource, 'App.tsx').viewModel,
       path: 'App.tsx',
     };
     await page.addInitScript((data) => {
@@ -167,7 +162,7 @@ interface Props {
 }
 `;
     const fileData = {
-      viewModel: buildViewModel(makeSemanticGraph(makeAST(source, 'Props.tsx')), source),
+      viewModel: buildFileData(source, 'Props.tsx').viewModel,
       path: 'Props.tsx',
     };
     await page.addInitScript((data) => {
@@ -214,7 +209,7 @@ interface Props {
 );
 `;
     const fileData = {
-      viewModel: buildViewModel(makeSemanticGraph(makeAST(filterBarSrc, 'FilterBar.tsx')), filterBarSrc),
+      viewModel: buildFileData(filterBarSrc, 'FilterBar.tsx').viewModel,
       path: 'FilterBar.tsx',
     };
     await page.addInitScript((data) => {

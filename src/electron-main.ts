@@ -2,9 +2,7 @@ import { app, BrowserWindow, ipcMain, dialog, Menu } from 'electron';
 import { join, relative, resolve } from 'path';
 import { homedir, tmpdir } from 'os';
 import { mkdir, mkdtemp, readdir, readFile, stat, writeFile } from 'fs/promises';
-import { makeSemanticGraph } from './lib/makeSemanticGraph';
-import { buildViewModel } from './lib/renderable/viewModel';
-import { Project } from "ts-morph";
+import { buildFileData } from './lib/buildFileData';
 
 
 const isDev = !app.isPackaged;
@@ -90,16 +88,10 @@ function setupIPC() {
     const isTranslatable = filePath.endsWith('.ts') || filePath.endsWith('.tsx');
 
     if (isTranslatable) {
-      const project = new Project();
-      const sourceFile = project.createSourceFile(filePath, sourceCode, {
-        overwrite: true,
-        scriptKind: filePath.endsWith('.tsx') ? 4 : 3,
-      });
-      const semanticGraph = makeSemanticGraph(sourceFile);
-      const viewModel = buildViewModel(semanticGraph, sourceCode);
-      return { viewModel, path: filePath };
+      return buildFileData(sourceCode, filePath);
     }
 
+    const { buildViewModel } = await import('./lib/renderable/viewModel');
     const viewModel = buildViewModel([], sourceCode);
     return { viewModel, path: filePath };
   });

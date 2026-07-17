@@ -1,7 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { makeSemanticGraph } from '../src/lib/makeSemanticGraph';
-import { makeAST } from '../src/lib/makeAST';
-import { buildViewModel } from '../src/lib/renderable/viewModel';
+import { buildFileData } from '../src/lib/buildFileData';
 
 // Real-world file reported as crashing DisplayNode (node.spans undefined).
 const SOURCE = `import { createContext, useContext, useEffect, useState } from "react";
@@ -58,7 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 `;
 
 async function loadApp(page: Page) {
-  const viewModel = buildViewModel(makeSemanticGraph(makeAST(SOURCE, 'AuthContext.tsx')), SOURCE);
+  const { viewModel } = buildFileData(SOURCE, 'AuthContext.tsx');
   // Every rendered node must be in display-span shape.
   for (const line of viewModel.lines) {
     for (const node of line.nodes) {

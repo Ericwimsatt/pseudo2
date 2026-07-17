@@ -1,7 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { makeSemanticGraph } from '../src/lib/makeSemanticGraph';
-import { makeAST } from '../src/lib/makeAST';
-import { buildViewModel } from '../src/lib/renderable/viewModel';
+import { buildFileData } from '../src/lib/buildFileData';
 
 const SOURCE = `import { useState } from 'react';
 import { formatCount } from './helper';
@@ -18,7 +16,7 @@ export function Demo() {
 
 async function loadApp(page: Page) {
   const fileData = {
-    viewModel: buildViewModel(makeSemanticGraph(makeAST(SOURCE, 'Demo.tsx')), SOURCE),
+    viewModel: buildFileData(SOURCE, 'Demo.tsx').viewModel,
     path: 'Demo.tsx',
   };
   await page.addInitScript((data) => {
