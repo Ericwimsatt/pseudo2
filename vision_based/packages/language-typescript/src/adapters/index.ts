@@ -1,1 +1,0 @@
-export { TypeScriptAdapter } from './TypeScriptAdapter'

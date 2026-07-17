@@ -1,1 +1,0 @@
-export { SymbolExtractor } from './SymbolExtractor'

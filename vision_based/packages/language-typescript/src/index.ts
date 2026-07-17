@@ -1,5 +1,0 @@
-export { TypeScriptParser } from './parser'
-export { TypeScriptVisitor } from './visitors'
-export type { VisitorContext } from './visitors'
-export { TypeScriptAdapter } from './adapters'
-export { SymbolExtractor } from './symbols'
