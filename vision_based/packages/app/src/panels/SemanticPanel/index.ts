@@ -1,1 +1,0 @@
-export { SemanticPanel } from './SemanticPanel'

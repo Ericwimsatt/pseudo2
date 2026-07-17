@@ -1,1 +1,0 @@
-export { TypeScriptParser } from './TypeScriptParser'
