@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
+import type { ViewModel } from './lib/renderable/types';
 
 interface FileNode {
   name: string;
@@ -14,25 +15,7 @@ interface BrowseResult {
 }
 
 interface FileResult {
-  viewModel: {
-    lines: Array<{
-      lineNumber: number;
-      sourceText: string;
-      bucket: string;
-      nodes: Array<{
-        type: string;
-        name?: string;
-        children: unknown[];
-        metadata: Record<string, unknown>;
-        indent: number;
-        sourceStartLine: number;
-        sourceEndLine: number;
-      }>;
-      spanningBuckets: string[];
-      translationRowSpan?: number;
-      skipTranslation?: boolean;
-    }>;
-  };
+  viewModel: ViewModel;
   path: string;
 }
 

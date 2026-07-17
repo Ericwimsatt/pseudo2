@@ -6,7 +6,7 @@ export function translateType(rawType: string): string {
     const params = funcMatch[1].trim();
     const returns = funcMatch[2].trim();
     const returnDesc = returns === 'void' ? 'nothing' : translateType(returns);
-    return `a function that expects parameters (${params}) and returns ${returnDesc}`;
+    return `a function that expects  {${params}} and returns ${returnDesc}`;
   }
 
   const arrayMatch = t.match(/^(.+)\[\]$/);
@@ -21,6 +21,13 @@ export function translateType(rawType: string): string {
 
   if (t.includes(' | ')) {
     const parts = t.split(' | ').map((p) => translateType(p.trim()));
+    if (parts.includes('undefined')) {
+      const filteredParts = parts.filter((p) => p !== 'undefined');
+      if (filteredParts.length === 1) {
+        return `${filteredParts[0]} (optional)`;
+      }
+      return `${filteredParts.join(' or ')} (optional)`;
+    }
     return parts.join(' or ');
   }
 

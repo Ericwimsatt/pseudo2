@@ -10,7 +10,7 @@ import {
 } from '@floating-ui/react';
 import { useHover } from './useHover';
 import { useSafePolygonDismiss } from './useSafePolygonDismiss';
-import { formatMetadata } from './Tooltip';
+import { formatMetadata } from '../../lib/renderable/hover';
 
 export function HoverPopover() {
   const { hovered, scheduleHide, cancelClear, registerPopupEl } = useHover();

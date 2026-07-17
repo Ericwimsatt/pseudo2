@@ -56,7 +56,7 @@ export function LineRow({
           className="px-4 py-1 align-top"
           rowSpan={rowSpan && rowSpan > 1 ? rowSpan : undefined}
         >
-          <NodeLayer nodes={line.nodes as any} />
+          <NodeLayer nodes={line.nodes} />
         </td>
       )}
     </tr>

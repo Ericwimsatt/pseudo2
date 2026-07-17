@@ -33,25 +33,7 @@ interface BrowseData {
 }
 
 interface FileData {
-  viewModel: {
-    lines: Array<{
-      lineNumber: number;
-      sourceText: string;
-      bucket: string;
-      nodes: Array<{
-        type: string;
-        name?: string;
-        children: unknown[];
-        metadata: Record<string, unknown>;
-        indent: number;
-        sourceStartLine: number;
-        sourceEndLine: number;
-      }>;
-      spanningBuckets: string[];
-      translationRowSpan?: number;
-      skipTranslation?: boolean;
-    }>;
-  };
+  viewModel: ViewModel;
   path: string;
 }
 
@@ -94,7 +76,7 @@ function FileView({ tree, onFileSelect }: { tree: FileNode[]; onFileSelect: (pat
         </div>
       ) : fileData ? (
         <CodeTable
-          viewModel={fileData.viewModel as ViewModel}
+          viewModel={fileData.viewModel}
           fileName={fileData.path}
         />
       ) : (

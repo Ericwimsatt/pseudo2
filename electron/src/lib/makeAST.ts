@@ -1,12 +1,10 @@
-import * as ts from 'typescript';
+import { Project, SourceFile } from "ts-morph";
 
-export function makeAST(sourceCode: string, fileName: string): ts.SourceFile {
+export function makeAST(sourceCode: string, fileName: string): SourceFile {
+  const project = new Project();
   const isTsx = fileName.endsWith('.tsx');
-  return ts.createSourceFile(
-    fileName,
-    sourceCode,
-    ts.ScriptTarget.Latest,
-    true,
-    isTsx ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
-  );
+  return project.createSourceFile(fileName, sourceCode, {
+    overwrite: true,
+    scriptKind: isTsx ? 4 : 3,
+  });
 }

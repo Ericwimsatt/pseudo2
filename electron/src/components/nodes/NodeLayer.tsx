@@ -1,8 +1,8 @@
-import type { SemanticNode } from '../../lib/makeSemanticGraph';
+import type { DisplayNodeData } from '../../lib/renderable/types';
 import { DisplayNode } from './node';
 
 interface LayerProps {
-  nodes: SemanticNode[];
+  nodes: DisplayNodeData[];
 }
 
 export function NodeLayer({ nodes }: LayerProps) {
