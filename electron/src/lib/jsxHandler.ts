@@ -1,10 +1,8 @@
-import * as ts from 'typescript';
+import { Node, SyntaxKind } from "ts-morph";
 import type { SemanticNode } from './makeSemanticGraph';
 
-function getNodeLineRange(node: ts.Node, sourceFile: ts.SourceFile): { start: number; end: number } {
-  const start = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
-  const end = sourceFile.getLineAndCharacterOfPosition(node.getEnd());
-  return { start: start.line + 1, end: end.line + 1 };
+function getNodeLineRange(node: Node): { start: number; end: number } {
+  return { start: node.getStartLineNumber(), end: node.getEndLineNumber() };
 }
 
 const TAG_DESCRIPTIONS: Record<string, string> = {
@@ -493,34 +491,34 @@ function translateStyleObject(styleText: string): string {
   return `with inline styles: ${descriptions.join(', ')}`;
 }
 
-function describeEventHandler(name: string, value: ts.JsxAttributeValue): string {
+function describeEventHandler(name: string, value: Node | undefined): string {
   const eventDesc = EVENT_DESCRIPTIONS[name] || name.replace(/^on/, 'when ').replace(/([A-Z])/g, ' $1').toLowerCase();
 
   if (!value) return eventDesc;
 
-  if (ts.isStringLiteral(value)) {
-    return `${eventDesc}, calls ${value.text}`;
+  if (Node.isStringLiteral(value)) {
+    return `${eventDesc}, calls ${value.getText()}`;
   }
 
-  if (ts.isJsxExpression(value) && value.expression) {
-    const expr = value.expression;
-    if (ts.isIdentifier(expr)) {
-      return `${eventDesc}, calls ${expr.text}`;
+  if (Node.isJsxExpression(value) && value.getExpression()) {
+    const expr = value.getExpression()!;
+    if (Node.isIdentifier(expr)) {
+      return `${eventDesc}, calls ${expr.getText()}`;
     }
-    if (ts.isArrowFunction(expr) || ts.isFunctionExpression(expr)) {
-      const body = expr.body;
-      if (ts.isCallExpression(body)) {
-        return `${eventDesc}, calls ${body.expression.getText()}${body.arguments.length > 0 ? ' with ' + body.arguments.map(a => a.getText()).join(', ') : ''}`;
+    if (Node.isArrowFunction(expr) || Node.isFunctionExpression(expr)) {
+      const body = expr.getBody();
+      if (Node.isCallExpression(body)) {
+        return `${eventDesc}, calls ${body.getExpression().getText()}${body.getArguments().length > 0 ? ' with ' + body.getArguments().map(a => a.getText()).join(', ') : ''}`;
       }
-      if (ts.isBlock(body) && body.statements.length === 1 && ts.isExpressionStatement(body.statements[0])) {
-        const stmt = body.statements[0].expression;
-        if (ts.isCallExpression(stmt)) {
-          return `${eventDesc}, calls ${stmt.expression.getText()}${stmt.arguments.length > 0 ? ' with ' + stmt.arguments.map(a => a.getText()).join(', ') : ''}`;
+      if (Node.isBlock(body) && body.getStatements().length === 1 && Node.isExpressionStatement(body.getStatements()[0])) {
+        const stmt = body.getStatements()[0].getExpression();
+        if (Node.isCallExpression(stmt)) {
+          return `${eventDesc}, calls ${stmt.getExpression().getText()}${stmt.getArguments().length > 0 ? ' with ' + stmt.getArguments().map(a => a.getText()).join(', ') : ''}`;
         }
       }
       return `${eventDesc}, executes handler`;
     }
-    if (ts.isPropertyAccessExpression(expr)) {
+    if (Node.isPropertyAccessExpression(expr)) {
       return `${eventDesc}, calls ${expr.getText()}`;
     }
     return `${eventDesc}, executes handler`;
@@ -529,11 +527,11 @@ function describeEventHandler(name: string, value: ts.JsxAttributeValue): string
   return eventDesc;
 }
 
-function getTagName(tagName: ts.JsxTagNameExpression): string {
-  if (ts.isIdentifier(tagName)) {
-    return tagName.text;
+function getTagName(tagName: Node): string {
+  if (Node.isIdentifier(tagName)) {
+    return tagName.getText();
   }
-  if (ts.isPropertyAccessExpression(tagName)) {
+  if (Node.isPropertyAccessExpression(tagName)) {
     return tagName.getText();
   }
   return tagName.getText();
@@ -556,7 +554,7 @@ interface AttributeResult {
 }
 
 function processAttributes(
-  attrs: ts.JsxAttributes,
+  attrs: Node[],
   _tagName: string
 ): AttributeResult {
   const descriptions: string[] = [];
@@ -575,32 +573,32 @@ function processAttributes(
     testId: null,
   };
 
-  for (const attr of attrs.properties) {
-    if (ts.isJsxSpreadAttribute(attr)) {
-      descriptions.push(`passes through all props from ${attr.expression.getText()}`);
+  for (const attr of attrs) {
+    if (Node.isJsxSpreadAttribute(attr)) {
+      descriptions.push(`passes through all props from ${attr.getExpression().getText()}`);
       continue;
     }
 
-    if (!ts.isJsxAttribute(attr)) continue;
+    if (!Node.isJsxAttribute(attr)) continue;
 
-    const name = attr.name.getText();
-    const value = attr.initializer;
+    const name = attr.getNameNode().getText();
+    const value = attr.getInitializer();
 
     if (name === 'key' || name === 'ref') continue;
 
     if (name === 'className' || name === 'class') {
-      if (value && ts.isStringLiteral(value)) {
-        metadata.className = value.text;
-        metadata.classNameDescription = translateClassName(value.text);
-      } else if (value && ts.isJsxExpression(value)) {
+      if (value && Node.isStringLiteral(value)) {
+        metadata.className = value.getText();
+        metadata.classNameDescription = translateClassName(value.getText());
+      } else if (value && Node.isJsxExpression(value)) {
         metadata.classNameDescription = 'dynamic styles';
       }
       continue;
     }
 
     if (name === 'style') {
-      if (value && ts.isJsxExpression(value) && value.expression) {
-        const styleText = value.expression.getText();
+      if (value && Node.isJsxExpression(value) && value.getExpression()) {
+        const styleText = value.getExpression()!.getText();
         metadata.style = styleText;
         metadata.styleDescription = translateStyleObject(styleText);
       }
@@ -608,70 +606,70 @@ function processAttributes(
     }
 
     if (name.startsWith('on') && name.length > 2 && /[A-Z]/.test(name[2])) {
-      const eventDesc = describeEventHandler(name, value!);
+      const eventDesc = describeEventHandler(name, value);
       metadata.events.push({ name, description: eventDesc });
       descriptions.push(eventDesc);
       continue;
     }
 
     if (name === 'href') {
-      if (value && ts.isStringLiteral(value)) {
-        metadata.href = value.text;
-        descriptions.push(`pointing to ${value.text}`);
-      } else if (value && ts.isJsxExpression(value) && value.expression) {
-        metadata.href = value.expression.getText();
-        descriptions.push(`pointing to ${value.expression.getText()}`);
+      if (value && Node.isStringLiteral(value)) {
+        metadata.href = value.getText();
+        descriptions.push(`pointing to ${value.getText()}`);
+      } else if (value && Node.isJsxExpression(value) && value.getExpression()) {
+        metadata.href = value.getExpression()!.getText();
+        descriptions.push(`pointing to ${value.getExpression()!.getText()}`);
       }
       continue;
     }
 
     if (name === 'src') {
-      if (value && ts.isStringLiteral(value)) {
-        metadata.src = value.text;
-        descriptions.push(`with source ${value.text}`);
-      } else if (value && ts.isJsxExpression(value) && value.expression) {
-        metadata.src = value.expression.getText();
-        descriptions.push(`with source from ${value.expression.getText()}`);
+      if (value && Node.isStringLiteral(value)) {
+        metadata.src = value.getText();
+        descriptions.push(`with source ${value.getText()}`);
+      } else if (value && Node.isJsxExpression(value) && value.getExpression()) {
+        metadata.src = value.getExpression()!.getText();
+        descriptions.push(`with source from ${value.getExpression()!.getText()}`);
       }
       continue;
     }
 
     if (name === 'alt') {
-      if (value && ts.isStringLiteral(value)) {
-        metadata.alt = value.text;
-        descriptions.push(`described as "${value.text}"`);
-      } else if (value && ts.isJsxExpression(value) && value.expression) {
-        metadata.alt = value.expression.getText();
-        descriptions.push(`described by ${value.expression.getText()}`);
+      if (value && Node.isStringLiteral(value)) {
+        metadata.alt = value.getText();
+        descriptions.push(`described as "${value.getText()}"`);
+      } else if (value && Node.isJsxExpression(value) && value.getExpression()) {
+        metadata.alt = value.getExpression()!.getText();
+        descriptions.push(`described by ${value.getExpression()!.getText()}`);
       }
       continue;
     }
 
     if (name === 'aria-label') {
-      if (value && ts.isStringLiteral(value)) {
-        metadata.ariaLabel = value.text;
-        descriptions.push(`accessible label "${value.text}"`);
+      if (value && Node.isStringLiteral(value)) {
+        metadata.ariaLabel = value.getText();
+        descriptions.push(`accessible label "${value.getText()}"`);
       }
       continue;
     }
 
     if (name === 'role') {
-      if (value && ts.isStringLiteral(value)) {
-        metadata.role = value.text;
-        descriptions.push(`role: ${value.text}`);
+      if (value && Node.isStringLiteral(value)) {
+        metadata.role = value.getText();
+        descriptions.push(`role: ${value.getText()}`);
       }
       continue;
     }
 
     if (name === 'data-testid') {
-      if (value && ts.isStringLiteral(value)) {
-        metadata.testId = value.text;
+      if (value && Node.isStringLiteral(value)) {
+        metadata.testId = value.getText();
       }
       continue;
     }
 
     if (name === 'disabled') {
-      if (!value || (ts.isJsxExpression(value) && value.expression && value.expression.getText() !== 'false')) {
+      if (!value || (Node.isJsxExpression(value) && value.getExpression() && value.getExpression()!.getText() !== 'false')) {
         descriptions.push('disabled');
       }
       continue;
@@ -688,35 +686,35 @@ function processAttributes(
     }
 
     if (name === 'placeholder') {
-      if (value && ts.isStringLiteral(value)) {
-        descriptions.push(`placeholder "${value.text}"`);
-      } else if (value && ts.isJsxExpression(value) && value.expression) {
-        descriptions.push(`placeholder from ${value.expression.getText()}`);
+      if (value && Node.isStringLiteral(value)) {
+        descriptions.push(`placeholder "${value.getText()}"`);
+      } else if (value && Node.isJsxExpression(value) && value.getExpression()) {
+        descriptions.push(`placeholder from ${value.getExpression()!.getText()}`);
       }
       continue;
     }
 
     if (name === 'type') {
-      if (value && ts.isStringLiteral(value)) {
-        metadata.props[name] = value.text;
+      if (value && Node.isStringLiteral(value)) {
+        metadata.props[name] = value.getText();
         continue;
       }
     }
 
     if (name === 'id' || name === 'name' || name === 'htmlFor') {
-      if (value && ts.isStringLiteral(value)) {
-        metadata.props[name] = value.text;
+      if (value && Node.isStringLiteral(value)) {
+        metadata.props[name] = value.getText();
         continue;
       }
     }
 
     if (value) {
-      if (ts.isStringLiteral(value)) {
-        metadata.props[name] = value.text;
-        descriptions.push(`${name}: "${value.text}"`);
-      } else if (ts.isJsxExpression(value) && value.expression) {
-        metadata.props[name] = value.expression.getText();
-        descriptions.push(`${name} from ${value.expression.getText()}`);
+      if (Node.isStringLiteral(value)) {
+        metadata.props[name] = value.getText();
+        descriptions.push(`${name}: "${value.getText()}"`);
+      } else if (Node.isJsxExpression(value) && value.getExpression()) {
+        metadata.props[name] = value.getExpression()!.getText();
+        descriptions.push(`${name} from ${value.getExpression()!.getText()}`);
       }
     } else {
       metadata.props[name] = true;
@@ -730,42 +728,43 @@ function processAttributes(
   };
 }
 
-function unwrapExpression(expr: ts.Expression): ts.Expression {
-  if (ts.isParenthesizedExpression(expr)) {
-    return unwrapExpression(expr.expression);
+function unwrapExpression(expr: Node): Node {
+  if (Node.isParenthesizedExpression(expr)) {
+    return unwrapExpression(expr.getExpression()!);
   }
-  if (ts.isAsExpression(expr)) {
-    return unwrapExpression(expr.expression);
+  if (Node.isAsExpression(expr)) {
+    return unwrapExpression(expr.getExpression()!);
   }
   return expr;
 }
 
-function processMapCall(call: ts.CallExpression, indent: number, sourceFile: ts.SourceFile): SemanticNode | null {
-  const expr = call.expression;
-  if (!ts.isPropertyAccessExpression(expr)) return null;
-  if (expr.name.text !== 'map') return null;
+function processMapCall(call: Node, indent: number): SemanticNode | null {
+  const expr = call.getExpression();
+  if (!Node.isPropertyAccessExpression(expr)) return null;
+  if (expr.getName() !== 'map') return null;
 
-  const collection = expr.expression.getText();
-  const callback = call.arguments[0];
+  const collection = expr.getExpression().getText();
+  const callback = call.getArguments()[0];
   if (!callback) return null;
 
   let itemName = 'item';
   let indexName = '';
-  let bodyExpr: ts.Expression | null = null;
+  let bodyExpr: Node | null = null;
 
-  if (ts.isArrowFunction(callback) || ts.isFunctionExpression(callback)) {
-    if (callback.parameters.length > 0) {
-      itemName = callback.parameters[0].name.getText();
+  if (Node.isArrowFunction(callback) || Node.isFunctionExpression(callback)) {
+    const params = callback.getParameters();
+    if (params.length > 0) {
+      itemName = params[0].getName();
     }
-    if (callback.parameters.length > 1) {
-      indexName = callback.parameters[1].name.getText();
+    if (params.length > 1) {
+      indexName = params[1].getName();
     }
 
-    const body = callback.body;
-    if (ts.isBlock(body)) {
-      const returnStmt = body.statements.find(ts.isReturnStatement);
-      if (returnStmt && returnStmt.expression) {
-        bodyExpr = unwrapExpression(returnStmt.expression);
+    const body = callback.getBody();
+    if (Node.isBlock(body)) {
+      const returnStmt = body.getStatements().find(s => Node.isReturnStatement(s));
+      if (returnStmt && returnStmt.getExpression()) {
+        bodyExpr = unwrapExpression(returnStmt.getExpression()!);
       }
     } else {
       bodyExpr = unwrapExpression(body);
@@ -774,11 +773,11 @@ function processMapCall(call: ts.CallExpression, indent: number, sourceFile: ts.
 
   const children: SemanticNode[] = [];
   if (bodyExpr && isJsxNode(bodyExpr)) {
-    const child = processJsxNode(bodyExpr, indent + 1, sourceFile);
+    const child = processJsxNode(bodyExpr, indent + 1);
     if (child) children.push(child);
   }
 
-  const lines = getNodeLineRange(call, sourceFile);
+  const lines = getNodeLineRange(call);
   return {
     type: 'jsx-list',
     name: collection,
@@ -794,20 +793,20 @@ function processMapCall(call: ts.CallExpression, indent: number, sourceFile: ts.
   };
 }
 
-function processFilterCall(call: ts.CallExpression, indent: number, sourceFile: ts.SourceFile): SemanticNode | null {
-  const expr = call.expression;
-  if (!ts.isPropertyAccessExpression(expr)) return null;
-  if (expr.name.text !== 'filter') return null;
+function processFilterCall(call: Node, indent: number): SemanticNode | null {
+  const expr = call.getExpression();
+  if (!Node.isPropertyAccessExpression(expr)) return null;
+  if (expr.getName() !== 'filter') return null;
 
-  const collection = expr.expression.getText();
-  const callback = call.arguments[0];
+  const collection = expr.getExpression().getText();
+  const callback = call.getArguments()[0];
   let condition = '';
 
-  if (callback && (ts.isArrowFunction(callback) || ts.isFunctionExpression(callback))) {
-    condition = callback.body.getText();
+  if (callback && (Node.isArrowFunction(callback) || Node.isFunctionExpression(callback))) {
+    condition = callback.getBody().getText();
   }
 
-  const lines = getNodeLineRange(call, sourceFile);
+  const lines = getNodeLineRange(call);
   return {
     type: 'jsx-filter',
     name: collection,
@@ -822,19 +821,19 @@ function processFilterCall(call: ts.CallExpression, indent: number, sourceFile: 
   };
 }
 
-function processConditionalAnd(expr: ts.BinaryExpression, indent: number, sourceFile: ts.SourceFile): SemanticNode | null {
-  if (expr.operatorToken.kind !== ts.SyntaxKind.AmpersandAmpersandToken) return null;
+function processConditionalAnd(expr: Node, indent: number): SemanticNode | null {
+  if (expr.getKind() !== SyntaxKind.AmpersandAmpersandToken) return null;
 
-  const condition = expr.left.getText();
+  const condition = expr.getLeft().getText();
   const children: SemanticNode[] = [];
 
-  const right = unwrapExpression(expr.right);
+  const right = unwrapExpression(expr.getRight());
   if (isJsxNode(right)) {
-    const child = processJsxNode(right, indent + 1, sourceFile);
+    const child = processJsxNode(right, indent + 1);
     if (child) children.push(child);
   }
 
-  const lines = getNodeLineRange(expr, sourceFile);
+  const lines = getNodeLineRange(expr);
   return {
     type: 'jsx-conditional',
     children,
@@ -848,29 +847,29 @@ function processConditionalAnd(expr: ts.BinaryExpression, indent: number, source
   };
 }
 
-function processTernary(expr: ts.ConditionalExpression, indent: number, sourceFile: ts.SourceFile): SemanticNode {
-  const condition = expr.condition.getText();
+function processTernary(expr: Node, indent: number): SemanticNode {
+  const condition = expr.getCondition().getText();
   const trueChildren: SemanticNode[] = [];
   const falseChildren: SemanticNode[] = [];
 
-  const trueExpr = unwrapExpression(expr.whenTrue);
-  const falseExpr = unwrapExpression(expr.whenFalse);
+  const trueExpr = unwrapExpression(expr.getWhenTrue());
+  const falseExpr = unwrapExpression(expr.getWhenFalse());
 
   if (isJsxNode(trueExpr)) {
-    const child = processJsxNode(trueExpr, indent + 1, sourceFile);
+    const child = processJsxNode(trueExpr, indent + 1);
     if (child) trueChildren.push(child);
-  } else if (ts.isStringLiteral(trueExpr)) {
-    const childLines = getNodeLineRange(trueExpr, sourceFile);
+  } else if (Node.isStringLiteral(trueExpr)) {
+    const childLines = getNodeLineRange(trueExpr);
     trueChildren.push({
       type: 'jsx-text',
       children: [],
-      metadata: { text: trueExpr.text },
+      metadata: { text: trueExpr.getText() },
       indent: indent + 1,
       sourceStartLine: childLines.start,
       sourceEndLine: childLines.end,
     });
-  } else if (trueExpr.kind !== ts.SyntaxKind.NullKeyword && trueExpr.getText() !== 'null' && trueExpr.getText() !== 'undefined') {
-    const childLines = getNodeLineRange(trueExpr, sourceFile);
+  } else if (trueExpr.getKind() !== SyntaxKind.NullKeyword && trueExpr.getText() !== 'null' && trueExpr.getText() !== 'undefined') {
+    const childLines = getNodeLineRange(trueExpr);
     trueChildren.push({
       type: 'jsx-expression',
       children: [],
@@ -882,20 +881,20 @@ function processTernary(expr: ts.ConditionalExpression, indent: number, sourceFi
   }
 
   if (isJsxNode(falseExpr)) {
-    const child = processJsxNode(falseExpr, indent + 1, sourceFile);
+    const child = processJsxNode(falseExpr, indent + 1);
     if (child) falseChildren.push(child);
-  } else if (ts.isStringLiteral(falseExpr)) {
-    const childLines = getNodeLineRange(falseExpr, sourceFile);
+  } else if (Node.isStringLiteral(falseExpr)) {
+    const childLines = getNodeLineRange(falseExpr);
     falseChildren.push({
       type: 'jsx-text',
       children: [],
-      metadata: { text: falseExpr.text },
+      metadata: { text: falseExpr.getText() },
       indent: indent + 1,
       sourceStartLine: childLines.start,
       sourceEndLine: childLines.end,
     });
-  } else if (falseExpr.kind !== ts.SyntaxKind.NullKeyword && falseExpr.getText() !== 'null' && falseExpr.getText() !== 'undefined') {
-    const childLines = getNodeLineRange(falseExpr, sourceFile);
+  } else if (falseExpr.getKind() !== SyntaxKind.NullKeyword && falseExpr.getText() !== 'null' && falseExpr.getText() !== 'undefined') {
+    const childLines = getNodeLineRange(falseExpr);
     falseChildren.push({
       type: 'jsx-expression',
       children: [],
@@ -906,7 +905,7 @@ function processTernary(expr: ts.ConditionalExpression, indent: number, sourceFi
     });
   }
 
-  const lines = getNodeLineRange(expr, sourceFile);
+  const lines = getNodeLineRange(expr);
   return {
     type: 'jsx-conditional',
     children: [...trueChildren, ...falseChildren.map(c => ({ ...c, type: 'jsx-conditional-alt' as string }))],
@@ -921,81 +920,82 @@ function processTernary(expr: ts.ConditionalExpression, indent: number, sourceFi
   };
 }
 
-function processJsxExpression(node: ts.JsxExpression, indent: number, sourceFile: ts.SourceFile): SemanticNode | null {
-  if (!node.expression) return null;
+function processJsxExpression(node: Node, indent: number): SemanticNode | null {
+  const expr = node.getExpression();
+  if (!expr) return null;
 
-  const expr = unwrapExpression(node.expression);
+  const unwrapped = unwrapExpression(expr);
 
-  if (ts.isCallExpression(expr)) {
-    const propAccess = expr.expression;
-    if (ts.isPropertyAccessExpression(propAccess)) {
-      if (propAccess.name.text === 'map') {
-        return processMapCall(expr, indent, sourceFile);
+  if (Node.isCallExpression(unwrapped)) {
+    const propAccess = unwrapped.getExpression();
+    if (Node.isPropertyAccessExpression(propAccess)) {
+      if (propAccess.getName() === 'map') {
+        return processMapCall(unwrapped, indent);
       }
-      if (propAccess.name.text === 'filter') {
-        const filterNode = processFilterCall(expr, indent, sourceFile);
+      if (propAccess.getName() === 'filter') {
+        const filterNode = processFilterCall(unwrapped, indent);
         if (filterNode) return filterNode;
       }
     }
-    const lines = getNodeLineRange(node, sourceFile);
+    const lines = getNodeLineRange(node);
     return {
       type: 'jsx-expression',
       children: [],
-      metadata: { expression: expr.getText() },
+      metadata: { expression: unwrapped.getText() },
       indent,
       sourceStartLine: lines.start,
       sourceEndLine: lines.end,
     };
   }
 
-  if (ts.isBinaryExpression(expr)) {
-    const conditional = processConditionalAnd(expr, indent, sourceFile);
+  if (Node.isBinaryExpression(unwrapped)) {
+    const conditional = processConditionalAnd(unwrapped, indent);
     if (conditional) return conditional;
   }
 
-  if (ts.isConditionalExpression(expr)) {
-    return processTernary(expr, indent, sourceFile);
+  if (Node.isConditionalExpression(unwrapped)) {
+    return processTernary(unwrapped, indent);
   }
 
-  if (ts.isStringLiteral(expr) || ts.isNumericLiteral(expr)) {
-    const lines = getNodeLineRange(node, sourceFile);
+  if (Node.isStringLiteral(unwrapped) || Node.isNumericLiteral(unwrapped)) {
+    const lines = getNodeLineRange(node);
     return {
       type: 'jsx-text',
       children: [],
-      metadata: { text: expr.text },
+      metadata: { text: unwrapped.getText() },
       indent,
       sourceStartLine: lines.start,
       sourceEndLine: lines.end,
     };
   }
 
-  if (ts.isTemplateExpression(expr)) {
-    const lines = getNodeLineRange(node, sourceFile);
+  if (Node.isTemplateExpression(unwrapped)) {
+    const lines = getNodeLineRange(node);
     return {
       type: 'jsx-expression',
       children: [],
-      metadata: { expression: expr.getText(), isTemplate: true },
+      metadata: { expression: unwrapped.getText(), isTemplate: true },
       indent,
       sourceStartLine: lines.start,
       sourceEndLine: lines.end,
     };
   }
 
-  const lines = getNodeLineRange(node, sourceFile);
+  const lines = getNodeLineRange(node);
   return {
     type: 'jsx-expression',
     children: [],
-    metadata: { expression: expr.getText() },
+    metadata: { expression: unwrapped.getText() },
     indent,
     sourceStartLine: lines.start,
     sourceEndLine: lines.end,
   };
 }
 
-function processJsxText(node: ts.JsxText, indent: number, sourceFile: ts.SourceFile): SemanticNode | null {
-  const text = node.text.replace(/\s+/g, ' ').trim();
+function processJsxText(node: Node, indent: number): SemanticNode | null {
+  const text = node.getText().replace(/\s+/g, ' ').trim();
   if (!text) return null;
-  const lines = getNodeLineRange(node, sourceFile);
+  const lines = getNodeLineRange(node);
   return {
     type: 'jsx-text',
     children: [],
@@ -1006,36 +1006,36 @@ function processJsxText(node: ts.JsxText, indent: number, sourceFile: ts.SourceF
   };
 }
 
-function processChildren(children: readonly ts.JsxChild[], indent: number, sourceFile: ts.SourceFile): SemanticNode[] {
+function processChildren(children: Node[], indent: number): SemanticNode[] {
   const result: SemanticNode[] = [];
 
   for (const child of children) {
-    if (ts.isJsxText(child)) {
-      const node = processJsxText(child, indent, sourceFile);
+    if (Node.isJsxText(child)) {
+      const node = processJsxText(child, indent);
       if (node) result.push(node);
-    } else if (ts.isJsxElement(child)) {
-      result.push(processElement(child, indent, sourceFile));
-    } else if (ts.isJsxSelfClosingElement(child)) {
-      result.push(processSelfClosing(child, indent, sourceFile));
-    } else if (ts.isJsxExpression(child)) {
-      const node = processJsxExpression(child, indent, sourceFile);
+    } else if (Node.isJsxElement(child)) {
+      result.push(processElement(child, indent));
+    } else if (Node.isJsxSelfClosingElement(child)) {
+      result.push(processSelfClosing(child, indent));
+    } else if (Node.isJsxExpression(child)) {
+      const node = processJsxExpression(child, indent);
       if (node) result.push(node);
-    } else if (ts.isJsxFragment(child)) {
-      result.push(processFragment(child, indent, sourceFile));
+    } else if (Node.isJsxFragment(child)) {
+      result.push(processFragment(child, indent));
     }
   }
 
   return result;
 }
 
-function processElement(node: ts.JsxElement, indent: number, sourceFile: ts.SourceFile): SemanticNode {
-  const tagName = getTagName(node.openingElement.tagName);
+function processElement(node: Node, indent: number): SemanticNode {
+  const tagName = getTagName(node.getOpeningElement().getTagNameNode());
   const tagDesc = describeTag(tagName);
   const isComp = isComponentTag(tagName);
-  const { description: attrDesc, metadata: attrMeta } = processAttributes(node.openingElement.attributes, tagName);
-  const children = processChildren(node.children, indent + 1, sourceFile);
+  const { description: attrDesc, metadata: attrMeta } = processAttributes(node.getOpeningElement().getAttributes(), tagName);
+  const children = processChildren(node.getJsxChildren(), indent + 1);
 
-  const lines = getNodeLineRange(node, sourceFile);
+  const lines = getNodeLineRange(node);
   return {
     type: 'jsx-element',
     name: tagName,
@@ -1052,13 +1052,13 @@ function processElement(node: ts.JsxElement, indent: number, sourceFile: ts.Sour
   };
 }
 
-function processSelfClosing(node: ts.JsxSelfClosingElement, indent: number, sourceFile: ts.SourceFile): SemanticNode {
-  const tagName = getTagName(node.tagName);
+function processSelfClosing(node: Node, indent: number): SemanticNode {
+  const tagName = getTagName(node.getTagNameNode());
   const tagDesc = describeTag(tagName);
   const isComp = isComponentTag(tagName);
-  const { description: attrDesc, metadata: attrMeta } = processAttributes(node.attributes, tagName);
+  const { description: attrDesc, metadata: attrMeta } = processAttributes(node.getAttributes(), tagName);
 
-  const lines = getNodeLineRange(node, sourceFile);
+  const lines = getNodeLineRange(node);
   return {
     type: 'jsx-element',
     name: tagName,
@@ -1076,9 +1076,9 @@ function processSelfClosing(node: ts.JsxSelfClosingElement, indent: number, sour
   };
 }
 
-function processFragment(node: ts.JsxFragment, indent: number, sourceFile: ts.SourceFile): SemanticNode {
-  const children = processChildren(node.children, indent + 1, sourceFile);
-  const lines = getNodeLineRange(node, sourceFile);
+function processFragment(node: Node, indent: number): SemanticNode {
+  const children = processChildren(node.getJsxChildren(), indent + 1);
+  const lines = getNodeLineRange(node);
   return {
     type: 'jsx-fragment',
     children,
@@ -1089,18 +1089,18 @@ function processFragment(node: ts.JsxFragment, indent: number, sourceFile: ts.So
   };
 }
 
-export function isJsxNode(node: ts.Node): boolean {
-  return ts.isJsxElement(node) || ts.isJsxSelfClosingElement(node) || ts.isJsxFragment(node);
+export function isJsxNode(node: Node): boolean {
+  return Node.isJsxElement(node) || Node.isJsxSelfClosingElement(node) || Node.isJsxFragment(node);
 }
 
-export function processJsxNode(node: ts.Node, indent: number, sourceFile: ts.SourceFile): SemanticNode | null {
-  if (ts.isJsxElement(node)) return processElement(node, indent, sourceFile);
-  if (ts.isJsxSelfClosingElement(node)) return processSelfClosing(node, indent, sourceFile);
-  if (ts.isJsxFragment(node)) return processFragment(node, indent, sourceFile);
+export function processJsxNode(node: Node, indent: number): SemanticNode | null {
+  if (Node.isJsxElement(node)) return processElement(node, indent);
+  if (Node.isJsxSelfClosingElement(node)) return processSelfClosing(node, indent);
+  if (Node.isJsxFragment(node)) return processFragment(node, indent);
   return null;
 }
 
-export function getJsxFromExpression(expr: ts.Expression | undefined): ts.Node | null {
+export function getJsxFromExpression(expr: Node | undefined): Node | null {
   if (!expr) return null;
   const unwrapped = unwrapExpression(expr);
   if (isJsxNode(unwrapped)) return unwrapped;

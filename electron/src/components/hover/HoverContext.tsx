@@ -1,12 +1,11 @@
-import { useRef, useState, useCallback, type ReactNode, type Context } from 'react';
-import { EMPTY_HOVER, type HoverContextValue, type HoverState } from './useHover';
+import { useRef, useState, useCallback, type ReactNode } from 'react';
+import { HoverContext, EMPTY_HOVER, type HoverState } from './useHover';
 
 interface ProviderProps {
-  context: Context<HoverContextValue | null>;
   children: ReactNode;
 }
 
-export function HoverProvider({ context: Ctx, children }: ProviderProps) {
+export function HoverProvider({ children }: ProviderProps) {
   const [hovered, setHoveredState] = useState<HoverState>(EMPTY_HOVER);
   const clearTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const popupElRef = useRef<HTMLElement | null>(null);
@@ -43,8 +42,8 @@ export function HoverProvider({ context: Ctx, children }: ProviderProps) {
   }, []);
 
   return (
-    <Ctx.Provider value={{ hovered, setHovered, scheduleHide, cancelClear, registerPopupEl }}>
+    <HoverContext.Provider value={{ hovered, setHovered, scheduleHide, cancelClear, registerPopupEl }}>
       {children}
-    </Ctx.Provider>
+    </HoverContext.Provider>
   );
 }
