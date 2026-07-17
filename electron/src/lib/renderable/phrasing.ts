@@ -12,11 +12,10 @@ function span(text: string, hover?: HoverContent): DisplaySpan {
 function phraseImport(node: SemanticNode): DisplaySpan[] {
   const names = String(node.name ?? '');
   const module = String(node.metadata.module ?? '');
-  const verb = names.includes(',') ? 'are imported from' : 'is imported from';
   return [
-    span('import '),
+    span('import {'),
     span(names),
-    span(` ${verb} `),
+    span(`} from `),
     span(module, buildHover('Module', module)),
   ];
 }
@@ -36,17 +35,18 @@ function phraseExport(node: SemanticNode): DisplaySpan[] {
 
 function phraseFunction(node: SemanticNode): DisplaySpan[] {
   const params = (node.metadata.parameters as string[]) ?? [];
-  const paramText = params.length > 0 ? `Parameters: ${params.join(', ')}` : 'No parameters';
-  const verb = node.type === 'method' ? 'method' : 'function';
+  const paramText = `Parameters: ${params.join(', ')}`;
+  // Choosing to call methods functions, may change later if this is confusing
+  //const verb = node.type === 'method' ? 'Method' : 'Function';
   return [
-    span(`Define ${verb} `),
+    span(`Function `),
     span(node.name ?? 'anonymous'),
     span(`. ${paramText}`),
   ];
 }
 
 function phraseClass(node: SemanticNode): DisplaySpan[] {
-  const spans = [span('Define class '), span(node.name ?? 'anonymous')];
+  const spans = [span('Class '), span(node.name ?? 'anonymous')];
   if (node.metadata.extends) {
     spans.push(span(` (extends ${node.metadata.extends})`));
   }
@@ -54,12 +54,12 @@ function phraseClass(node: SemanticNode): DisplaySpan[] {
 }
 
 function phraseInterface(node: SemanticNode): DisplaySpan[] {
-  return [span('Define interface '), span(node.name ?? 'anonymous')];
+  return [span('Interface '), span(node.name ?? 'anonymous')];
 }
 
 function phraseTypeAlias(node: SemanticNode): DisplaySpan[] {
   return [
-    span('Define type '),
+    span('Type '),
     span(node.name ?? 'anonymous'),
     span(' as '),
     span(String(node.metadata.type ?? '')),
@@ -70,7 +70,6 @@ function phraseProperty(node: SemanticNode): DisplaySpan[] {
   const type = String(node.metadata.type ?? 'any');
   const init = node.metadata.initializer as string | null;
   const spans: DisplaySpan[] = [];
-  if (node.metadata.optional) spans.push(span('optional, '));
   spans.push(
     span('`'),
     span(node.name ?? 'anonymous'),
@@ -94,7 +93,7 @@ function phraseVariable(node: SemanticNode): DisplaySpan[] {
 }
 
 function phraseReturn(node: SemanticNode): DisplaySpan[] {
-  if (node.metadata.hasJsx) return [span('Render')];
+  if (node.metadata.hasJsx) return [span('Return Visual Elements:')];
   const value = node.metadata.value as string | null;
   if (value) {
     return [span('return '), span('`'), span(value), span('`')];

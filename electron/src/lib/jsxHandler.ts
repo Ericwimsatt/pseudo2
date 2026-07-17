@@ -1,4 +1,13 @@
 import { Node, SyntaxKind } from "ts-morph";
+import type {
+  BinaryExpression,
+  CallExpression,
+  ConditionalExpression,
+  JsxElement,
+  JsxExpression,
+  JsxFragment,
+  JsxSelfClosingElement,
+} from "ts-morph";
 import type { SemanticNode } from './makeSemanticGraph';
 
 function getNodeLineRange(node: Node): { start: number; end: number } {
@@ -510,10 +519,13 @@ function describeEventHandler(name: string, value: Node | undefined): string {
       if (Node.isCallExpression(body)) {
         return `${eventDesc}, calls ${body.getExpression().getText()}${body.getArguments().length > 0 ? ' with ' + body.getArguments().map(a => a.getText()).join(', ') : ''}`;
       }
-      if (Node.isBlock(body) && body.getStatements().length === 1 && Node.isExpressionStatement(body.getStatements()[0])) {
-        const stmt = body.getStatements()[0].getExpression();
-        if (Node.isCallExpression(stmt)) {
-          return `${eventDesc}, calls ${stmt.getExpression().getText()}${stmt.getArguments().length > 0 ? ' with ' + stmt.getArguments().map(a => a.getText()).join(', ') : ''}`;
+      if (Node.isBlock(body) && body.getStatements().length === 1) {
+        const onlyStmt = body.getStatements()[0];
+        if (Node.isExpressionStatement(onlyStmt)) {
+          const stmt = onlyStmt.getExpression();
+          if (Node.isCallExpression(stmt)) {
+            return `${eventDesc}, calls ${stmt.getExpression().getText()}${stmt.getArguments().length > 0 ? ' with ' + stmt.getArguments().map(a => a.getText()).join(', ') : ''}`;
+          }
         }
       }
       return `${eventDesc}, executes handler`;
@@ -738,7 +750,7 @@ function unwrapExpression(expr: Node): Node {
   return expr;
 }
 
-function processMapCall(call: Node, indent: number): SemanticNode | null {
+function processMapCall(call: CallExpression, indent: number): SemanticNode | null {
   const expr = call.getExpression();
   if (!Node.isPropertyAccessExpression(expr)) return null;
   if (expr.getName() !== 'map') return null;
@@ -793,7 +805,7 @@ function processMapCall(call: Node, indent: number): SemanticNode | null {
   };
 }
 
-function processFilterCall(call: Node, indent: number): SemanticNode | null {
+function processFilterCall(call: CallExpression, indent: number): SemanticNode | null {
   const expr = call.getExpression();
   if (!Node.isPropertyAccessExpression(expr)) return null;
   if (expr.getName() !== 'filter') return null;
@@ -821,8 +833,8 @@ function processFilterCall(call: Node, indent: number): SemanticNode | null {
   };
 }
 
-function processConditionalAnd(expr: Node, indent: number): SemanticNode | null {
-  if (expr.getKind() !== SyntaxKind.AmpersandAmpersandToken) return null;
+function processConditionalAnd(expr: BinaryExpression, indent: number): SemanticNode | null {
+  if (expr.getOperatorToken().getKind() !== SyntaxKind.AmpersandAmpersandToken) return null;
 
   const condition = expr.getLeft().getText();
   const children: SemanticNode[] = [];
@@ -847,7 +859,7 @@ function processConditionalAnd(expr: Node, indent: number): SemanticNode | null 
   };
 }
 
-function processTernary(expr: Node, indent: number): SemanticNode {
+function processTernary(expr: ConditionalExpression, indent: number): SemanticNode {
   const condition = expr.getCondition().getText();
   const trueChildren: SemanticNode[] = [];
   const falseChildren: SemanticNode[] = [];
@@ -920,7 +932,7 @@ function processTernary(expr: Node, indent: number): SemanticNode {
   };
 }
 
-function processJsxExpression(node: Node, indent: number): SemanticNode | null {
+function processJsxExpression(node: JsxExpression, indent: number): SemanticNode | null {
   const expr = node.getExpression();
   if (!expr) return null;
 
@@ -1028,7 +1040,7 @@ function processChildren(children: Node[], indent: number): SemanticNode[] {
   return result;
 }
 
-function processElement(node: Node, indent: number): SemanticNode {
+function processElement(node: JsxElement, indent: number): SemanticNode {
   const tagName = getTagName(node.getOpeningElement().getTagNameNode());
   const tagDesc = describeTag(tagName);
   const isComp = isComponentTag(tagName);
@@ -1052,7 +1064,7 @@ function processElement(node: Node, indent: number): SemanticNode {
   };
 }
 
-function processSelfClosing(node: Node, indent: number): SemanticNode {
+function processSelfClosing(node: JsxSelfClosingElement, indent: number): SemanticNode {
   const tagName = getTagName(node.getTagNameNode());
   const tagDesc = describeTag(tagName);
   const isComp = isComponentTag(tagName);
@@ -1076,7 +1088,7 @@ function processSelfClosing(node: Node, indent: number): SemanticNode {
   };
 }
 
-function processFragment(node: Node, indent: number): SemanticNode {
+function processFragment(node: JsxFragment, indent: number): SemanticNode {
   const children = processChildren(node.getJsxChildren(), indent + 1);
   const lines = getNodeLineRange(node);
   return {

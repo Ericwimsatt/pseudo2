@@ -170,7 +170,7 @@ function setupMenu() {
           label: 'Load New Folder',
           accelerator: 'CmdOrCtrl+O',
           click: async (_menuItem, browserWindow) => {
-            if (!browserWindow) return;
+            if (!(browserWindow instanceof BrowserWindow)) return;
             const result = await dialog.showOpenDialog(browserWindow, {
               properties: ['openDirectory']
             });

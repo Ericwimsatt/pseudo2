@@ -6,4 +6,5 @@ For every change, run the app and exercise the new behavior. Test it from a few 
     1. If the behavior doesn't work, edit the code again and retest. 
     2. If other unrelated functionality has changed, edit the change so the differences are isolated. If you think its a pre-existing bug, flag to the user and ask for user input.
 ### Lint
-Always run a lint to check for syntax and type errors. Generally the solution to the type error is to fix the type or fix the call, not to bypass typechecking or make things optionsl
+Always run a lint to check for syntax and type errors. Generally the solution to the type error is to fix the type or fix the call, not to bypass typechecking or make things options
+npx tsc --noEmit

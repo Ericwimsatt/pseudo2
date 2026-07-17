@@ -1,4 +1,29 @@
 import { SourceFile, Node } from "ts-morph";
+import type {
+  ArrowFunction,
+  Block,
+  CallExpression,
+  ClassDeclaration,
+  DoStatement,
+  ExportDeclaration,
+  ExpressionStatement,
+  ForInStatement,
+  ForOfStatement,
+  ForStatement,
+  FunctionDeclaration,
+  FunctionExpression,
+  IfStatement,
+  ImportDeclaration,
+  InterfaceDeclaration,
+  MethodDeclaration,
+  NewExpression,
+  ParameterDeclaration,
+  PropertyDeclaration,
+  ReturnStatement,
+  TypeAliasDeclaration,
+  VariableDeclaration,
+  WhileStatement,
+} from "ts-morph";
 import { isJsxNode, processJsxNode, getJsxFromExpression } from './jsxHandler';
 
 export interface SemanticNode {
@@ -98,7 +123,7 @@ function processStatement(node: Node, indent: number): SemanticNode[] {
   return [];
 }
 
-function processBlock(block: Node, indent: number): SemanticNode[] {
+function processBlock(block: Block, indent: number): SemanticNode[] {
   const out: SemanticNode[] = [];
   for (const stmt of block.getStatements()) {
     out.push(...processStatement(stmt, indent));
@@ -106,7 +131,7 @@ function processBlock(block: Node, indent: number): SemanticNode[] {
   return out;
 }
 
-function processImport(node: Node, indent: number): SemanticNode {
+function processImport(node: ImportDeclaration, indent: number): SemanticNode {
   const moduleSpecifier = node.getModuleSpecifier().getText();
   const importClause = node.getImportClause();
   let importedNames: string[] = [];
@@ -133,13 +158,12 @@ function processImport(node: Node, indent: number): SemanticNode {
   });
 }
 
-function processExport(node: Node, indent: number): SemanticNode {
+function processExport(node: ExportDeclaration, indent: number): SemanticNode {
   const moduleSpecifier = node.getModuleSpecifier()?.getText().replace(/['"]/g, '') || '';
-  const exportClause = node.getExportClause();
   let exportedNames: string[] = [];
 
-  if (exportClause && Node.isNamedExports(exportClause)) {
-    exportClause.getElements().forEach(el => {
+  if (node.hasNamedExports()) {
+    node.getNamedExports().forEach(el => {
       exportedNames.push(el.getName());
     });
   }
@@ -151,11 +175,11 @@ function processExport(node: Node, indent: number): SemanticNode {
   });
 }
 
-function processFunction(node: Node, indent: number): SemanticNode {
+function processFunction(node: FunctionDeclaration, indent: number): SemanticNode {
   const name = node.getName() || 'anonymous';
   const params = node.getParameters().map(p => p.getName());
   const body = node.getBody();
-  const children = body ? processBlock(body, indent + 1) : [];
+  const children = body && Node.isBlock(body) ? processBlock(body, indent + 1) : [];
   const lines = getNodeLineRange(node);
   return makeNode('function', name, lines, indent, {
     parameters: params,
@@ -163,7 +187,7 @@ function processFunction(node: Node, indent: number): SemanticNode {
   }, children);
 }
 
-function processClass(node: Node, indent: number): SemanticNode {
+function processClass(node: ClassDeclaration, indent: number): SemanticNode {
   const name = node.getName() || 'anonymous';
   const children: SemanticNode[] = [];
 
@@ -178,15 +202,15 @@ function processClass(node: Node, indent: number): SemanticNode {
   const extendsClause = node.getExtends();
   const lines = getNodeLineRange(node);
   return makeNode('class', name, lines, indent, {
-    extends: extendsClause ? extendsClause[0].getExpression().getText() : null,
+    extends: extendsClause ? extendsClause.getExpression().getText() : null,
   }, children);
 }
 
-function processMethod(node: Node, indent: number): SemanticNode {
+function processMethod(node: MethodDeclaration, indent: number): SemanticNode {
   const name = node.getName();
   const params = node.getParameters().map(p => p.getName());
   const body = node.getBody();
-  const children = body ? processBlock(body, indent + 1) : [];
+  const children = body && Node.isBlock(body) ? processBlock(body, indent + 1) : [];
   const lines = getNodeLineRange(node);
   return makeNode('method', name, lines, indent, {
     parameters: params,
@@ -194,7 +218,7 @@ function processMethod(node: Node, indent: number): SemanticNode {
   }, children);
 }
 
-function processProperty(node: Node, indent: number): SemanticNode {
+function processProperty(node: PropertyDeclaration, indent: number): SemanticNode {
   const name = node.getName();
   const lines = getNodeLineRange(node);
   return makeNode('property', name, lines, indent, {
@@ -203,7 +227,7 @@ function processProperty(node: Node, indent: number): SemanticNode {
   });
 }
 
-function processInterface(node: Node, indent: number): SemanticNode {
+function processInterface(node: InterfaceDeclaration, indent: number): SemanticNode {
   const name = node.getName();
   const children: SemanticNode[] = [];
 
@@ -221,7 +245,7 @@ function processInterface(node: Node, indent: number): SemanticNode {
   return makeNode('interface', name, lines, indent, {}, children);
 }
 
-function processTypeAlias(node: Node, indent: number): SemanticNode {
+function processTypeAlias(node: TypeAliasDeclaration, indent: number): SemanticNode {
   const lines = getNodeLineRange(node);
   return makeNode('typeAlias', node.getName(), lines, indent, {
     type: node.getType().getText(),
@@ -229,7 +253,7 @@ function processTypeAlias(node: Node, indent: number): SemanticNode {
 }
 
 function processVariableDeclaration(
-  decl: Node,
+  decl: VariableDeclaration,
   indent: number,
 ): SemanticNode[] {
   const name = decl.getName();
@@ -255,7 +279,7 @@ function processVariableDeclaration(
   }, children)];
 }
 
-function processReturn(node: Node, indent: number): SemanticNode {
+function processReturn(node: ReturnStatement, indent: number): SemanticNode {
   const children: SemanticNode[] = [];
   let hasJsx = false;
 
@@ -273,13 +297,13 @@ function processReturn(node: Node, indent: number): SemanticNode {
   }, children);
 }
 
-function processIf(node: Node, indent: number): SemanticNode {
+function processIf(node: IfStatement, indent: number): SemanticNode {
   const children: SemanticNode[] = [];
   children.push(...processBody(node.getThenStatement(), indent + 1));
   const elseStatement = node.getElseStatement();
   if (elseStatement) {
     if (Node.isIfStatement(elseStatement)) {
-      children.push(...processIf(elseStatement, indent + 1));
+      children.push(processIf(elseStatement, indent + 1));
     } else {
       children.push(...processBody(elseStatement, indent + 1));
     }
@@ -293,7 +317,7 @@ function processIf(node: Node, indent: number): SemanticNode {
 }
 
 function processLoop(
-  node: Node,
+  node: ForStatement | ForOfStatement | ForInStatement,
   indent: number,
 ): SemanticNode {
   const statement = node.getStatement();
@@ -306,7 +330,7 @@ function processLoop(
   }, children);
 }
 
-function processWhile(node: Node, indent: number): SemanticNode {
+function processWhile(node: WhileStatement | DoStatement, indent: number): SemanticNode {
   const statement = node.getStatement();
   const children = processBody(statement, indent + 1);
   const lines = getNodeLineRange(node);
@@ -322,7 +346,7 @@ function processBody(body: Node | undefined, indent: number): SemanticNode[] {
   return processStatement(body, indent);
 }
 
-function processExpressionStatement(node: Node, indent: number): SemanticNode[] {
+function processExpressionStatement(node: ExpressionStatement, indent: number): SemanticNode[] {
   const expr = node.getExpression();
   if (isJsxNode(expr)) {
     const result = processJsxNode(expr, indent);
@@ -347,7 +371,7 @@ function processExpression(expr: Node, indent: number): SemanticNode | null {
 }
 
 function processCall(
-  node: Node,
+  node: CallExpression | NewExpression,
   indent: number,
 ): SemanticNode {
   const isNew = Node.isNewExpression(node);
@@ -380,7 +404,7 @@ function processCall(
 }
 
 function processArrowFunction(
-  node: Node,
+  node: ArrowFunction | FunctionExpression,
   indent: number,
 ): SemanticNode {
   const params = node.getParameters().map(p => summarizeParamName(p));
@@ -420,7 +444,7 @@ function processImplicitReturn(expr: Node, indent: number): SemanticNode | null 
   }, children);
 }
 
-function summarizeParamName(p: Node, max = 80): string {
+function summarizeParamName(p: ParameterDeclaration, max = 80): string {
   const nameNode = p.getNameNode();
   if (Node.isObjectBindingPattern(nameNode) || Node.isArrayBindingPattern(nameNode)) {
     const parts: string[] = [];
