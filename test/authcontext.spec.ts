@@ -89,11 +89,11 @@ test.describe('AuthContext.tsx renders without crashing', () => {
     await page.getByText('AuthContext.tsx', { exact: false }).first().click();
 
     // Representative translations across the constructs in this file.
-    await expect(page.locator('body')).toContainText('Define interface AuthContextType');
-    await expect(page.locator('body')).toContainText('Define function AuthProvider');
+    await expect(page.locator('body')).toContainText('Interface AuthContextType');
+    await expect(page.locator('body')).toContainText('Function AuthProvider');
     await expect(page.locator('body')).toContainText('Call createContext');
     await expect(page.locator('body')).toContainText('Call useState');
-    await expect(page.locator('body')).toContainText('Render');
+    await expect(page.locator('body')).toContainText('Return Visual Elements:');
 
     // No uncaught render errors (the reported TypeError would surface here).
     expect(pageErrors).toEqual([]);

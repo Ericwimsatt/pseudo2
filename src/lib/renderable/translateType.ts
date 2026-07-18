@@ -47,5 +47,10 @@ export function translateType(rawType: string): string {
   if (/^['"]/.test(t) && /['"]$/.test(t)) return t;
   if (/^\d+$/.test(t)) return t;
 
+  const importTypeMatch = t.match(/^import\(["'].+["']\)\.(.+)$/);
+  if (importTypeMatch) {
+    return importTypeMatch[1];
+  }
+
   return t;
 }

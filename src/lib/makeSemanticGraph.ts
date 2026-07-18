@@ -222,7 +222,7 @@ function processProperty(node: PropertyDeclaration, indent: number): SemanticNod
   const name = node.getName();
   const lines = getNodeLineRange(node);
   return makeNode('property', name, lines, indent, {
-    type: node.getType().getText() || 'any',
+    type: (node.getTypeNode()?.getText() ?? node.getType().getText()) || 'any',
     initializer: node.getInitializer()?.getText() || null,
   });
 }
@@ -235,7 +235,7 @@ function processInterface(node: InterfaceDeclaration, indent: number): SemanticN
     if (Node.isPropertySignature(member)) {
       const childLines = getNodeLineRange(member);
       children.push(makeNode('property', member.getName(), childLines, indent + 1, {
-        type: member.getType().getText() || 'any',
+        type: (member.getTypeNode()?.getText() ?? member.getType().getText()) || 'any',
         optional: member.hasQuestionToken(),
       }));
     }
@@ -248,7 +248,7 @@ function processInterface(node: InterfaceDeclaration, indent: number): SemanticN
 function processTypeAlias(node: TypeAliasDeclaration, indent: number): SemanticNode {
   const lines = getNodeLineRange(node);
   return makeNode('typeAlias', node.getName(), lines, indent, {
-    type: node.getType().getText(),
+    type: node.getTypeNode()?.getText() ?? node.getType().getText(),
   });
 }
 
@@ -274,7 +274,7 @@ function processVariableDeclaration(
   const children = child ? [child] : [];
   const initText = child ? null : (initializer ? truncate(initializer.getText()) : null);
   return [makeNode('variable', name, lines, indent, {
-    type: decl.getType().getText() || 'any',
+    type: (decl.getTypeNode()?.getText() ?? decl.getType().getText()) || 'any',
     initializer: initText,
   }, children)];
 }

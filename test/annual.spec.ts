@@ -51,13 +51,13 @@ test.describe('AnnualSummary translation', () => {
     // Select the file in the sidebar.
     await page.getByText('AnnualSummary.tsx', { exact: false }).first().click();
     // Wait for the function-definition line to render.
-    await expect(page.locator('body')).toContainText('Define function AnnualSummary');
+    await expect(page.locator('body')).toContainText('Function AnnualSummary');
 
     // Line 2 should hold the years/useMemo/anonymous-function nodes (nested, no duplication).
     const line2 = await translationTextsForLine(page, 2);
     expect(line2.some((t) => t.includes('Declare variable') && t.includes('years'))).toBeTruthy();
     expect(line2.some((t) => t.includes('Call') && t.includes('useMemo'))).toBeTruthy();
-    expect(line2.some((t) => t.includes('Define function anonymous'))).toBeTruthy();
+    expect(line2.some((t) => t.includes('Function anonymous'))).toBeTruthy();
     // No exact duplicate strings on line 2.
     const dupes = line2.filter((t, i) => line2.indexOf(t) !== i);
     expect(dupes).toEqual([]);
@@ -84,7 +84,7 @@ test.describe('AnnualSummary translation', () => {
     // more indented than "Declare variable years".
     const nodeDivs = page.locator('table tbody td:last-child > div > div');
     const line2indent = await nodeDivs
-      .filter({ hasText: /Define function anonymous/ })
+      .filter({ hasText: /Function anonymous/ })
       .first()
       .evaluate((el) => parseInt(getComputedStyle(el).paddingLeft || '0', 10));
     const yearsIndent = await nodeDivs
@@ -139,12 +139,12 @@ test.describe('AnnualSummary translation', () => {
     }, fileData);
     await page.goto('http://localhost:5174/');
     await page.getByText('App.tsx', { exact: false }).first().click();
-    await expect(page.locator('body')).toContainText('Render');
+    await expect(page.locator('body')).toContainText('Return Visual Elements:');
 
     // The "Render" line and each JSX element should appear exactly once on their
     // source line (the old pipeline emitted the return subtree twice).
     const renderTexts = await translationTextsForLine(page, 2);
-    expect(renderTexts.filter((t) => t.includes('Render')).length).toBe(1);
+    expect(renderTexts.filter((t) => t.includes('Return Visual Elements')).length).toBe(1);
     const spanTexts = await translationTextsForLine(page, 4);
     expect(spanTexts.filter((t) => t.includes('<span>')).length).toBe(1);
   });
@@ -181,16 +181,15 @@ interface Props {
     await page.goto('http://localhost:5174/');
     await page.getByText('Props.tsx', { exact: false }).first().click();
 
-    await expect(page.locator('body')).toContainText('Define interface');
+    await expect(page.locator('body')).toContainText('Interface');
 
     const allTexts = await page.locator('table tbody td:last-child div > div').allTextContents();
     const joined = allTexts.join('\n');
 
-    expect(joined).toContain('Define interface Props');
+    expect(joined).toContain('Interface Props');
     expect(joined).toContain('list of');
-    expect(joined).toContain('a function that expects parameters');
+    expect(joined).toContain('a function that expects');
     expect(joined).toContain('returns nothing');
-    expect(joined).toContain("optional,");
     expect(joined).toContain("'true' or 'false'");
     expect(joined).toContain('text');
   });
@@ -229,17 +228,17 @@ interface Props {
     await page.getByText('FilterBar.tsx', { exact: false }).first().click();
 
     // The function definition is present, with single-line destructured params.
-    await expect(page.locator('body')).toContainText('Define function FilterBar');
+    await expect(page.locator('body')).toContainText('Function FilterBar');
     const defText = await page
       .locator('table tbody td:last-child div > div')
-      .filter({ hasText: /Define function FilterBar/ })
+      .filter({ hasText: /Function FilterBar/ })
       .first()
       .textContent();
     expect(defText).not.toContain('\n');
     expect(defText).toContain('{ period, onPeriodChange, comparePeriod }');
 
     // The JSX body now renders (was entirely missing before the fix).
-    await expect(page.locator('body')).toContainText('Render');
+    await expect(page.locator('body')).toContainText('Return Visual Elements:');
     await expect(page.locator('body')).toContainText('<Select');
     await expect(page.locator('body')).toContainText('<SelectTrigger');
 

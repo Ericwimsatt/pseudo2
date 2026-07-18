@@ -34,7 +34,7 @@ async function loadApp(page: Page) {
   }, fileData);
   await page.goto('http://localhost:5174/');
   await page.getByText('Demo.tsx', { exact: false }).first().click();
-  await expect(page.locator('body')).toContainText('Define function Demo');
+  await expect(page.locator('body')).toContainText('Function Demo');
 }
 
 // The hoverable spans are the ones StyledSpan marks with cursor-help.
@@ -74,7 +74,7 @@ test.describe('hover popovers', () => {
     await expect(popover(page)).toBeVisible();
     await page
       .locator('table tbody td:last-child')
-      .getByText('Define function', { exact: false })
+      .getByText('Function', { exact: false })
       .first()
       .hover();
     await expect(popover(page)).toBeHidden();
