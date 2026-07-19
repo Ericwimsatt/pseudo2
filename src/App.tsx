@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { HashRouter, Routes, Route, useNavigate, useParams } from 'react-router-dom';
-import type { ViewModel } from './lib/renderable/types';
+import type { ViewModel, EnrichQuery, QueryAnswer } from './lib/renderable/types';
 import Sidebar from './components/Sidebar';
 import CodeTable from './components/CodeTable';
 import FolderBrowser from './components/FolderBrowser';
+import { FilePathContext } from './lib/filePathContext';
 
 declare global {
   interface Window {
@@ -11,6 +12,7 @@ declare global {
       loadRepo: (path: string) => Promise<{ tree: FileNode[]; path: string }>;
       getTree: () => Promise<{ tree: FileNode[] }>;
       getFile: (path: string) => Promise<FileData>;
+      ask: (filePath: string, query: EnrichQuery) => Promise<QueryAnswer>;
       browseDirectory: (path?: string) => Promise<BrowseData>;
       uploadFolder: (files: { path: string; content: string }[]) => Promise<{ tree: FileNode[]; path: string }>;
       dialogOpenDirectory: () => Promise<string | null>;
@@ -75,10 +77,12 @@ function FileView({ tree, onFileSelect }: { tree: FileNode[]; onFileSelect: (pat
           Error: {error}
         </div>
       ) : fileData ? (
-        <CodeTable
-          viewModel={fileData.viewModel}
-          fileName={fileData.path}
-        />
+        <FilePathContext.Provider value={fileData.path}>
+          <CodeTable
+            viewModel={fileData.viewModel}
+            fileName={fileData.path}
+          />
+        </FilePathContext.Provider>
       ) : (
         <div className="flex-1 flex items-center justify-center text-gray-500">
           {path ? 'Loading...' : 'Select a file to view'}

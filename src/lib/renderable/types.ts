@@ -27,6 +27,8 @@ export interface DisplaySpan {
   text: string;
   variant?: NodeVariant;
   hover?: HoverContent;
+  /** 0-based character offset for async enrichment queries (AstCache) */
+  refPos?: number;
 }
 
 export interface DisplayNodeData {
@@ -46,4 +48,29 @@ export interface LineRenderable {
 
 export interface ViewModel {
   lines: LineRenderable[];
+}
+
+// ── Query-based enrichment API ──────────────────────────────────────
+
+export type EnrichQuery =
+  | { kind: 'definition'; refPos: number }
+  | { kind: 'references'; refPos: number }
+  | { kind: 'type'; refPos: number };
+
+export type QueryAnswer =
+  | { kind: 'definition'; data: DefinitionData | null }
+  | { kind: 'references'; data: ReferencesData }
+  | { kind: 'type'; data: TypeData | null };
+
+export interface DefinitionData {
+  line: number;
+  text: string;
+}
+
+export interface ReferencesData {
+  list: { line: number; isWrite: boolean }[];
+}
+
+export interface TypeData {
+  text: string;
 }

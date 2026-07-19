@@ -3,6 +3,8 @@ import { join, relative, resolve } from 'path';
 import { homedir, tmpdir } from 'os';
 import { mkdir, mkdtemp, readdir, readFile, stat, writeFile } from 'fs/promises';
 import { buildFileData } from './lib/buildFileData';
+import type { AstCache } from './lib/astCache';
+import type { EnrichQuery, QueryAnswer } from './lib/renderable/types';
 
 
 const isDev = !app.isPackaged;
@@ -10,6 +12,8 @@ const DEV_PORT = process.env.DEV_PORT || '5173';
 const DEV_URL = `http://localhost:${DEV_PORT}`;
 
 let repoPath = '';
+
+const openCaches = new Map<string, AstCache>();
 
 interface FileNode {
   name: string;
@@ -88,12 +92,22 @@ function setupIPC() {
     const isTranslatable = filePath.endsWith('.ts') || filePath.endsWith('.tsx');
 
     if (isTranslatable) {
-      return buildFileData(sourceCode, filePath);
+      const result = buildFileData(sourceCode, filePath);
+      openCaches.set(filePath, result.astCache);
+      return { viewModel: result.viewModel, path: result.path };
     }
 
     const { buildViewModel } = await import('./lib/renderable/viewModel');
     const viewModel = buildViewModel([], sourceCode);
     return { viewModel, path: filePath };
+  });
+
+  ipcMain.handle('ask', (_event, filePath: string, query: EnrichQuery): QueryAnswer => {
+    const cache = openCaches.get(filePath);
+    if (!cache) {
+      return emptyAnswer(query.kind);
+    }
+    return cache.answer(query.refPos, query.kind);
   });
 
   ipcMain.handle('browse-directory', async (_event, requestedPath?: string) => {
@@ -201,6 +215,15 @@ function createWindow() {
     win.webContents.openDevTools();
   } else {
     win.loadFile(join(__dirname, '../dist/index.html'));
+  }
+}
+
+function emptyAnswer(kind: string): QueryAnswer {
+  switch (kind) {
+    case 'definition': return { kind: 'definition', data: null };
+    case 'references': return { kind: 'references', data: { list: [] } };
+    case 'type': return { kind: 'type', data: null };
+    default: throw new Error(`Unknown query kind: ${kind}`);
   }
 }
 

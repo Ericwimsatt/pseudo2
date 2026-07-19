@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import type { ViewModel } from './lib/renderable/types';
+import type { ViewModel, EnrichQuery, QueryAnswer } from './lib/renderable/types';
 
 interface FileNode {
   name: string;
@@ -28,6 +28,9 @@ const api = {
 
   getFile: (path: string): Promise<FileResult> =>
     ipcRenderer.invoke('get-file', path),
+
+  ask: (filePath: string, query: EnrichQuery): Promise<QueryAnswer> =>
+    ipcRenderer.invoke('ask', filePath, query),
 
   browseDirectory: (path?: string): Promise<BrowseResult> =>
     ipcRenderer.invoke('browse-directory', path),

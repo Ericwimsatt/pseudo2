@@ -1,11 +1,11 @@
 import type { DisplayNodeData } from '../../lib/renderable/types';
-import { StyledSpan } from './StyledSpan';
+import { EnrichedSpan } from './EnrichedSpan';
 
 export function DisplayNode({ node }: { node: DisplayNodeData }) {
   return (
     <>
       {node.spans.map((s, i) => (
-        <StyledSpan key={i} text={s.text} hover={s.hover} />
+        <EnrichedSpan key={i} span={s} />
       ))}
     </>
   );

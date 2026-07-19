@@ -34,10 +34,8 @@ export interface SemanticNode {
   indent: number;
   sourceStartLine: number;
   sourceEndLine: number;
-}
-
-function getNodeLineRange(node: Node): { start: number; end: number } {
-  return { start: node.getStartLineNumber(), end: node.getEndLineNumber() };
+  /** 0-based character offset of the primary identifier for AST enrichment queries */
+  refPos?: number;
 }
 
 function truncate(text: string, max = 80): string {
@@ -45,13 +43,14 @@ function truncate(text: string, max = 80): string {
   return single.length > max ? single.slice(0, max - 3) + '...' : single;
 }
 
-function makeNode(
+function makeNodeFromAst(
   type: string,
   name: string | undefined,
-  lines: { start: number; end: number },
+  node: Node,
   indent: number,
   metadata: Record<string, any> = {},
   children: SemanticNode[] = [],
+  refPos?: number,
 ): SemanticNode {
   return {
     type,
@@ -59,9 +58,44 @@ function makeNode(
     children,
     metadata,
     indent,
-    sourceStartLine: lines.start,
-    sourceEndLine: lines.end,
+    sourceStartLine: node.getStartLineNumber(),
+    sourceEndLine: node.getEndLineNumber(),
+    refPos,
   };
+}
+
+/** Resolve the primary-identifier offset for a node, based on its semantic type. */
+function getIdentifierPos(node: Node, type: string): number | undefined {
+  try {
+    switch (type) {
+      case 'variable':
+        return (node as import('ts-morph').VariableDeclaration).getNameNode().getStart();
+      case 'function':
+      case 'method':
+        return (node as import('ts-morph').FunctionDeclaration | import('ts-morph').MethodDeclaration).getNameNode()?.getStart();
+      case 'class':
+        return (node as import('ts-morph').ClassDeclaration).getNameNode()?.getStart();
+      case 'interface':
+        return (node as import('ts-morph').InterfaceDeclaration).getNameNode()?.getStart();
+      case 'typeAlias':
+        return (node as import('ts-morph').TypeAliasDeclaration).getNameNode()?.getStart();
+      case 'property':
+        return (node as import('ts-morph').PropertyDeclaration | import('ts-morph').PropertySignature).getNameNode().getStart();
+      case 'call': {
+        const callee = (node as import('ts-morph').CallExpression).getExpression();
+        if (Node.isIdentifier(callee)) return callee.getStart();
+        if (Node.isPropertyAccessExpression(callee)) return callee.getNameNode().getStart();
+        return callee.getStart();
+      }
+      case 'import':
+      case 'export':
+        return node.getStart();
+      default:
+        return undefined;
+    }
+  } catch {
+    return undefined;
+  }
 }
 
 export function makeSemanticGraph(sourceFile: SourceFile): SemanticNode[] {
@@ -151,8 +185,7 @@ function processImport(node: ImportDeclaration, indent: number): SemanticNode {
     }
   }
 
-  const lines = getNodeLineRange(node);
-  return makeNode('import', importedNames.join(', '), lines, indent, {
+  return makeNodeFromAst('import', importedNames.join(', '), node, indent, {
     module: moduleSpecifier.replace(/['"]/g, ''),
     importedNames,
   });
@@ -168,8 +201,7 @@ function processExport(node: ExportDeclaration, indent: number): SemanticNode {
     });
   }
 
-  const lines = getNodeLineRange(node);
-  return makeNode('export', exportedNames.join(', '), lines, indent, {
+  return makeNodeFromAst('export', exportedNames.join(', '), node, indent, {
     module: moduleSpecifier,
     exportedNames,
   });
@@ -180,11 +212,10 @@ function processFunction(node: FunctionDeclaration, indent: number): SemanticNod
   const params = node.getParameters().map(p => p.getName());
   const body = node.getBody();
   const children = body && Node.isBlock(body) ? processBlock(body, indent + 1) : [];
-  const lines = getNodeLineRange(node);
-  return makeNode('function', name, lines, indent, {
+  return makeNodeFromAst('function', name, node, indent, {
     parameters: params,
     returnType: node.getReturnType().getText() || 'void',
-  }, children);
+  }, children, getIdentifierPos(node, 'function'));
 }
 
 function processClass(node: ClassDeclaration, indent: number): SemanticNode {
@@ -200,10 +231,9 @@ function processClass(node: ClassDeclaration, indent: number): SemanticNode {
   }
 
   const extendsClause = node.getExtends();
-  const lines = getNodeLineRange(node);
-  return makeNode('class', name, lines, indent, {
+  return makeNodeFromAst('class', name, node, indent, {
     extends: extendsClause ? extendsClause.getExpression().getText() : null,
-  }, children);
+  }, children, getIdentifierPos(node, 'class'));
 }
 
 function processMethod(node: MethodDeclaration, indent: number): SemanticNode {
@@ -211,20 +241,18 @@ function processMethod(node: MethodDeclaration, indent: number): SemanticNode {
   const params = node.getParameters().map(p => p.getName());
   const body = node.getBody();
   const children = body && Node.isBlock(body) ? processBlock(body, indent + 1) : [];
-  const lines = getNodeLineRange(node);
-  return makeNode('method', name, lines, indent, {
+  return makeNodeFromAst('method', name, node, indent, {
     parameters: params,
     returnType: node.getReturnType().getText() || 'void',
-  }, children);
+  }, children, getIdentifierPos(node, 'method'));
 }
 
 function processProperty(node: PropertyDeclaration, indent: number): SemanticNode {
   const name = node.getName();
-  const lines = getNodeLineRange(node);
-  return makeNode('property', name, lines, indent, {
+  return makeNodeFromAst('property', name, node, indent, {
     type: (node.getTypeNode()?.getText() ?? node.getType().getText()) || 'any',
     initializer: node.getInitializer()?.getText() || null,
-  });
+  }, [], getIdentifierPos(node, 'property'));
 }
 
 function processInterface(node: InterfaceDeclaration, indent: number): SemanticNode {
@@ -233,23 +261,20 @@ function processInterface(node: InterfaceDeclaration, indent: number): SemanticN
 
   for (const member of node.getMembers()) {
     if (Node.isPropertySignature(member)) {
-      const childLines = getNodeLineRange(member);
-      children.push(makeNode('property', member.getName(), childLines, indent + 1, {
+      children.push(makeNodeFromAst('property', member.getName(), member, indent + 1, {
         type: (member.getTypeNode()?.getText() ?? member.getType().getText()) || 'any',
         optional: member.hasQuestionToken(),
-      }));
+      }, [], getIdentifierPos(member, 'property')));
     }
   }
 
-  const lines = getNodeLineRange(node);
-  return makeNode('interface', name, lines, indent, {}, children);
+  return makeNodeFromAst('interface', name, node, indent, {}, children, getIdentifierPos(node, 'interface'));
 }
 
 function processTypeAlias(node: TypeAliasDeclaration, indent: number): SemanticNode {
-  const lines = getNodeLineRange(node);
-  return makeNode('typeAlias', node.getName(), lines, indent, {
+  return makeNodeFromAst('typeAlias', node.getName(), node, indent, {
     type: node.getTypeNode()?.getText() ?? node.getType().getText(),
-  });
+  }, [], getIdentifierPos(node, 'typeAlias'));
 }
 
 function processVariableDeclaration(
@@ -257,26 +282,24 @@ function processVariableDeclaration(
   indent: number,
 ): SemanticNode[] {
   const name = decl.getName();
-  const lines = getNodeLineRange(decl);
   const initializer = decl.getInitializer();
 
   if (initializer) {
     const unwrapped = unwrapExpression(initializer);
     if (Node.isArrowFunction(unwrapped) || Node.isFunctionExpression(unwrapped)) {
       const fn = processArrowFunction(unwrapped, indent);
-      const fnLines = getNodeLineRange(decl);
       const fnMeta = { ...fn.metadata, anonymous: false };
-      return [makeNode('function', name, fnLines, indent, fnMeta, fn.children)];
+      return [makeNodeFromAst('function', name, decl, indent, fnMeta, fn.children, decl.getNameNode().getStart())];
     }
   }
 
   const child = initializer ? processExpression(initializer, indent + 1) : null;
   const children = child ? [child] : [];
   const initText = child ? null : (initializer ? truncate(initializer.getText()) : null);
-  return [makeNode('variable', name, lines, indent, {
+  return [makeNodeFromAst('variable', name, decl, indent, {
     type: (decl.getTypeNode()?.getText() ?? decl.getType().getText()) || 'any',
     initializer: initText,
-  }, children)];
+  }, children, decl.getNameNode().getStart())];
 }
 
 function processReturn(node: ReturnStatement, indent: number): SemanticNode {
@@ -290,8 +313,7 @@ function processReturn(node: ReturnStatement, indent: number): SemanticNode {
     if (result) children.push(result);
   }
 
-  const lines = getNodeLineRange(node);
-  return makeNode('return', undefined, lines, indent, {
+  return makeNodeFromAst('return', undefined, node, indent, {
     value: hasJsx ? null : (node.getExpression() ? truncate(node.getExpression()!.getText()) : null),
     hasJsx,
   }, children);
@@ -309,8 +331,7 @@ function processIf(node: IfStatement, indent: number): SemanticNode {
     }
   }
 
-  const lines = getNodeLineRange(node);
-  return makeNode('if', undefined, lines, indent, {
+  return makeNodeFromAst('if', undefined, node, indent, {
     condition: truncate(node.getExpression().getText()),
     hasElse: !!elseStatement,
   }, children);
@@ -322,9 +343,8 @@ function processLoop(
 ): SemanticNode {
   const statement = node.getStatement();
   const children = processBody(statement, indent + 1);
-  const lines = getNodeLineRange(node);
   const loopType = Node.isForStatement(node) ? 'for' : Node.isForOfStatement(node) ? 'forOf' : 'forIn';
-  return makeNode('loop', undefined, lines, indent, {
+  return makeNodeFromAst('loop', undefined, node, indent, {
     loopType,
     condition: truncate(node.getText().split('{')[0] || ''),
   }, children);
@@ -333,8 +353,7 @@ function processLoop(
 function processWhile(node: WhileStatement | DoStatement, indent: number): SemanticNode {
   const statement = node.getStatement();
   const children = processBody(statement, indent + 1);
-  const lines = getNodeLineRange(node);
-  return makeNode('loop', undefined, lines, indent, {
+  return makeNodeFromAst('loop', undefined, node, indent, {
     loopType: 'while',
     condition: truncate(node.getExpression().getText()),
   }, children);
@@ -394,13 +413,12 @@ function processCall(
     argSummaries.push(truncate(arg.getText(), 80));
   }
 
-  const lines = getNodeLineRange(node);
-  return makeNode('call', undefined, lines, indent, {
+  return makeNodeFromAst('call', undefined, node, indent, {
     function: calleeText,
     arguments: argSummaries,
     argCount: args.length,
     isNew,
-  }, children);
+  }, children, getIdentifierPos(node, 'call'));
 }
 
 function processArrowFunction(
@@ -418,8 +436,7 @@ function processArrowFunction(
       if (ret) children.push(ret);
     }
   }
-  const lines = getNodeLineRange(node);
-  return makeNode('function', undefined, lines, indent, {
+  return makeNodeFromAst('function', undefined, node, indent, {
     parameters: params,
     returnType: node.getReturnType().getText() || 'void',
     anonymous: true,
@@ -437,8 +454,7 @@ function processImplicitReturn(expr: Node, indent: number): SemanticNode | null 
     if (result) children.push(result);
   }
 
-  const lines = getNodeLineRange(expr);
-  return makeNode('return', undefined, lines, indent, {
+  return makeNodeFromAst('return', undefined, expr, indent, {
     value: hasJsx ? null : (expr ? truncate(expr.getText()) : null),
     hasJsx,
   }, children);

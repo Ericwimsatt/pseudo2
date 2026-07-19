@@ -14,7 +14,8 @@ const SOURCE = `function AnnualSummary() {
 
 // Pre-compute the semantic graph in node, exactly as the main process would.
 function buildFileDataForTest() {
-  return buildFileData(SOURCE, 'AnnualSummary.tsx');
+  const result = buildFileData(SOURCE, 'AnnualSummary.tsx');
+  return { viewModel: result.viewModel, path: result.path };
 }
 
 async function loadAppWithFile(page: Page) {
