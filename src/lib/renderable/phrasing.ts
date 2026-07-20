@@ -1,4 +1,4 @@
-import type { SemanticNode } from '../makeSemanticGraph';
+import type { SemanticNode } from '../../main/file/makeSemanticGraph';
 import type { DisplayNodeData, DisplaySpan, HoverContent } from './types';
 import { buildHover, getReactHookTooltip } from './hover';
 import { translateType } from './translateType';

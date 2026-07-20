@@ -2,7 +2,7 @@ import { join } from 'path';
 import { readFile } from 'fs/promises';
 import type { SourceLine } from '../../shared/api';
 import type { ViewModel } from '../../lib/renderable/types';
-import { buildFileData } from '../../lib/buildFileData';
+import { buildFileData } from './buildFileData';
 import { buildViewModel } from '../../lib/renderable/viewModel';
 import { getRepoPath, setCache } from '../cache/projectCache';
 

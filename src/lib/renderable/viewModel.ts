@@ -1,4 +1,4 @@
-import type { SemanticNode } from '../makeSemanticGraph';
+import type { SemanticNode } from '../../main/file/makeSemanticGraph';
 import type { LineRenderable, ViewModel } from './types';
 import { bucketForNode, pickLineBucket } from './bucket';
 import { toDisplayNode } from './phrasing';
