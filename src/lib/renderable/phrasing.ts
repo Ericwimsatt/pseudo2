@@ -8,7 +8,10 @@ type Phraser = (node: SemanticNode) => DisplaySpan[];
 function span(text: string, hover?: HoverContent, refPos?: number): DisplaySpan {
   const result: DisplaySpan = { text };
   if (hover) result.hover = hover;
-  if (refPos !== undefined) result.refPos = refPos;
+  if (refPos !== undefined) {
+    result.refPos = refPos;
+    result.hasHover = true;
+  }
   return result;
 }
 

@@ -1,5 +1,5 @@
-import { useCallback, useContext, useMemo, useRef, useState } from 'react';
-import type { DisplaySpan, QueryAnswer, EnrichQuery } from '../../lib/renderable/types';
+import { useCallback, useContext, useRef, useState } from 'react';
+import type { DisplaySpan, TooltipData } from '../../lib/renderable/types';
 import { FilePathContext } from '../../lib/filePathContext';
 import { StyledSpan } from './StyledSpan';
 
@@ -7,97 +7,44 @@ interface Props {
   span: DisplaySpan;
 }
 
-function renderAnswer(answer: QueryAnswer): string | null {
-  switch (answer.kind) {
-    case 'definition':
-      if (!answer.data) return null;
-      return `Defined at line ${answer.data.line}: ${answer.data.text}`;
-    case 'references':
-      if (answer.data.list.length === 0) return null;
-      const writes = answer.data.list.filter((r) => r.isWrite);
-      const reads = answer.data.list.filter((r) => !r.isWrite);
-      const parts: string[] = [];
-      if (reads.length) parts.push(`Used: line ${reads.map((r) => r.line).join(', ')}`);
-      if (writes.length) parts.push(`Modified: line ${writes.map((r) => r.line).join(', ')}`);
-      return parts.join('\n');
-    case 'type':
-      if (!answer.data) return null;
-      return `Type: ${answer.data.text}`;
-  }
-}
-
-function useEnrichment(refPos: number | undefined, staticHover: import('../../lib/renderable/types').HoverContent | undefined) {
+function useTooltipData(refPos: number | undefined, hasHover: boolean | undefined) {
   const filePath = useContext(FilePathContext);
-  const [answers, setAnswers] = useState<Map<string, QueryAnswer>>(new Map());
+  const [sections, setSections] = useState<TooltipData['sections'] | null>(null);
   const [loading, setLoading] = useState(false);
-  const askedRef = useRef<Set<string>>(new Set());
-  const hasRef = refPos !== undefined && refPos !== 0;
+  const askedRef = useRef(false);
 
   const onHover = useCallback(() => {
-    if (!hasRef) return;
+    if (!hasHover || refPos === undefined) return;
+    if (askedRef.current) return;
+    askedRef.current = true;
 
-    const asked = askedRef.current;
-    if (asked.size > 0) return;
-
-    // Show "Looking up..." immediately on first hover
     setLoading(true);
 
-    const queries: EnrichQuery[] = [
-      { kind: 'definition', refPos: refPos! },
-      { kind: 'references', refPos: refPos! },
-      { kind: 'type', refPos: refPos! },
-    ];
-
-    for (const q of queries) {
-      const key = q.kind;
-      if (asked.has(key)) continue;
-      asked.add(key);
-
-      window.electronAPI.getNodeDetail({ filePath, query: q }).then((answer: QueryAnswer) => {
-        setAnswers((prev) => {
-          const next = new Map(prev);
-          next.set(key, answer);
-          if (next.size === queries.length) setLoading(false);
-          return next;
-        });
-      }).catch(() => {
-        setAnswers((prev) => {
-          const next = new Map(prev);
-          setLoading(false);
-          return next;
-        });
+    window.electronAPI.getNodeDetail({ filePath, query: { refPos } })
+      .then((answer: TooltipData) => {
+        setSections(answer.sections);
+        setLoading(false);
+      })
+      .catch(() => {
+        setLoading(false);
       });
-    }
-  }, [hasRef, refPos, filePath]);
+  }, [hasHover, refPos, filePath]);
 
-  const hoverContent = useMemo(() => {
-    const bodyParts: string[] = [];
-
-    if (loading && answers.size === 0) {
-      bodyParts.push('Looking up...');
-    }
-
-    if (staticHover?.body) bodyParts.push(staticHover.body);
-
-    for (const answer of answers.values()) {
-      const line = renderAnswer(answer);
-      if (line) bodyParts.push(line);
-    }
-
-    if (bodyParts.length === 0 && !staticHover) {
-      return hasRef ? { title: '', body: '' } : undefined;
-    }
-
-    return {
-      title: staticHover?.title ?? '',
-      body: bodyParts.join('\n'),
-    };
-  }, [staticHover, answers, loading, hasRef]);
-
-  return { hoverContent, onHover };
+  return { sections, loading, onHover };
 }
 
 export function EnrichedSpan({ span }: Props) {
-  const { hoverContent, onHover } = useEnrichment(span.refPos, span.hover);
-  return <StyledSpan text={span.text} hover={hoverContent} onHover={onHover} />;
+  const { sections, loading, onHover } = useTooltipData(span.refPos, span.hasHover);
+  const hasData = span.hasHover && (loading || sections !== null);
+
+  let hover = span.hover;
+  if (hasData) {
+    hover = {
+      title: span.hover?.title ?? '',
+      loading,
+      sections: sections ?? undefined,
+    };
+  }
+
+  return <StyledSpan text={span.text} hover={hover} onHover={onHover} />;
 }

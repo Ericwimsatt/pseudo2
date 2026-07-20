@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { buildFileData } from '../src/lib/buildFileData';
+import type { TooltipData } from '../src/lib/renderable/types';
 
 const SOURCE = `import { useState } from 'react';
 
@@ -27,10 +28,29 @@ test.describe('enrichment hover', () => {
         loadFileSource: async ({ path: _path }: { path: string }) => ({ path: 'Demo.tsx', lines: sourceLines }),
         loadFileTranslation: async ({ path: _path }: { path: string }) => data,
         getNodeDetail: async ({ query }: { query: any }) => {
-          if (query.kind === 'definition' && query.refPos > 0) return { kind: 'definition', data: { line: 4, text: 'count = 0' } };
-          if (query.kind === 'references' && query.refPos > 0) return { kind: 'references', data: { list: [{ line: 5, isWrite: false }, { line: 7, isWrite: false }] } };
-          if (query.kind === 'type' && query.refPos > 0) return { kind: 'type', data: { text: 'number' } };
-          return { kind: query.kind, data: null };
+          if (query.refPos > 0) {
+            const answer: TooltipData = {
+              sections: [
+                { type: 'definition', line: 6, snippet: [
+                  { lineNumber: 5, sourceText: 'export function Demo() {', nodes: data.viewModel.lines[4]?.nodes ?? [] },
+                  { lineNumber: 6, sourceText: '  const count = 0;', nodes: data.viewModel.lines[5]?.nodes ?? [] },
+                  { lineNumber: 7, sourceText: '  const doubled = count * 2;', nodes: data.viewModel.lines[6]?.nodes ?? [] },
+                  { lineNumber: 8, sourceText: '  return (', nodes: data.viewModel.lines[7]?.nodes ?? [] },
+                ]},
+                { type: 'references', items: [
+                  { line: 7, filePath: 'Demo.tsx', snippet: [
+                    { lineNumber: 6, sourceText: '  const count = 0;', nodes: data.viewModel.lines[5]?.nodes ?? [] },
+                    { lineNumber: 7, sourceText: '  const doubled = count * 2;', nodes: data.viewModel.lines[6]?.nodes ?? [] },
+                    { lineNumber: 8, sourceText: '  return (', nodes: data.viewModel.lines[7]?.nodes ?? [] },
+                    { lineNumber: 9, sourceText: '    <div>{doubled}</div>', nodes: data.viewModel.lines[8]?.nodes ?? [] },
+                  ]},
+                ]},
+                { type: 'type', text: 'number' },
+              ],
+            };
+            return answer;
+          }
+          return { sections: [] };
         },
         browseDirectory: async ({ requestedPath: _p }: { requestedPath?: string }) => ({ currentPath: '/tmp', parentPath: null, directories: [] }),
         uploadFolder: async ({ files: _f }: { files: any[] }) => ({ tree, path: '/tmp/enrich' }),
@@ -44,7 +64,7 @@ test.describe('enrichment hover', () => {
     // Wait for the variable declaration to render
     await expect(page.locator('body')).toContainText('Declare variable');
 
-    // The span with "count" in the translation should have cursor-help if refPos is set
+    // The span with "count" in the translation should have cursor-help if hasHover is set
     const countSpan = page.locator('span.cursor-help').filter({ hasText: 'count' }).first();
     await expect(countSpan).toBeVisible();
 
@@ -56,7 +76,8 @@ test.describe('enrichment hover', () => {
     await expect(popover).toBeVisible({ timeout: 3000 });
 
     // The popover should contain the enrichment data from our mock
-    await expect(popover).toContainText('Defined at line 4', { timeout: 3000 });
+    await expect(popover).toContainText('Definition (line 6)', { timeout: 3000 });
+    await expect(popover).toContainText('References');
 
     await page.screenshot({ path: 'test/screenshots/enrichment-hover.png', fullPage: true });
   });

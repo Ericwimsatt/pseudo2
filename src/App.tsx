@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { HashRouter, Routes, Route, useNavigate, useParams } from 'react-router-dom';
+import { HashRouter, Routes, Route, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import type { ViewModel } from './lib/renderable/types';
 import type { ElectronAPI, FileNode } from './shared/api';
 import Sidebar from './components/Sidebar';
@@ -15,11 +15,20 @@ declare global {
 
 function FileView({ tree, onFileSelect }: { tree: FileNode[]; onFileSelect: (path: string) => void }) {
   const params = useParams();
+  const [searchParams] = useSearchParams();
   const path = params['*'];
   const [viewModel, setViewModel] = useState<ViewModel | null>(null);
   const [filePath, setFilePath] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  const targetSourceLine = searchParams.get('sourceLine')
+    ? Number(searchParams.get('sourceLine'))
+    : null;
+  const targetTransLine = searchParams.get('transLine')
+    ? Number(searchParams.get('transLine'))
+    : null;
+  const targetVar = searchParams.get('var');
 
   useEffect(() => {
     if (path) {
@@ -59,6 +68,9 @@ function FileView({ tree, onFileSelect }: { tree: FileNode[]; onFileSelect: (pat
           <CodeTable
             viewModel={viewModel}
             fileName={filePath}
+            targetSourceLine={targetSourceLine}
+            targetTransLine={targetTransLine}
+            targetVar={targetVar}
           />
         </FilePathContext.Provider>
       ) : (

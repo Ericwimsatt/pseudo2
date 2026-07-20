@@ -21,6 +21,8 @@ export interface HoverContent {
   title: string;
   body?: string;
   metadata?: Record<string, unknown>;
+  sections?: TooltipSection[];
+  loading?: boolean;
 }
 
 export interface DisplaySpan {
@@ -29,6 +31,8 @@ export interface DisplaySpan {
   hover?: HoverContent;
   /** 0-based character offset for async enrichment queries (AstCache) */
   refPos?: number;
+  /** If true, this span triggers a tooltip on hover */
+  hasHover?: boolean;
 }
 
 export interface DisplayNodeData {
@@ -50,27 +54,25 @@ export interface ViewModel {
   lines: LineRenderable[];
 }
 
-// ── Query-based enrichment API ──────────────────────────────────────
+// ── Tooltip / enrichment API ────────────────────────────────────────
 
-export type EnrichQuery =
-  | { kind: 'definition'; refPos: number }
-  | { kind: 'references'; refPos: number }
-  | { kind: 'type'; refPos: number };
-
-export type QueryAnswer =
-  | { kind: 'definition'; data: DefinitionData | null }
-  | { kind: 'references'; data: ReferencesData }
-  | { kind: 'type'; data: TypeData | null };
-
-export interface DefinitionData {
-  line: number;
-  text: string;
+export interface SnippetLine {
+  lineNumber: number;
+  sourceText: string;
+  nodes: DisplayNodeData[];
 }
 
-export interface ReferencesData {
-  list: { line: number; isWrite: boolean }[];
+export type TooltipSection =
+  | { type: 'definition'; line: number; snippet: SnippetLine[] }
+  | { type: 'references'; items: { line: number; filePath: string; snippet: SnippetLine[] }[] }
+  | { type: 'type'; text: string };
+
+export interface TooltipData {
+  sections: TooltipSection[];
 }
 
-export interface TypeData {
-  text: string;
+export interface EnrichQuery {
+  refPos: number;
 }
+
+export type QueryAnswer = TooltipData;

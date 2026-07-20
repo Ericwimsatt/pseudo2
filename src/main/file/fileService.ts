@@ -35,7 +35,7 @@ export async function loadFileTranslation(arg: { path: string }): Promise<{ path
 
   if (isTranslatable) {
     const result = buildFileData(sourceCode, arg.path);
-    setCache(arg.path, result.astCache);
+    setCache(arg.path, result.astCache, result.viewModel);
     return { path: result.path, viewModel: result.viewModel };
   }
 

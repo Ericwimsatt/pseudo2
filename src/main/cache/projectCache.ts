@@ -1,14 +1,20 @@
 import type { AstCache } from '../../lib/astCache';
+import type { ViewModel } from '../../lib/renderable/types';
 
-const openCaches = new Map<string, AstCache>();
-let repoPath = '';
-
-export function getCache(path: string): AstCache | undefined {
-  return openCaches.get(path);
+interface FileCacheEntry {
+  astCache: AstCache;
+  viewModel: ViewModel;
 }
 
-export function setCache(path: string, cache: AstCache): void {
-  openCaches.set(path, cache);
+const openCaches = new Map<string, FileCacheEntry>();
+let repoPath = '';
+
+export function setCache(path: string, astCache: AstCache, viewModel: ViewModel): void {
+  openCaches.set(path, { astCache, viewModel });
+}
+
+export function getCache(path: string): FileCacheEntry | undefined {
+  return openCaches.get(path);
 }
 
 export function clearCache(): void {

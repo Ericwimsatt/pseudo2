@@ -1,45 +1,26 @@
 import { SourceFile, Node } from 'ts-morph';
-import type { QueryAnswer } from './renderable/types';
+
+export interface AstDefinition {
+  line: number;
+  text: string;
+}
+
+export interface AstReference {
+  line: number;
+  isWrite: boolean;
+}
+
+export interface AstType {
+  text: string;
+}
 
 export class AstCache {
   private sourceFile: SourceFile;
   private nodeByOffset = new Map<number, Node | null>();
-  private answerCache = new Map<string, QueryAnswer>();
+  private resultCache = new Map<string, unknown>();
 
   constructor(sourceFile: SourceFile) {
     this.sourceFile = sourceFile;
-  }
-
-  /**
-   * Answer a single enrichment query.
-   * Results are cached per (kind, refPos) so repeated calls are O(1).
-   */
-  answer(refPos: number, kind: string): QueryAnswer {
-    const key = `${kind}:${refPos}`;
-    const cached = this.answerCache.get(key);
-    if (cached) return cached;
-
-    let answer: QueryAnswer;
-    try {
-      switch (kind) {
-        case 'definition':
-          answer = this.answerDefinition(refPos);
-          break;
-        case 'references':
-          answer = this.answerReferences(refPos);
-          break;
-        case 'type':
-          answer = this.answerType(refPos);
-          break;
-        default:
-          throw new Error(`Unknown query kind: ${kind}`);
-      }
-    } catch {
-      answer = emptyAnswer(kind);
-    }
-
-    this.answerCache.set(key, answer);
-    return answer;
   }
 
   // ── Node lookup (cached) ──────────────────────────────────────────
@@ -57,70 +38,84 @@ export class AstCache {
     return node;
   }
 
-  // ── Definition ────────────────────────────────────────────────────
+  // ── Public query methods ──────────────────────────────────────────
 
-  private answerDefinition(refPos: number): QueryAnswer {
-    const node = this.lookupNode(refPos);
-    if (!node) return emptyAnswer('definition');
+  getDefinition(refPos: number): AstDefinition | null {
+    const key = `def:${refPos}`;
+    const cached = this.resultCache.get(key) as AstDefinition | null | undefined;
+    if (cached !== undefined) return cached;
 
-    const symbol = node.getSymbol?.();
-    if (!symbol) return emptyAnswer('definition');
+    let result: AstDefinition | null = null;
+    try {
+      const node = this.lookupNode(refPos);
+      if (node) {
+        const symbol = node.getSymbol?.();
+        if (symbol) {
+          const decls = symbol.getDeclarations();
+          const decl = decls[0];
+          if (decl) {
+            result = {
+              line: decl.getStartLineNumber(),
+              text: firstLine(decl.getText()),
+            };
+          }
+        }
+      }
+    } catch { /* return null */ }
 
-    const decls = symbol.getDeclarations();
-    if (decls.length === 0) return emptyAnswer('definition');
-
-    const decl = decls[0];
-    return {
-      kind: 'definition',
-      data: {
-        line: decl.getStartLineNumber(),
-        text: firstLine(decl.getText()),
-      },
-    };
+    this.resultCache.set(key, result);
+    return result;
   }
 
-  // ── References ────────────────────────────────────────────────────
+  getReferences(refPos: number): AstReference[] {
+    const key = `ref:${refPos}`;
+    const cached = this.resultCache.get(key) as AstReference[] | undefined;
+    if (cached !== undefined) return cached;
 
-  private answerReferences(refPos: number): QueryAnswer {
-    const node = this.lookupNode(refPos);
-    if (!node) return { kind: 'references', data: { list: [] } };
-
-    const symbol = node.getSymbol?.();
-    if (!symbol) return { kind: 'references', data: { list: [] } };
-
-    let refNodes: Node[];
+    let result: AstReference[] = [];
     try {
-      refNodes = (node as any).findReferencesAsNodes();
-    } catch {
-      return { kind: 'references', data: { list: [] } };
-    }
+      const node = this.lookupNode(refPos);
+      if (node) {
+        const symbol = node.getSymbol?.();
+        if (symbol) {
+          const refNodes: Node[] = (node as any).findReferencesAsNodes();
+          const declOffsets = new Set(
+            symbol.getDeclarations().map((d: Node) => d.getStart()),
+          );
+          result = refNodes
+            .filter((r) => !declOffsets.has(r.getStart()))
+            .map((r) => ({
+              line: r.getStartLineNumber(),
+              isWrite: isWriteReference(r),
+            }));
+        }
+      }
+    } catch { /* return empty */ }
 
-    const declOffsets = new Set(
-      symbol.getDeclarations().map((d: Node) => d.getStart()),
-    );
-
-    const list = refNodes
-      .filter((r) => !declOffsets.has(r.getStart()))
-      .map((r) => ({
-        line: r.getStartLineNumber(),
-        isWrite: isWriteReference(r),
-      }));
-
-    return { kind: 'references', data: { list } };
+    this.resultCache.set(key, result);
+    return result;
   }
 
-  // ── Type ──────────────────────────────────────────────────────────
+  getType(refPos: number): AstType | null {
+    const key = `type:${refPos}`;
+    const cached = this.resultCache.get(key) as AstType | null | undefined;
+    if (cached !== undefined) return cached;
 
-  private answerType(refPos: number): QueryAnswer {
-    const node = this.lookupNode(refPos);
-    if (!node) return { kind: 'type', data: null };
-
+    let result: AstType | null = null;
     try {
-      const typeText = node.getType().getText();
-      return { kind: 'type', data: { text: typeText } };
-    } catch {
-      return { kind: 'type', data: null };
-    }
+      const node = this.lookupNode(refPos);
+      if (node) {
+        const typeText = node.getType().getText();
+        result = { text: typeText };
+      }
+    } catch { /* return null */ }
+
+    this.resultCache.set(key, result);
+    return result;
+  }
+
+  getSourceFile(): SourceFile {
+    return this.sourceFile;
   }
 }
 
@@ -153,17 +148,4 @@ function isWriteReference(node: Node): boolean {
 function firstLine(text: string): string {
   const idx = text.indexOf('\n');
   return idx === -1 ? text : text.slice(0, idx);
-}
-
-function emptyAnswer(kind: string): QueryAnswer {
-  switch (kind) {
-    case 'definition':
-      return { kind: 'definition', data: null };
-    case 'references':
-      return { kind: 'references', data: { list: [] } };
-    case 'type':
-      return { kind: 'type', data: null };
-    default:
-      throw new Error(`Unknown query kind: ${kind}`);
-  }
 }
