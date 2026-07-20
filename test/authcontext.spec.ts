@@ -56,27 +56,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 `;
 
 async function loadApp(page: Page) {
-  const { viewModel } = buildFileData(SOURCE, 'AuthContext.tsx');
+  const viewModel = buildFileData(SOURCE, 'AuthContext.tsx').viewModel;
   // Every rendered node must be in display-span shape.
   for (const line of viewModel.lines) {
     for (const node of line.nodes) {
       expect(Array.isArray(node.spans)).toBeTruthy();
     }
   }
-  const fileData = { viewModel, path: 'AuthContext.tsx' };
+  const sourceLines = viewModel.lines.map((l) => ({ lineNumber: l.lineNumber, text: l.sourceText }));
   await page.addInitScript((data) => {
     localStorage.setItem('repoPath', '/tmp/auth');
     const tree = [{ name: 'AuthContext.tsx', path: 'AuthContext.tsx', type: 'file' as const }];
     (window as any).electronAPI = {
-      loadRepo: async () => ({ tree, path: '/tmp/auth' }),
+      loadProject: async ({ path: _p }: { path: string }) => ({ tree, path: '/tmp/auth' }),
       getTree: async () => ({ tree }),
-      getFile: async () => data,
-      browseDirectory: async () => ({ currentPath: '/tmp', parentPath: null, directories: [] }),
-      uploadFolder: async () => ({ tree, path: '/tmp/auth' }),
-      dialogOpenDirectory: async () => null,
+      loadFileSource: async ({ path: _p }: { path: string }) => ({ path: 'AuthContext.tsx', lines: data.sourceLines }),
+      loadFileTranslation: async ({ path: _p }: { path: string }) => ({ viewModel: data.viewModel, path: 'AuthContext.tsx' }),
+      browseDirectory: async ({ requestedPath: _p }: { requestedPath?: string }) => ({ currentPath: '/tmp', parentPath: null, directories: [] }),
+      uploadFolder: async ({ files: _f }: { files: any[] }) => ({ tree, path: '/tmp/auth' }),
+      openDirectorySelector: async () => null,
       onMenuLoadFolder: () => () => {},
     };
-  }, fileData);
+  }, { viewModel, sourceLines });
   await page.goto('http://localhost:5174/');
 }
 

@@ -20,24 +20,26 @@ test.describe('enrichment hover', () => {
     await page.addInitScript((data: any) => {
       localStorage.setItem('repoPath', '/tmp/enrich');
       const tree = [{ name: 'Demo.tsx', path: 'Demo.tsx', type: 'file' as const }];
+      const sourceLines = data.viewModel.lines.map((l: any) => ({ lineNumber: l.lineNumber, text: l.sourceText }));
       (window as any).electronAPI = {
-        loadRepo: async () => ({ tree, path: '/tmp/enrich' }),
+        loadProject: async ({ path: _path }: { path: string }) => ({ tree, path: '/tmp/enrich' }),
         getTree: async () => ({ tree }),
-        getFile: async () => data,
-        ask: async (_filePath: string, query: any) => {
+        loadFileSource: async ({ path: _path }: { path: string }) => ({ path: 'Demo.tsx', lines: sourceLines }),
+        loadFileTranslation: async ({ path: _path }: { path: string }) => data,
+        getNodeDetail: async ({ query }: { query: any }) => {
           if (query.kind === 'definition' && query.refPos > 0) return { kind: 'definition', data: { line: 4, text: 'count = 0' } };
           if (query.kind === 'references' && query.refPos > 0) return { kind: 'references', data: { list: [{ line: 5, isWrite: false }, { line: 7, isWrite: false }] } };
           if (query.kind === 'type' && query.refPos > 0) return { kind: 'type', data: { text: 'number' } };
           return { kind: query.kind, data: null };
         },
-        browseDirectory: async () => ({ currentPath: '/tmp', parentPath: null, directories: [] }),
-        uploadFolder: async () => ({ tree, path: '/tmp/enrich' }),
-        dialogOpenDirectory: async () => null,
+        browseDirectory: async ({ requestedPath: _p }: { requestedPath?: string }) => ({ currentPath: '/tmp', parentPath: null, directories: [] }),
+        uploadFolder: async ({ files: _f }: { files: any[] }) => ({ tree, path: '/tmp/enrich' }),
+        openDirectorySelector: async () => null,
         onMenuLoadFolder: () => () => {},
       };
     }, serializable);
 
-    await page.goto('http://localhost:5175/#/file/Demo.tsx');
+    await page.goto('http://localhost:5174/#/file/Demo.tsx');
 
     // Wait for the variable declaration to render
     await expect(page.locator('body')).toContainText('Declare variable');

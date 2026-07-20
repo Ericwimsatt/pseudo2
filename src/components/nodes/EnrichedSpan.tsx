@@ -53,7 +53,7 @@ function useEnrichment(refPos: number | undefined, staticHover: import('../../li
       if (asked.has(key)) continue;
       asked.add(key);
 
-      window.electronAPI.ask(filePath, q).then((answer: QueryAnswer) => {
+      window.electronAPI.getNodeDetail({ filePath, query: q }).then((answer: QueryAnswer) => {
         setAnswers((prev) => {
           const next = new Map(prev);
           next.set(key, answer);

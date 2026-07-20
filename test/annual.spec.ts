@@ -19,20 +19,22 @@ function buildFileDataForTest() {
 }
 
 async function loadAppWithFile(page: Page) {
-  const fileData = buildFileDataForTest();
+  const { viewModel, path: filePath } = buildFileDataForTest();
+  const sourceLines = viewModel.lines.map((l) => ({ lineNumber: l.lineNumber, text: l.sourceText }));
   await page.addInitScript((data) => {
     localStorage.setItem('repoPath', '/tmp/annual');
     const tree = [{ name: 'AnnualSummary.tsx', path: 'AnnualSummary.tsx', type: 'file' as const }];
     (window as any).electronAPI = {
-      loadRepo: async () => ({ tree, path: '/tmp/annual' }),
+      loadProject: async ({ path: _p }: { path: string }) => ({ tree, path: '/tmp/annual' }),
       getTree: async () => ({ tree }),
-      getFile: async () => data,
-      browseDirectory: async () => ({ currentPath: '/tmp', parentPath: null, directories: [] }),
-      uploadFolder: async () => ({ tree, path: '/tmp/annual' }),
-      dialogOpenDirectory: async () => null,
+      loadFileSource: async ({ path: _p }: { path: string }) => ({ path: 'AnnualSummary.tsx', lines: data.sourceLines }),
+      loadFileTranslation: async ({ path: _p }: { path: string }) => ({ viewModel: data.viewModel, path: data.filePath }),
+      browseDirectory: async ({ requestedPath: _p }: { requestedPath?: string }) => ({ currentPath: '/tmp', parentPath: null, directories: [] }),
+      uploadFolder: async ({ files: _f }: { files: any[] }) => ({ tree, path: '/tmp/annual' }),
+      openDirectorySelector: async () => null,
       onMenuLoadFolder: () => () => {},
     };
-  }, fileData);
+  }, { viewModel, sourceLines, filePath });
   await page.goto('http://localhost:5174/');
 }
 
@@ -125,19 +127,21 @@ test.describe('AnnualSummary translation', () => {
       viewModel: buildFileData(jsxSource, 'App.tsx').viewModel,
       path: 'App.tsx',
     };
+    const srcLines = fileData.viewModel.lines.map((l: any) => ({ lineNumber: l.lineNumber, text: l.sourceText }));
     await page.addInitScript((data) => {
       localStorage.setItem('repoPath', '/tmp/annual');
       const tree = [{ name: 'App.tsx', path: 'App.tsx', type: 'file' as const }];
       (window as any).electronAPI = {
-        loadRepo: async () => ({ tree, path: '/tmp/annual' }),
+        loadProject: async ({ path: _p }: { path: string }) => ({ tree, path: '/tmp/annual' }),
         getTree: async () => ({ tree }),
-        getFile: async () => data,
-        browseDirectory: async () => ({ currentPath: '/tmp', parentPath: null, directories: [] }),
-        uploadFolder: async () => ({ tree, path: '/tmp/annual' }),
-        dialogOpenDirectory: async () => null,
+        loadFileSource: async ({ path: _p }: { path: string }) => ({ path: 'App.tsx', lines: data.sourceLines }),
+        loadFileTranslation: async ({ path: _p }: { path: string }) => ({ viewModel: data.viewModel, path: 'App.tsx' }),
+        browseDirectory: async ({ requestedPath: _p }: { requestedPath?: string }) => ({ currentPath: '/tmp', parentPath: null, directories: [] }),
+        uploadFolder: async ({ files: _f }: { files: any[] }) => ({ tree, path: '/tmp/annual' }),
+        openDirectorySelector: async () => null,
         onMenuLoadFolder: () => () => {},
       };
-    }, fileData);
+    }, { viewModel: fileData.viewModel, sourceLines: srcLines });
     await page.goto('http://localhost:5174/');
     await page.getByText('App.tsx', { exact: false }).first().click();
     await expect(page.locator('body')).toContainText('Return Visual Elements:');
@@ -162,23 +166,22 @@ interface Props {
   items: Array<Expense>;
 }
 `;
-    const fileData = {
-      viewModel: buildFileData(source, 'Props.tsx').viewModel,
-      path: 'Props.tsx',
-    };
+    const vmProps = buildFileData(source, 'Props.tsx').viewModel;
+    const srcLinesProps = vmProps.lines.map((l: any) => ({ lineNumber: l.lineNumber, text: l.sourceText }));
     await page.addInitScript((data) => {
       localStorage.setItem('repoPath', '/tmp/annual');
       const tree = [{ name: 'Props.tsx', path: 'Props.tsx', type: 'file' as const }];
       (window as any).electronAPI = {
-        loadRepo: async () => ({ tree, path: '/tmp/annual' }),
+        loadProject: async ({ path: _p }: { path: string }) => ({ tree, path: '/tmp/annual' }),
         getTree: async () => ({ tree }),
-        getFile: async () => data,
-        browseDirectory: async () => ({ currentPath: '/tmp', parentPath: null, directories: [] }),
-        uploadFolder: async () => ({ tree, path: '/tmp/annual' }),
-        dialogOpenDirectory: async () => null,
+        loadFileSource: async ({ path: _p }: { path: string }) => ({ path: 'Props.tsx', lines: data.sourceLines }),
+        loadFileTranslation: async ({ path: _p }: { path: string }) => ({ viewModel: data.viewModel, path: 'Props.tsx' }),
+        browseDirectory: async ({ requestedPath: _p }: { requestedPath?: string }) => ({ currentPath: '/tmp', parentPath: null, directories: [] }),
+        uploadFolder: async ({ files: _f }: { files: any[] }) => ({ tree, path: '/tmp/annual' }),
+        openDirectorySelector: async () => null,
         onMenuLoadFolder: () => () => {},
       };
-    }, fileData);
+    }, { viewModel: vmProps, sourceLines: srcLinesProps });
     await page.goto('http://localhost:5174/');
     await page.getByText('Props.tsx', { exact: false }).first().click();
 
@@ -208,23 +211,22 @@ interface Props {
   </div>
 );
 `;
-    const fileData = {
-      viewModel: buildFileData(filterBarSrc, 'FilterBar.tsx').viewModel,
-      path: 'FilterBar.tsx',
-    };
+    const vmFilter = buildFileData(filterBarSrc, 'FilterBar.tsx').viewModel;
+    const srcLinesFilter = vmFilter.lines.map((l: any) => ({ lineNumber: l.lineNumber, text: l.sourceText }));
     await page.addInitScript((data) => {
       localStorage.setItem('repoPath', '/tmp/annual');
       const tree = [{ name: 'FilterBar.tsx', path: 'FilterBar.tsx', type: 'file' as const }];
       (window as any).electronAPI = {
-        loadRepo: async () => ({ tree, path: '/tmp/annual' }),
+        loadProject: async ({ path: _p }: { path: string }) => ({ tree, path: '/tmp/annual' }),
         getTree: async () => ({ tree }),
-        getFile: async () => data,
-        browseDirectory: async () => ({ currentPath: '/tmp', parentPath: null, directories: [] }),
-        uploadFolder: async () => ({ tree, path: '/tmp/annual' }),
-        dialogOpenDirectory: async () => null,
+        loadFileSource: async ({ path: _p }: { path: string }) => ({ path: 'FilterBar.tsx', lines: data.sourceLines }),
+        loadFileTranslation: async ({ path: _p }: { path: string }) => ({ viewModel: data.viewModel, path: 'FilterBar.tsx' }),
+        browseDirectory: async ({ requestedPath: _p }: { requestedPath?: string }) => ({ currentPath: '/tmp', parentPath: null, directories: [] }),
+        uploadFolder: async ({ files: _f }: { files: any[] }) => ({ tree, path: '/tmp/annual' }),
+        openDirectorySelector: async () => null,
         onMenuLoadFolder: () => () => {},
       };
-    }, fileData);
+    }, { viewModel: vmFilter, sourceLines: srcLinesFilter });
     await page.goto('http://localhost:5174/');
     await page.getByText('FilterBar.tsx', { exact: false }).first().click();
 

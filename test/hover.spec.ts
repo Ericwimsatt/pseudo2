@@ -15,23 +15,22 @@ export function Demo() {
 `;
 
 async function loadApp(page: Page) {
-  const fileData = {
-    viewModel: buildFileData(SOURCE, 'Demo.tsx').viewModel,
-    path: 'Demo.tsx',
-  };
+  const viewModel = buildFileData(SOURCE, 'Demo.tsx').viewModel;
+  const sourceLines = viewModel.lines.map((l) => ({ lineNumber: l.lineNumber, text: l.sourceText }));
   await page.addInitScript((data) => {
     localStorage.setItem('repoPath', '/tmp/demo');
     const tree = [{ name: 'Demo.tsx', path: 'Demo.tsx', type: 'file' as const }];
     (window as any).electronAPI = {
-      loadRepo: async () => ({ tree, path: '/tmp/demo' }),
+      loadProject: async ({ path: _p }: { path: string }) => ({ tree, path: '/tmp/demo' }),
       getTree: async () => ({ tree }),
-      getFile: async () => data,
-      browseDirectory: async () => ({ currentPath: '/tmp', parentPath: null, directories: [] }),
-      uploadFolder: async () => ({ tree, path: '/tmp/demo' }),
-      dialogOpenDirectory: async () => null,
+      loadFileSource: async ({ path: _p }: { path: string }) => ({ path: 'Demo.tsx', lines: data.sourceLines }),
+      loadFileTranslation: async ({ path: _p }: { path: string }) => ({ viewModel: data.viewModel, path: 'Demo.tsx' }),
+      browseDirectory: async ({ requestedPath: _p }: { requestedPath?: string }) => ({ currentPath: '/tmp', parentPath: null, directories: [] }),
+      uploadFolder: async ({ files: _f }: { files: any[] }) => ({ tree, path: '/tmp/demo' }),
+      openDirectorySelector: async () => null,
       onMenuLoadFolder: () => () => {},
     };
-  }, fileData);
+  }, { viewModel, sourceLines });
   await page.goto('http://localhost:5174/');
   await page.getByText('Demo.tsx', { exact: false }).first().click();
   await expect(page.locator('body')).toContainText('Function Demo');

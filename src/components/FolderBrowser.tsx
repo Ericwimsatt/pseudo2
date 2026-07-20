@@ -1,10 +1,5 @@
 import { useEffect, useState } from 'react';
-
-interface BrowseData {
-  currentPath: string;
-  parentPath: string | null;
-  directories: { name: string; path: string }[];
-}
+import type { BrowseResult } from '../shared/api';
 
 interface FolderBrowserProps {
   onSelect: (path: string) => void;
@@ -12,7 +7,7 @@ interface FolderBrowserProps {
 }
 
 export default function FolderBrowser({ onSelect, onClose }: FolderBrowserProps) {
-  const [browseData, setBrowseData] = useState<BrowseData | null>(null);
+  const [browseData, setBrowseData] = useState<BrowseResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,7 +15,7 @@ export default function FolderBrowser({ onSelect, onClose }: FolderBrowserProps)
     setLoading(true);
     setError(null);
     try {
-      const data = await window.electronAPI.browseDirectory(path);
+      const data = await window.electronAPI.browseDirectory(path ? { requestedPath: path } : {});
       setBrowseData(data);
     } catch (err: any) {
       setError(err.message || 'Failed to browse directory');

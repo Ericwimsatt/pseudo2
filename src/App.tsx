@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { HashRouter, Routes, Route, useNavigate, useParams } from 'react-router-dom';
-import type { ViewModel, EnrichQuery, QueryAnswer } from './lib/renderable/types';
+import type { ViewModel } from './lib/renderable/types';
+import type { ElectronAPI, FileNode } from './shared/api';
 import Sidebar from './components/Sidebar';
 import CodeTable from './components/CodeTable';
 import FolderBrowser from './components/FolderBrowser';
@@ -8,53 +9,30 @@ import { FilePathContext } from './lib/filePathContext';
 
 declare global {
   interface Window {
-    electronAPI: {
-      loadRepo: (path: string) => Promise<{ tree: FileNode[]; path: string }>;
-      getTree: () => Promise<{ tree: FileNode[] }>;
-      getFile: (path: string) => Promise<FileData>;
-      ask: (filePath: string, query: EnrichQuery) => Promise<QueryAnswer>;
-      browseDirectory: (path?: string) => Promise<BrowseData>;
-      uploadFolder: (files: { path: string; content: string }[]) => Promise<{ tree: FileNode[]; path: string }>;
-      dialogOpenDirectory: () => Promise<string | null>;
-      onMenuLoadFolder: (callback: (path: string) => void) => () => void;
-    };
+    electronAPI: ElectronAPI;
   }
-}
-
-interface FileNode {
-  name: string;
-  path: string;
-  type: 'file' | 'directory';
-  children?: FileNode[];
-}
-
-interface BrowseData {
-  currentPath: string;
-  parentPath: string | null;
-  directories: { name: string; path: string }[];
-}
-
-interface FileData {
-  viewModel: ViewModel;
-  path: string;
 }
 
 function FileView({ tree, onFileSelect }: { tree: FileNode[]; onFileSelect: (path: string) => void }) {
   const params = useParams();
   const path = params['*'];
-  const [fileData, setFileData] = useState<FileData | null>(null);
+  const [viewModel, setViewModel] = useState<ViewModel | null>(null);
+  const [filePath, setFilePath] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
-    console.log('FileView: path changed to', path);
     if (path) {
-      setFileData(null);
+      setViewModel(null);
+      setFilePath(null);
       setError(null);
-      window.electronAPI.getFile(path)
-        .then(data => {
-          console.log('FileView: file data received', data);
-          setFileData(data);
+      Promise.all([
+        window.electronAPI.loadFileSource({ path }),
+        window.electronAPI.loadFileTranslation({ path }),
+      ])
+        .then(([_sourceResult, translationResult]) => {
+          setFilePath(translationResult.path);
+          setViewModel(translationResult.viewModel);
         })
         .catch(err => {
           console.error('Failed to load file:', err);
@@ -76,11 +54,11 @@ function FileView({ tree, onFileSelect }: { tree: FileNode[]; onFileSelect: (pat
         <div className="flex-1 flex items-center justify-center text-red-500">
           Error: {error}
         </div>
-      ) : fileData ? (
-        <FilePathContext.Provider value={fileData.path}>
+      ) : viewModel ? (
+        <FilePathContext.Provider value={filePath}>
           <CodeTable
-            viewModel={fileData.viewModel}
-            fileName={fileData.path}
+            viewModel={viewModel}
+            fileName={filePath}
           />
         </FilePathContext.Provider>
       ) : (
@@ -153,7 +131,7 @@ function App() {
     setLoading(true);
     setLoadError(null);
     try {
-      const data = await window.electronAPI.loadRepo(path);
+      const data = await window.electronAPI.loadProject({ path });
       setTree(data.tree);
       setRepoPath(data.path);
       localStorage.setItem('repoPath', data.path);
@@ -207,7 +185,7 @@ function App() {
         return;
       }
 
-      const data = await window.electronAPI.uploadFolder(files);
+      const data = await window.electronAPI.uploadFolder({ files });
       setTree(data.tree);
       setRepoPath(data.path);
       localStorage.setItem('repoPath', data.path);

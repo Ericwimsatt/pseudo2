@@ -6,7 +6,7 @@ const watchMode = process.argv.includes('--watch');
 await mkdir('dist-electron', { recursive: true });
 
 const mainOptions = {
-  entryPoints: ['src/electron-main.ts'],
+  entryPoints: ['src/main/index.ts'],
   outfile: 'dist-electron/main.cjs',
   bundle: true,
   platform: 'node',
@@ -16,7 +16,7 @@ const mainOptions = {
 };
 
 const preloadOptions = {
-  entryPoints: ['src/electron-preload.ts'],
+  entryPoints: ['src/main/preload.ts'],
   outfile: 'dist-electron/preload.cjs',
   bundle: true,
   platform: 'node',
