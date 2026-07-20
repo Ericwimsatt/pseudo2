@@ -1,7 +1,7 @@
 import { useEffect, useRef, useContext } from 'react';
 import { cx } from './styleHelpers';
 import { useHover } from '../hover/useHover';
-import type { HoverContent } from '../../lib/renderable/types';
+import type { HoverContent } from '../../../main/translationService/renderable/types';
 import { SearchContext } from '../../lib/searchContext';
 import { FilePathContext } from '../../lib/filePathContext';
 

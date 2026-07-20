@@ -2,7 +2,7 @@ import { join, relative, resolve } from 'path';
 import { tmpdir } from 'os';
 import { mkdir, mkdtemp, readdir, stat, writeFile } from 'fs/promises';
 import type { FileNode } from '../../shared/api';
-import { setRepoPath, getRepoPath } from '../cache/projectCache';
+import { setRepoPath, getRepoPath } from '../translationService/cache/projectCache';
 
 async function buildFileTree(dirPath: string, basePath: string): Promise<FileNode[]> {
   const entries = await readdir(dirPath, { withFileTypes: true });

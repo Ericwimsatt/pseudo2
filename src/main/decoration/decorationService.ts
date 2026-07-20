@@ -1,8 +1,8 @@
-import type { EnrichQuery, QueryAnswer, SnippetLine, TooltipSection } from '../../lib/renderable/types';
-import { getCache } from '../cache/projectCache';
+import type { EnrichQuery, QueryAnswer, SnippetLine, TooltipSection } from '../translationService/renderable/types';
+import { getCache } from '../translationService/cache/projectCache';
 import { size } from '@floating-ui/react';
 
-function extractSnippet(lines: { lineNumber: number; sourceText: string; nodes: import('../../lib/renderable/types').DisplayNodeData[] }[], anchorLine: number): SnippetLine[] {
+function extractSnippet(lines: { lineNumber: number; sourceText: string; nodes: import('../translationService/renderable/types').DisplayNodeData[] }[], anchorLine: number): SnippetLine[] {
   const snippet: SnippetLine[] = [];
   for (let offset = -1; offset <= 2; offset++) {
     const targetLine = anchorLine + offset;

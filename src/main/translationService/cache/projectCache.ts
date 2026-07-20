@@ -1,5 +1,5 @@
-import type { AstCache } from '../../lib/astCache';
-import type { ViewModel } from '../../lib/renderable/types';
+import type { AstCache } from './astCache';
+import type { ViewModel } from '../renderable/types';
 
 interface FileCacheEntry {
   astCache: AstCache;

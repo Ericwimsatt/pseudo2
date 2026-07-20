@@ -1,5 +1,5 @@
-import type { LineRenderable } from '../lib/renderable/types';
-import { BUCKET_LABELS } from '../lib/renderable/bucket';
+import type { LineRenderable } from '../../main/translationService/renderable/types';
+import { BUCKET_LABELS } from '../../main/translationService/renderable/bucket';
 import { cx } from './nodes/styleHelpers';
 import { NodeLayer } from './nodes/NodeLayer';
 import { SearchContext } from '../lib/searchContext';

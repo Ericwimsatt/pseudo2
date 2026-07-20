@@ -1,8 +1,8 @@
 import { Project } from "ts-morph";
 import { makeSemanticGraph } from './makeSemanticGraph';
-import { buildViewModel } from '../../lib/renderable/viewModel';
-import { AstCache } from '../../lib/astCache';
-import type { ViewModel } from '../../lib/renderable/types';
+import { buildViewModel } from './renderable/viewModel';
+import { AstCache } from './cache/astCache';
+import type { ViewModel } from './renderable/types';
 
 export interface BuildFileResult {
   viewModel: ViewModel;

@@ -1,4 +1,4 @@
-import type { ViewModel, EnrichQuery, QueryAnswer } from '../lib/renderable/types';
+import type { ViewModel, EnrichQuery, QueryAnswer } from '../main/translationService/renderable/types';
 
 export interface FileNode {
   name: string;

@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useContext } from 'react';
-import type { TooltipSection } from '../../lib/renderable/types';
+import type { TooltipSection } from '../../../main/translationService/renderable/types';
 import { TooltipSnippetBlock } from './TooltipSnippetBlock';
 import { FilePathContext } from '../../lib/filePathContext';
 

@@ -1,8 +1,8 @@
 import { useContext, useEffect, useRef, useState } from 'react';
-import type { HoverContent, TooltipSection } from '../../lib/renderable/types';
+import type { HoverContent, TooltipSection } from '../../../main/translationService/renderable/types';
 import { FilePathContext } from '../../lib/filePathContext';
 import { TooltipContent } from './TooltipContent';
-import { formatMetadata } from '../../lib/renderable/hover';
+import { formatMetadata } from '../../../main/translationService/renderable/hover';
 
 interface Props {
   hover: HoverContent;

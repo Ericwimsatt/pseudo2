@@ -1,0 +1,4156 @@
+{
+  "kind": "combined",
+  "schema_version": 7,
+  "version": "2.95.0",
+  "elapsed_ms": 1064,
+  "_meta": {
+    "telemetry": {
+      "analysis_run_id": "run_47357974cfc854e2"
+    }
+  },
+  "check": {
+    "schema_version": 7,
+    "version": "2.95.0",
+    "elapsed_ms": 37,
+    "total_issues": 12,
+    "entry_points": {
+      "total": 40,
+      "sources": {
+        "package.json": 2,
+        "plugin": 38
+      }
+    },
+    "summary": {
+      "total_issues": 12,
+      "unused_files": 2,
+      "unused_exports": 0,
+      "unused_types": 1,
+      "private_type_leaks": 0,
+      "unused_dependencies": 1,
+      "unused_enum_members": 0,
+      "unused_class_members": 0,
+      "unresolved_imports": 8,
+      "unlisted_dependencies": 0,
+      "duplicate_exports": 0,
+      "type_only_dependencies": 0,
+      "test_only_dependencies": 0,
+      "circular_dependencies": 0,
+      "re_export_cycles": 0,
+      "boundary_violations": 0,
+      "boundary_coverage_violations": 0,
+      "boundary_call_violations": 0,
+      "policy_violations": 0,
+      "stale_suppressions": 0,
+      "unused_catalog_entries": 0,
+      "empty_catalog_groups": 0,
+      "unresolved_catalog_references": 0,
+      "unused_dependency_overrides": 0,
+      "misconfigured_dependency_overrides": 0
+    },
+    "unused_files": [
+      {
+        "path": "src/App/App.css",
+        "actions": [
+          {
+            "type": "delete-file",
+            "auto_fixable": false,
+            "description": "Delete this file",
+            "note": "File deletion may remove runtime functionality not visible to static analysis"
+          },
+          {
+            "type": "suppress-file",
+            "auto_fixable": false,
+            "description": "Suppress with a file-level comment at the top of the file",
+            "comment": "// fallow-ignore-file unused-file"
+          }
+        ]
+      },
+      {
+        "path": "src/App/lib/dev/profiler.tsx",
+        "actions": [
+          {
+            "type": "delete-file",
+            "auto_fixable": false,
+            "description": "Delete this file",
+            "note": "File deletion may remove runtime functionality not visible to static analysis"
+          },
+          {
+            "type": "suppress-file",
+            "auto_fixable": false,
+            "description": "Suppress with a file-level comment at the top of the file",
+            "comment": "// fallow-ignore-file unused-file"
+          }
+        ]
+      }
+    ],
+    "unused_exports": [],
+    "unused_types": [
+      {
+        "path": "src/shared/api.ts",
+        "export_name": "ApiSend",
+        "is_type_only": true,
+        "line": 56,
+        "col": 17,
+        "span_start": 1256,
+        "is_re_export": false,
+        "actions": [
+          {
+            "type": "remove-export",
+            "auto_fixable": true,
+            "description": "Remove the `export` (or `export type`) keyword from the type declaration"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the line",
+            "comment": "// fallow-ignore-next-line unused-type"
+          }
+        ]
+      }
+    ],
+    "private_type_leaks": [],
+    "unused_dependencies": [],
+    "unused_dev_dependencies": [
+      {
+        "package_name": "wait-on",
+        "location": "devDependencies",
+        "path": "package.json",
+        "line": 40,
+        "actions": [
+          {
+            "type": "remove-dependency",
+            "auto_fixable": true,
+            "description": "Remove from devDependencies in package.json"
+          },
+          {
+            "type": "add-to-config",
+            "auto_fixable": false,
+            "description": "Add \"wait-on\" to ignoreDependencies in fallow config",
+            "config_key": "ignoreDependencies",
+            "value": "wait-on",
+            "value_schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json#/properties/ignoreDependencies/items"
+          }
+        ]
+      }
+    ],
+    "unused_optional_dependencies": [],
+    "unused_enum_members": [],
+    "unused_class_members": [],
+    "unresolved_imports": [
+      {
+        "path": "test/annual.spec.ts",
+        "specifier": "../src/lib/buildFileData",
+        "line": 2,
+        "col": 9,
+        "specifier_col": 30,
+        "actions": [
+          {
+            "type": "resolve-import",
+            "auto_fixable": false,
+            "description": "Fix the import specifier or install the missing module",
+            "note": "Verify the module path and check tsconfig paths configuration"
+          },
+          {
+            "type": "add-to-config",
+            "auto_fixable": false,
+            "description": "Add \"../src/lib/buildFileData\" to ignoreUnresolvedImports in fallow config",
+            "config_key": "ignoreUnresolvedImports",
+            "value": "../src/lib/buildFileData",
+            "value_schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json#/properties/ignoreUnresolvedImports/items"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the line",
+            "comment": "// fallow-ignore-next-line unresolved-import"
+          }
+        ]
+      },
+      {
+        "path": "test/astCache.vitest.ts",
+        "specifier": "../src/lib/astCache",
+        "line": 3,
+        "col": 9,
+        "specifier_col": 25,
+        "actions": [
+          {
+            "type": "resolve-import",
+            "auto_fixable": false,
+            "description": "Fix the import specifier or install the missing module",
+            "note": "Verify the module path and check tsconfig paths configuration"
+          },
+          {
+            "type": "add-to-config",
+            "auto_fixable": false,
+            "description": "Add \"../src/lib/astCache\" to ignoreUnresolvedImports in fallow config",
+            "config_key": "ignoreUnresolvedImports",
+            "value": "../src/lib/astCache",
+            "value_schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json#/properties/ignoreUnresolvedImports/items"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the line",
+            "comment": "// fallow-ignore-next-line unresolved-import"
+          }
+        ]
+      },
+      {
+        "path": "test/authcontext.spec.ts",
+        "specifier": "../src/lib/buildFileData",
+        "line": 2,
+        "col": 9,
+        "specifier_col": 30,
+        "actions": [
+          {
+            "type": "resolve-import",
+            "auto_fixable": false,
+            "description": "Fix the import specifier or install the missing module",
+            "note": "Verify the module path and check tsconfig paths configuration"
+          },
+          {
+            "type": "add-to-config",
+            "auto_fixable": false,
+            "description": "Add \"../src/lib/buildFileData\" to ignoreUnresolvedImports in fallow config",
+            "config_key": "ignoreUnresolvedImports",
+            "value": "../src/lib/buildFileData",
+            "value_schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json#/properties/ignoreUnresolvedImports/items"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the line",
+            "comment": "// fallow-ignore-next-line unresolved-import"
+          }
+        ]
+      },
+      {
+        "path": "test/enrichment.spec.ts",
+        "specifier": "../src/lib/buildFileData",
+        "line": 2,
+        "col": 9,
+        "specifier_col": 30,
+        "actions": [
+          {
+            "type": "resolve-import",
+            "auto_fixable": false,
+            "description": "Fix the import specifier or install the missing module",
+            "note": "Verify the module path and check tsconfig paths configuration"
+          },
+          {
+            "type": "add-to-config",
+            "auto_fixable": false,
+            "description": "Add \"../src/lib/buildFileData\" to ignoreUnresolvedImports in fallow config",
+            "config_key": "ignoreUnresolvedImports",
+            "value": "../src/lib/buildFileData",
+            "value_schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json#/properties/ignoreUnresolvedImports/items"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the line",
+            "comment": "// fallow-ignore-next-line unresolved-import"
+          }
+        ]
+      },
+      {
+        "path": "test/enrichment.spec.ts",
+        "specifier": "../src/lib/renderable/types",
+        "line": 3,
+        "col": 14,
+        "specifier_col": 33,
+        "actions": [
+          {
+            "type": "resolve-import",
+            "auto_fixable": false,
+            "description": "Fix the import specifier or install the missing module",
+            "note": "Verify the module path and check tsconfig paths configuration"
+          },
+          {
+            "type": "add-to-config",
+            "auto_fixable": false,
+            "description": "Add \"../src/lib/renderable/types\" to ignoreUnresolvedImports in fallow config",
+            "config_key": "ignoreUnresolvedImports",
+            "value": "../src/lib/renderable/types",
+            "value_schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json#/properties/ignoreUnresolvedImports/items"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the line",
+            "comment": "// fallow-ignore-next-line unresolved-import"
+          }
+        ]
+      },
+      {
+        "path": "test/hover.spec.ts",
+        "specifier": "../src/lib/buildFileData",
+        "line": 2,
+        "col": 9,
+        "specifier_col": 30,
+        "actions": [
+          {
+            "type": "resolve-import",
+            "auto_fixable": false,
+            "description": "Fix the import specifier or install the missing module",
+            "note": "Verify the module path and check tsconfig paths configuration"
+          },
+          {
+            "type": "add-to-config",
+            "auto_fixable": false,
+            "description": "Add \"../src/lib/buildFileData\" to ignoreUnresolvedImports in fallow config",
+            "config_key": "ignoreUnresolvedImports",
+            "value": "../src/lib/buildFileData",
+            "value_schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json#/properties/ignoreUnresolvedImports/items"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the line",
+            "comment": "// fallow-ignore-next-line unresolved-import"
+          }
+        ]
+      },
+      {
+        "path": "test/importedTypes.spec.ts",
+        "specifier": "../src/lib/buildFileData",
+        "line": 2,
+        "col": 9,
+        "specifier_col": 30,
+        "actions": [
+          {
+            "type": "resolve-import",
+            "auto_fixable": false,
+            "description": "Fix the import specifier or install the missing module",
+            "note": "Verify the module path and check tsconfig paths configuration"
+          },
+          {
+            "type": "add-to-config",
+            "auto_fixable": false,
+            "description": "Add \"../src/lib/buildFileData\" to ignoreUnresolvedImports in fallow config",
+            "config_key": "ignoreUnresolvedImports",
+            "value": "../src/lib/buildFileData",
+            "value_schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json#/properties/ignoreUnresolvedImports/items"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the line",
+            "comment": "// fallow-ignore-next-line unresolved-import"
+          }
+        ]
+      },
+      {
+        "path": "test/navigation.spec.ts",
+        "specifier": "../src/lib/buildFileData",
+        "line": 2,
+        "col": 9,
+        "specifier_col": 30,
+        "actions": [
+          {
+            "type": "resolve-import",
+            "auto_fixable": false,
+            "description": "Fix the import specifier or install the missing module",
+            "note": "Verify the module path and check tsconfig paths configuration"
+          },
+          {
+            "type": "add-to-config",
+            "auto_fixable": false,
+            "description": "Add \"../src/lib/buildFileData\" to ignoreUnresolvedImports in fallow config",
+            "config_key": "ignoreUnresolvedImports",
+            "value": "../src/lib/buildFileData",
+            "value_schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json#/properties/ignoreUnresolvedImports/items"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the line",
+            "comment": "// fallow-ignore-next-line unresolved-import"
+          }
+        ]
+      }
+    ],
+    "unlisted_dependencies": [],
+    "duplicate_exports": [],
+    "type_only_dependencies": [],
+    "test_only_dependencies": [],
+    "circular_dependencies": [],
+    "re_export_cycles": [],
+    "boundary_violations": [],
+    "boundary_coverage_violations": [],
+    "boundary_call_violations": [],
+    "policy_violations": [],
+    "stale_suppressions": [],
+    "unused_catalog_entries": [],
+    "empty_catalog_groups": [],
+    "unresolved_catalog_references": [],
+    "unused_dependency_overrides": [],
+    "misconfigured_dependency_overrides": []
+  },
+  "dupes": {
+    "clone_groups": [
+      {
+        "instances": [
+          {
+            "file": "src/App/components/LineRow.tsx",
+            "start_line": 29,
+            "end_line": 183,
+            "start_col": 29,
+            "end_col": 1,
+            "fragment": "text: string, term: string, isActive: boolean) {\n  if (!term) return text;\n  const lower = text.toLowerCase();\n  const termLower = term.toLowerCase();\n  const parts: { t: string; match: boolean }[] = [];\n  let lastIndex = 0;\n  let index = lower.indexOf(termLower);\n  while (index !== -1) {\n    if (index > lastIndex) {\n      parts.push({ t: text.slice(lastIndex, index), match: false });\n    }\n    parts.push({ t: text.slice(index, index + term.length), match: true });\n    lastIndex = index + term.length;\n    index = lower.indexOf(termLower, lastIndex);\n  }\n  if (lastIndex < text.length) {\n    parts.push({ t: text.slice(lastIndex), match: false });\n  }\n  return parts.map((p, i) =>\n    p.match ? (\n      <mark\n        key={i}\n        className={cx(\n          'rounded-sm',\n          isActive ? 'bg-yellow-300 text-black' : 'bg-yellow-100 text-black'\n        )}\n      >\n        {p.t}\n      </mark>\n    ) : (\n      <span key={i}>{p.t}</span>\n    )\n  );\n}\n\nexport function LineRow({\n  line,\n  lineIndex,\n  bucketStyle,\n  isInterface,\n  onResizeStart,\n  sourcePct,\n  searchTerm,\n  searchMatches,\n  activeMatchIndex,\n  navVar,\n  isNavHighlight,\n  parentRowIndex,\n}: Props) {\n  const rowRef = useRef<HTMLTableRowElement>(null);\n  const [flash, setFlash] = useState(false);\n\n  useEffect(() => {\n    if (isNavHighlight && rowRef.current) {\n      setFlash(true);\n      const timer = setTimeout(() => setFlash(false), 3000);\n      return () => clearTimeout(timer);\n    }\n  }, [isNavHighlight]);\n\n  const showTranslation = !line.skipTranslation && line.nodes.length > 0;\n  const rowSpan = line.translationRowSpan;\n\n  const effectiveSearchTerm = searchTerm || navVar || '';\n\n  const sourceHasTerm = effectiveSearchTerm &&\n    line.sourceText.toLowerCase().includes(effectiveSearchTerm.toLowerCase());\n\n  function matchIndexForLine(targetLineIndex: number, checkTrans: boolean): number {\n    return searchMatches?.findIndex((m) =>\n      m.lineIndex === targetLineIndex && (checkTrans ? m.inTranslation : m.inSource)\n    ) ?? -1;\n  }\n\n  function parentTransMatchActive(): boolean {\n    if (parentRowIndex == null || parentRowIndex < 0) return false;\n    const idx = matchIndexForLine(parentRowIndex, true);\n    return idx >= 0 && idx === activeMatchIndex;\n  }\n\n  const isActiveSource = (() => {\n    if (!searchTerm) return false;\n    const idx = matchIndexForLine(lineIndex, false);\n    if (idx >= 0) return idx === activeMatchIndex;\n    return parentTransMatchActive();\n  })();\n\n  const searchCtxValue = useMemo(() => {\n    if (!effectiveSearchTerm) return { term: '', isActiveMatch: false };\n    const term = effectiveSearchTerm;\n    let isActive = false;\n    if (searchTerm) {\n      const myIdx = searchMatches?.findIndex((m) => m.lineIndex === lineIndex && m.inTranslation) ?? -1;\n      isActive = myIdx === activeMatchIndex;\n      if (!isActive && parentRowIndex != null && parentRowIndex >= 0) {\n        const parentIdx = searchMatches?.findIndex((m) => m.lineIndex === parentRowIndex && m.inTranslation) ?? -1;\n        isActive = parentIdx === activeMatchIndex;\n      }\n    }\n    return { term, isActiveMatch: isActive };\n  }, [effectiveSearchTerm, searchTerm, searchMatches, lineIndex, activeMatchIndex, parentRowIndex]);\n\n  return (\n    <tr\n      ref={rowRef}\n      className={cx(\n        'hover:bg-gray-50/40 transition-colors',\n        bucketStyle,\n        flash && 'animate-pulse bg-yellow-50'\n      )}\n      data-bucket={BUCKET_LABELS[line.bucket]}\n      data-line={line.lineNumber}\n    >\n      <td\n        className={cx(\n          'p-0 align-top border-l-2',\n          isInterface ? 'border-blue-500' : 'border-transparent'\n        )}\n        style={{ width: 6 }}\n      />\n      <td className=\"text-right pr-3 py-1 text-gray-400 select-none border-r border-gray-200 bg-gray-50 align-top font-mono text-xs\">\n        {line.lineNumber}\n      </td>\n      <td\n        className=\"py-1 align-top border-r border-gray-200\"\n        style={{ width: `${sourcePct}%` }}\n      >\n        <div className=\"px-4 whitespace-pre-wrap break-words font-mono text-sm\">\n          {sourceHasTerm\n            ? highlightSourceText(\n                line.sourceText || '',\n                effectiveSearchTerm,\n                isActiveSource\n              )\n            : line.sourceText || '\\u00A0'}\n        </div>\n      </td>\n      <td\n        className=\"cursor-col-resize bg-gray-100 hover:bg-blue-300 active:bg-blue-400 p-0 align-top border-r border-gray-200\"\n        style={{ width: 4 }}\n        onMouseDown={onResizeStart}\n      />\n      {showTranslation && (\n        <td\n          className=\"px-4 py-1 align-top\"\n          rowSpan={rowSpan && rowSpan > 1 ? rowSpan : undefined}\n        >\n          <SearchContext.Provider value={searchCtxValue}>\n            <NodeLayer nodes={line.nodes} />\n          </SearchContext.Provider>\n        </td>\n      )}\n    </tr>\n  );\n}"
+          },
+          {
+            "file": "src/App/components/nodes/StyledSpan.tsx",
+            "start_line": 17,
+            "end_line": 97,
+            "start_col": 23,
+            "end_col": 1,
+            "fragment": "text: string, term: string, isActive: boolean) {\n  if (!term) return text;\n  const lower = text.toLowerCase();\n  const termLower = term.toLowerCase();\n  const parts: { t: string; match: boolean }[] = [];\n  let lastIndex = 0;\n  let index = lower.indexOf(termLower);\n  while (index !== -1) {\n    if (index > lastIndex) {\n      parts.push({ t: text.slice(lastIndex, index), match: false });\n    }\n    parts.push({ t: text.slice(index, index + term.length), match: true });\n    lastIndex = index + term.length;\n    index = lower.indexOf(termLower, lastIndex);\n  }\n  if (lastIndex < text.length) {\n    parts.push({ t: text.slice(lastIndex), match: false });\n  }\n  return parts.map((p, i) =>\n    p.match ? (\n      <mark\n        key={i}\n        className={cx(\n          'rounded-sm',\n          isActive ? 'bg-yellow-300 text-black' : 'bg-yellow-100 text-black'\n        )}\n      >\n        {p.t}\n      </mark>\n    ) : (\n      <span key={i}>{p.t}</span>\n    )\n  );\n}\n\nexport function StyledSpan({\n  text,\n  classes,\n  hover,\n  onClick,\n  onHover,\n  refPos,\n}: Props) {\n  const { setHovered, scheduleHide, cancelClear } = useHover();\n  const searchCtx = useContext(SearchContext);\n  const filePath = useContext(FilePathContext);\n  const elRef = useRef<HTMLSpanElement>(null);\n  const hoveredRef = useRef(false);\n  const hasTooltip = !!(hover || refPos !== undefined);\n\n  const handleEnter = () => {\n    if (hasTooltip && elRef.current) {\n      setHovered({ hover: hover ?? { title: '' }, trigger: elRef.current, refPos, filePath });\n      hoveredRef.current = true;\n    }\n    onHover?.();\n  };\n\n  useEffect(() => {\n    if (hoveredRef.current && hasTooltip && elRef.current) {\n      setHovered({ hover: hover ?? { title: '' }, trigger: elRef.current, refPos, filePath });\n    }\n  }, [hover, refPos, setHovered, filePath]);\n\n  const handleLeave = () => {\n    hoveredRef.current = false;\n    scheduleHide();\n  };\n\n  return (\n    <span\n      ref={elRef}\n      className={cx(classes?.join(' '), hasTooltip && 'cursor-help underline decoration-dotted underline-offset-2')}\n      onMouseEnter={handleEnter}\n      onMouseLeave={handleLeave}\n      onClick={onClick}\n    >\n      {searchCtx.term ? highlightText(text, searchCtx.term, searchCtx.isActiveMatch) : text}\n    </span>\n  );\n}"
+          }
+        ],
+        "token_count": 226,
+        "line_count": 155,
+        "fingerprint": "dup:40e1c613",
+        "actions": [
+          {
+            "type": "extract-shared",
+            "auto_fixable": false,
+            "description": "Extract duplicated code (155 lines, 2 instances) into a shared function"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the duplicated code",
+            "comment": "// fallow-ignore-next-line code-duplication"
+          }
+        ]
+      },
+      {
+        "instances": [
+          {
+            "file": "src/main/translationService/makeSemanticGraph.ts",
+            "start_line": 211,
+            "end_line": 215,
+            "start_col": 8,
+            "end_col": 25,
+            "fragment": "name = node.getName() || 'anonymous';\n  const params = node.getParameters().map(p => p.getName());\n  const body = node.getBody();\n  const children = body && Node.isBlock(body) ? processBlock(body, indent + 1) : [];\n  return makeNodeFromAst("
+          },
+          {
+            "file": "src/main/translationService/makeSemanticGraph.ts",
+            "start_line": 240,
+            "end_line": 244,
+            "start_col": 8,
+            "end_col": 25,
+            "fragment": "name = node.getName();\n  const params = node.getParameters().map(p => p.getName());\n  const body = node.getBody();\n  const children = body && Node.isBlock(body) ? processBlock(body, indent + 1) : [];\n  return makeNodeFromAst("
+          }
+        ],
+        "token_count": 65,
+        "line_count": 5,
+        "fingerprint": "dup:01a08456",
+        "suggested_name": "body",
+        "actions": [
+          {
+            "type": "extract-shared",
+            "auto_fixable": false,
+            "description": "Extract duplicated code (5 lines, 2 instances) into a shared function"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the duplicated code",
+            "comment": "// fallow-ignore-next-line code-duplication"
+          }
+        ]
+      },
+      {
+        "instances": [
+          {
+            "file": "test/annual.spec.ts",
+            "start_line": 26,
+            "end_line": 30,
+            "start_col": 74,
+            "end_col": 71,
+            "fragment": "type: 'file' as const }];\n    (window as any).electronAPI = {\n      loadProject: async ({ path: _p }: { path: string }) => ({ tree, path: '/tmp/annual' }),\n      getTree: async () => ({ tree }),\n      loadFileSource: async ({ path: _p }: { path: string }) => ({ path"
+          },
+          {
+            "file": "test/annual.spec.ts",
+            "start_line": 133,
+            "end_line": 137,
+            "start_col": 56,
+            "end_col": 73,
+            "fragment": "type: 'file' as const }];\n      (window as any).electronAPI = {\n        loadProject: async ({ path: _p }: { path: string }) => ({ tree, path: '/tmp/annual' }),\n        getTree: async () => ({ tree }),\n        loadFileSource: async ({ path: _p }: { path: string }) => ({ path"
+          },
+          {
+            "file": "test/annual.spec.ts",
+            "start_line": 173,
+            "end_line": 177,
+            "start_col": 60,
+            "end_col": 73,
+            "fragment": "type: 'file' as const }];\n      (window as any).electronAPI = {\n        loadProject: async ({ path: _p }: { path: string }) => ({ tree, path: '/tmp/annual' }),\n        getTree: async () => ({ tree }),\n        loadFileSource: async ({ path: _p }: { path: string }) => ({ path"
+          },
+          {
+            "file": "test/annual.spec.ts",
+            "start_line": 218,
+            "end_line": 222,
+            "start_col": 68,
+            "end_col": 73,
+            "fragment": "type: 'file' as const }];\n      (window as any).electronAPI = {\n        loadProject: async ({ path: _p }: { path: string }) => ({ tree, path: '/tmp/annual' }),\n        getTree: async () => ({ tree }),\n        loadFileSource: async ({ path: _p }: { path: string }) => ({ path"
+          }
+        ],
+        "token_count": 63,
+        "line_count": 5,
+        "fingerprint": "dup:c9836dd9",
+        "suggested_name": "path",
+        "actions": [
+          {
+            "type": "extract-shared",
+            "auto_fixable": false,
+            "description": "Extract duplicated code (5 lines, 4 instances) into a shared function"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the duplicated code",
+            "comment": "// fallow-ignore-next-line code-duplication"
+          }
+        ]
+      },
+      {
+        "instances": [
+          {
+            "file": "test/annual.spec.ts",
+            "start_line": 31,
+            "end_line": 37,
+            "start_col": 70,
+            "end_col": 16,
+            "fragment": "{ viewModel: data.viewModel, path: data.filePath }),\n      browseDirectory: async ({ requestedPath: _p }: { requestedPath?: string }) => ({ currentPath: '/tmp', parentPath: null, directories: [] }),\n      uploadFolder: async ({ files: _f }: { files: any[] }) => ({ tree, path: '/tmp/annual' }),\n      openDirectorySelector: async () => null,\n      onMenuLoadFolder: () => () => {},\n    };\n  }, { viewModel"
+          },
+          {
+            "file": "test/annual.spec.ts",
+            "start_line": 138,
+            "end_line": 144,
+            "start_col": 72,
+            "end_col": 18,
+            "fragment": "{ viewModel: data.viewModel, path: 'App.tsx' }),\n        browseDirectory: async ({ requestedPath: _p }: { requestedPath?: string }) => ({ currentPath: '/tmp', parentPath: null, directories: [] }),\n        uploadFolder: async ({ files: _f }: { files: any[] }) => ({ tree, path: '/tmp/annual' }),\n        openDirectorySelector: async () => null,\n        onMenuLoadFolder: () => () => {},\n      };\n    }, { viewModel"
+          },
+          {
+            "file": "test/annual.spec.ts",
+            "start_line": 178,
+            "end_line": 184,
+            "start_col": 72,
+            "end_col": 18,
+            "fragment": "{ viewModel: data.viewModel, path: 'Props.tsx' }),\n        browseDirectory: async ({ requestedPath: _p }: { requestedPath?: string }) => ({ currentPath: '/tmp', parentPath: null, directories: [] }),\n        uploadFolder: async ({ files: _f }: { files: any[] }) => ({ tree, path: '/tmp/annual' }),\n        openDirectorySelector: async () => null,\n        onMenuLoadFolder: () => () => {},\n      };\n    }, { viewModel"
+          },
+          {
+            "file": "test/annual.spec.ts",
+            "start_line": 223,
+            "end_line": 229,
+            "start_col": 72,
+            "end_col": 18,
+            "fragment": "{ viewModel: data.viewModel, path: 'FilterBar.tsx' }),\n        browseDirectory: async ({ requestedPath: _p }: { requestedPath?: string }) => ({ currentPath: '/tmp', parentPath: null, directories: [] }),\n        uploadFolder: async ({ files: _f }: { files: any[] }) => ({ tree, path: '/tmp/annual' }),\n        openDirectorySelector: async () => null,\n        onMenuLoadFolder: () => () => {},\n      };\n    }, { viewModel"
+          }
+        ],
+        "token_count": 69,
+        "line_count": 7,
+        "fingerprint": "dup:1bbe3d86",
+        "suggested_name": "viewModel",
+        "actions": [
+          {
+            "type": "extract-shared",
+            "auto_fixable": false,
+            "description": "Extract duplicated code (7 lines, 4 instances) into a shared function"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the duplicated code",
+            "comment": "// fallow-ignore-next-line code-duplication"
+          }
+        ]
+      },
+      {
+        "instances": [
+          {
+            "file": "test/annual.spec.ts",
+            "start_line": 51,
+            "end_line": 57,
+            "start_col": 57,
+            "end_col": 53,
+            "fragment": ", async ({ page }) => {\n    await loadAppWithFile(page);\n\n    // Select the file in the sidebar.\n    await page.getByText('AnnualSummary.tsx', { exact: false }).first().click();\n    // Wait for the function-definition line to render.\n    await expect(page.locator('body')).toContainText("
+          },
+          {
+            "file": "test/annual.spec.ts",
+            "start_line": 102,
+            "end_line": 105,
+            "start_col": 71,
+            "end_col": 53,
+            "fragment": ", async ({ page }) => {\n    await loadAppWithFile(page);\n    await page.getByText('AnnualSummary.tsx', { exact: false }).first().click();\n    await expect(page.locator('body')).toContainText("
+          }
+        ],
+        "token_count": 54,
+        "line_count": 7,
+        "fingerprint": "dup:cf0ba936",
+        "actions": [
+          {
+            "type": "extract-shared",
+            "auto_fixable": false,
+            "description": "Extract duplicated code (7 lines, 2 instances) into a shared function"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the duplicated code",
+            "comment": "// fallow-ignore-next-line code-duplication"
+          }
+        ]
+      },
+      {
+        "instances": [
+          {
+            "file": "test/annual.spec.ts",
+            "start_line": 220,
+            "end_line": 225,
+            "start_col": 64,
+            "end_col": 78,
+            "fragment": "{ tree, path: '/tmp/annual' }),\n        getTree: async () => ({ tree }),\n        loadFileSource: async ({ path: _p }: { path: string }) => ({ path: 'FilterBar.tsx', lines: data.sourceLines }),\n        loadFileTranslation: async ({ path: _p }: { path: string }) => ({ viewModel: data.viewModel, path: 'FilterBar.tsx' }),\n        browseDirectory: async ({ requestedPath: _p }: { requestedPath?: string }) => ({ currentPath: '/tmp', parentPath: null, directories: [] }),\n        uploadFolder: async ({ files: _f }: { files: any[] }) => ({ tree, path"
+          },
+          {
+            "file": "test/navigation.spec.ts",
+            "start_line": 202,
+            "end_line": 207,
+            "start_col": 64,
+            "end_col": 78,
+            "fragment": "{ tree, path: '/tmp/filter' }),\n        getTree: async () => ({ tree }),\n        loadFileSource: async ({ path: _p }: { path: string }) => ({ path: 'FilterBar.tsx', lines: data.sourceLines }),\n        loadFileTranslation: async ({ path: _p }: { path: string }) => ({ viewModel: data.viewModel, path: 'FilterBar.tsx' }),\n        browseDirectory: async ({ requestedPath: _p }: { requestedPath?: string }) => ({ currentPath: '/tmp', parentPath: null, directories: [] }),\n        uploadFolder: async ({ files: _f }: { files: any[] }) => ({ tree, path"
+          }
+        ],
+        "token_count": 104,
+        "line_count": 6,
+        "fingerprint": "dup:d04d428c",
+        "suggested_name": "path",
+        "actions": [
+          {
+            "type": "extract-shared",
+            "auto_fixable": false,
+            "description": "Extract duplicated code (6 lines, 2 instances) into a shared function"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the duplicated code",
+            "comment": "// fallow-ignore-next-line code-duplication"
+          }
+        ]
+      },
+      {
+        "instances": [
+          {
+            "file": "test/hover.spec.ts",
+            "start_line": 18,
+            "end_line": 27,
+            "start_col": 2,
+            "end_col": 118,
+            "fragment": "const viewModel = buildFileData(SOURCE, 'Demo.tsx').viewModel;\n  const sourceLines = viewModel.lines.map((l) => ({ lineNumber: l.lineNumber, text: l.sourceText }));\n  await page.addInitScript((data) => {\n    localStorage.setItem('repoPath', '/tmp/demo');\n    const tree = [{ name: 'Demo.tsx', path: 'Demo.tsx', type: 'file' as const }];\n    (window as any).electronAPI = {\n      loadProject: async ({ path: _p }: { path: string }) => ({ tree, path: '/tmp/demo' }),\n      getTree: async () => ({ tree }),\n      loadFileSource: async ({ path: _p }: { path: string }) => ({ path: 'Demo.tsx', lines: data.sourceLines }),\n      loadFileTranslation: async ({ path: _p }: { path: string }) => ({ viewModel: data.viewModel, path: 'Demo.tsx' })"
+          },
+          {
+            "file": "test/navigation.spec.ts",
+            "start_line": 18,
+            "end_line": 27,
+            "start_col": 2,
+            "end_col": 118,
+            "fragment": "const viewModel = buildFileData(SOURCE, 'Demo.tsx').viewModel;\n  const sourceLines = viewModel.lines.map((l) => ({ lineNumber: l.lineNumber, text: l.sourceText }));\n  await page.addInitScript((data) => {\n    localStorage.setItem('repoPath', '/tmp/demo');\n    const tree = [{ name: 'Demo.tsx', path: 'Demo.tsx', type: 'file' as const }];\n    (window as any).electronAPI = {\n      loadProject: async ({ path: _p }: { path: string }) => ({ tree, path: '/tmp/demo' }),\n      getTree: async () => ({ tree }),\n      loadFileSource: async ({ path: _p }: { path: string }) => ({ path: 'Demo.tsx', lines: data.sourceLines }),\n      loadFileTranslation: async ({ path: _p }: { path: string }) => ({ viewModel: data.viewModel, path: 'Demo.tsx' })"
+          }
+        ],
+        "token_count": 166,
+        "line_count": 10,
+        "fingerprint": "dup:72b28929",
+        "suggested_name": "path",
+        "actions": [
+          {
+            "type": "extract-shared",
+            "auto_fixable": false,
+            "description": "Extract duplicated code (10 lines, 2 instances) into a shared function"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the duplicated code",
+            "comment": "// fallow-ignore-next-line code-duplication"
+          }
+        ]
+      },
+      {
+        "instances": [
+          {
+            "file": "test/hover.spec.ts",
+            "start_line": 28,
+            "end_line": 35,
+            "start_col": 34,
+            "end_col": 18,
+            "fragment": "{ sections: [] }),\n      browseDirectory: async ({ requestedPath: _p }: { requestedPath?: string }) => ({ currentPath: '/tmp', parentPath: null, directories: [] }),\n      uploadFolder: async ({ files: _f }: { files: any[] }) => ({ tree, path: '/tmp/demo' }),\n      openDirectorySelector: async () => null,\n      onMenuLoadFolder: () => () => {},\n    };\n  }, { viewModel, sourceLines });\n  await page.goto("
+          },
+          {
+            "file": "test/navigation.spec.ts",
+            "start_line": 27,
+            "end_line": 34,
+            "start_col": 70,
+            "end_col": 18,
+            "fragment": "{ viewModel: data.viewModel, path: 'Demo.tsx' }),\n      browseDirectory: async ({ requestedPath: _p }: { requestedPath?: string }) => ({ currentPath: '/tmp', parentPath: null, directories: [] }),\n      uploadFolder: async ({ files: _f }: { files: any[] }) => ({ tree, path: '/tmp/demo' }),\n      openDirectorySelector: async () => null,\n      onMenuLoadFolder: () => () => {},\n    };\n  }, { viewModel, sourceLines });\n  await page.goto("
+          }
+        ],
+        "token_count": 81,
+        "line_count": 8,
+        "fingerprint": "dup:e1a9fa71",
+        "suggested_name": "requestedPath",
+        "actions": [
+          {
+            "type": "extract-shared",
+            "auto_fixable": false,
+            "description": "Extract duplicated code (8 lines, 2 instances) into a shared function"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the duplicated code",
+            "comment": "// fallow-ignore-next-line code-duplication"
+          }
+        ]
+      },
+      {
+        "instances": [
+          {
+            "file": "test/navigation.spec.ts",
+            "start_line": 29,
+            "end_line": 39,
+            "start_col": 64,
+            "end_col": 25,
+            "fragment": "{ tree, path: '/tmp/demo' }),\n      openDirectorySelector: async () => null,\n      onMenuLoadFolder: () => () => {},\n    };\n  }, { viewModel, sourceLines });\n  await page.goto(`http://localhost:5174/${extraHash || ''}`);\n\n  // If we already navigated via hash URL, just wait for the file to load.\n  // Otherwise, select the file from the sidebar.\n  if (!extraHash) {\n    await page.getByText("
+          },
+          {
+            "file": "test/navigation.spec.ts",
+            "start_line": 207,
+            "end_line": 214,
+            "start_col": 66,
+            "end_col": 27,
+            "fragment": "{ tree, path: '/tmp/filter' }),\n        openDirectorySelector: async () => null,\n        onMenuLoadFolder: () => () => {},\n      };\n    }, { viewModel, sourceLines });\n    await page.goto(`http://localhost:5174/${extraHash || ''}`);\n    if (!extraHash) {\n      await page.getByText("
+          }
+        ],
+        "token_count": 52,
+        "line_count": 11,
+        "fingerprint": "dup:2047c85f",
+        "actions": [
+          {
+            "type": "extract-shared",
+            "auto_fixable": false,
+            "description": "Extract duplicated code (11 lines, 2 instances) into a shared function"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the duplicated code",
+            "comment": "// fallow-ignore-next-line code-duplication"
+          }
+        ]
+      }
+    ],
+    "clone_families": [
+      {
+        "files": [
+          "src/App/components/LineRow.tsx",
+          "src/App/components/nodes/StyledSpan.tsx"
+        ],
+        "groups": [
+          {
+            "instances": [
+              {
+                "file": "src/App/components/LineRow.tsx",
+                "start_line": 29,
+                "end_line": 183,
+                "start_col": 29,
+                "end_col": 1,
+                "fragment": "text: string, term: string, isActive: boolean) {\n  if (!term) return text;\n  const lower = text.toLowerCase();\n  const termLower = term.toLowerCase();\n  const parts: { t: string; match: boolean }[] = [];\n  let lastIndex = 0;\n  let index = lower.indexOf(termLower);\n  while (index !== -1) {\n    if (index > lastIndex) {\n      parts.push({ t: text.slice(lastIndex, index), match: false });\n    }\n    parts.push({ t: text.slice(index, index + term.length), match: true });\n    lastIndex = index + term.length;\n    index = lower.indexOf(termLower, lastIndex);\n  }\n  if (lastIndex < text.length) {\n    parts.push({ t: text.slice(lastIndex), match: false });\n  }\n  return parts.map((p, i) =>\n    p.match ? (\n      <mark\n        key={i}\n        className={cx(\n          'rounded-sm',\n          isActive ? 'bg-yellow-300 text-black' : 'bg-yellow-100 text-black'\n        )}\n      >\n        {p.t}\n      </mark>\n    ) : (\n      <span key={i}>{p.t}</span>\n    )\n  );\n}\n\nexport function LineRow({\n  line,\n  lineIndex,\n  bucketStyle,\n  isInterface,\n  onResizeStart,\n  sourcePct,\n  searchTerm,\n  searchMatches,\n  activeMatchIndex,\n  navVar,\n  isNavHighlight,\n  parentRowIndex,\n}: Props) {\n  const rowRef = useRef<HTMLTableRowElement>(null);\n  const [flash, setFlash] = useState(false);\n\n  useEffect(() => {\n    if (isNavHighlight && rowRef.current) {\n      setFlash(true);\n      const timer = setTimeout(() => setFlash(false), 3000);\n      return () => clearTimeout(timer);\n    }\n  }, [isNavHighlight]);\n\n  const showTranslation = !line.skipTranslation && line.nodes.length > 0;\n  const rowSpan = line.translationRowSpan;\n\n  const effectiveSearchTerm = searchTerm || navVar || '';\n\n  const sourceHasTerm = effectiveSearchTerm &&\n    line.sourceText.toLowerCase().includes(effectiveSearchTerm.toLowerCase());\n\n  function matchIndexForLine(targetLineIndex: number, checkTrans: boolean): number {\n    return searchMatches?.findIndex((m) =>\n      m.lineIndex === targetLineIndex && (checkTrans ? m.inTranslation : m.inSource)\n    ) ?? -1;\n  }\n\n  function parentTransMatchActive(): boolean {\n    if (parentRowIndex == null || parentRowIndex < 0) return false;\n    const idx = matchIndexForLine(parentRowIndex, true);\n    return idx >= 0 && idx === activeMatchIndex;\n  }\n\n  const isActiveSource = (() => {\n    if (!searchTerm) return false;\n    const idx = matchIndexForLine(lineIndex, false);\n    if (idx >= 0) return idx === activeMatchIndex;\n    return parentTransMatchActive();\n  })();\n\n  const searchCtxValue = useMemo(() => {\n    if (!effectiveSearchTerm) return { term: '', isActiveMatch: false };\n    const term = effectiveSearchTerm;\n    let isActive = false;\n    if (searchTerm) {\n      const myIdx = searchMatches?.findIndex((m) => m.lineIndex === lineIndex && m.inTranslation) ?? -1;\n      isActive = myIdx === activeMatchIndex;\n      if (!isActive && parentRowIndex != null && parentRowIndex >= 0) {\n        const parentIdx = searchMatches?.findIndex((m) => m.lineIndex === parentRowIndex && m.inTranslation) ?? -1;\n        isActive = parentIdx === activeMatchIndex;\n      }\n    }\n    return { term, isActiveMatch: isActive };\n  }, [effectiveSearchTerm, searchTerm, searchMatches, lineIndex, activeMatchIndex, parentRowIndex]);\n\n  return (\n    <tr\n      ref={rowRef}\n      className={cx(\n        'hover:bg-gray-50/40 transition-colors',\n        bucketStyle,\n        flash && 'animate-pulse bg-yellow-50'\n      )}\n      data-bucket={BUCKET_LABELS[line.bucket]}\n      data-line={line.lineNumber}\n    >\n      <td\n        className={cx(\n          'p-0 align-top border-l-2',\n          isInterface ? 'border-blue-500' : 'border-transparent'\n        )}\n        style={{ width: 6 }}\n      />\n      <td className=\"text-right pr-3 py-1 text-gray-400 select-none border-r border-gray-200 bg-gray-50 align-top font-mono text-xs\">\n        {line.lineNumber}\n      </td>\n      <td\n        className=\"py-1 align-top border-r border-gray-200\"\n        style={{ width: `${sourcePct}%` }}\n      >\n        <div className=\"px-4 whitespace-pre-wrap break-words font-mono text-sm\">\n          {sourceHasTerm\n            ? highlightSourceText(\n                line.sourceText || '',\n                effectiveSearchTerm,\n                isActiveSource\n              )\n            : line.sourceText || '\\u00A0'}\n        </div>\n      </td>\n      <td\n        className=\"cursor-col-resize bg-gray-100 hover:bg-blue-300 active:bg-blue-400 p-0 align-top border-r border-gray-200\"\n        style={{ width: 4 }}\n        onMouseDown={onResizeStart}\n      />\n      {showTranslation && (\n        <td\n          className=\"px-4 py-1 align-top\"\n          rowSpan={rowSpan && rowSpan > 1 ? rowSpan : undefined}\n        >\n          <SearchContext.Provider value={searchCtxValue}>\n            <NodeLayer nodes={line.nodes} />\n          </SearchContext.Provider>\n        </td>\n      )}\n    </tr>\n  );\n}"
+              },
+              {
+                "file": "src/App/components/nodes/StyledSpan.tsx",
+                "start_line": 17,
+                "end_line": 97,
+                "start_col": 23,
+                "end_col": 1,
+                "fragment": "text: string, term: string, isActive: boolean) {\n  if (!term) return text;\n  const lower = text.toLowerCase();\n  const termLower = term.toLowerCase();\n  const parts: { t: string; match: boolean }[] = [];\n  let lastIndex = 0;\n  let index = lower.indexOf(termLower);\n  while (index !== -1) {\n    if (index > lastIndex) {\n      parts.push({ t: text.slice(lastIndex, index), match: false });\n    }\n    parts.push({ t: text.slice(index, index + term.length), match: true });\n    lastIndex = index + term.length;\n    index = lower.indexOf(termLower, lastIndex);\n  }\n  if (lastIndex < text.length) {\n    parts.push({ t: text.slice(lastIndex), match: false });\n  }\n  return parts.map((p, i) =>\n    p.match ? (\n      <mark\n        key={i}\n        className={cx(\n          'rounded-sm',\n          isActive ? 'bg-yellow-300 text-black' : 'bg-yellow-100 text-black'\n        )}\n      >\n        {p.t}\n      </mark>\n    ) : (\n      <span key={i}>{p.t}</span>\n    )\n  );\n}\n\nexport function StyledSpan({\n  text,\n  classes,\n  hover,\n  onClick,\n  onHover,\n  refPos,\n}: Props) {\n  const { setHovered, scheduleHide, cancelClear } = useHover();\n  const searchCtx = useContext(SearchContext);\n  const filePath = useContext(FilePathContext);\n  const elRef = useRef<HTMLSpanElement>(null);\n  const hoveredRef = useRef(false);\n  const hasTooltip = !!(hover || refPos !== undefined);\n\n  const handleEnter = () => {\n    if (hasTooltip && elRef.current) {\n      setHovered({ hover: hover ?? { title: '' }, trigger: elRef.current, refPos, filePath });\n      hoveredRef.current = true;\n    }\n    onHover?.();\n  };\n\n  useEffect(() => {\n    if (hoveredRef.current && hasTooltip && elRef.current) {\n      setHovered({ hover: hover ?? { title: '' }, trigger: elRef.current, refPos, filePath });\n    }\n  }, [hover, refPos, setHovered, filePath]);\n\n  const handleLeave = () => {\n    hoveredRef.current = false;\n    scheduleHide();\n  };\n\n  return (\n    <span\n      ref={elRef}\n      className={cx(classes?.join(' '), hasTooltip && 'cursor-help underline decoration-dotted underline-offset-2')}\n      onMouseEnter={handleEnter}\n      onMouseLeave={handleLeave}\n      onClick={onClick}\n    >\n      {searchCtx.term ? highlightText(text, searchCtx.term, searchCtx.isActiveMatch) : text}\n    </span>\n  );\n}"
+              }
+            ],
+            "token_count": 226,
+            "line_count": 155,
+            "fingerprint": "dup:40e1c613",
+            "actions": [
+              {
+                "type": "extract-shared",
+                "auto_fixable": false,
+                "description": "Extract duplicated code (155 lines, 2 instances) into a shared function"
+              },
+              {
+                "type": "suppress-line",
+                "auto_fixable": false,
+                "description": "Suppress with an inline comment above the duplicated code",
+                "comment": "// fallow-ignore-next-line code-duplication"
+              }
+            ]
+          }
+        ],
+        "total_duplicated_lines": 155,
+        "total_duplicated_tokens": 226,
+        "suggestions": [
+          {
+            "kind": "ExtractModule",
+            "description": "Extract 1 shared clone group (155 lines) from LineRow.tsx, StyledSpan.tsx into a shared directory",
+            "estimated_savings": 155
+          }
+        ],
+        "actions": [
+          {
+            "type": "extract-shared",
+            "auto_fixable": false,
+            "description": "Extract 1 duplicated code block (155 lines) into a shared module",
+            "note": "These clone groups share the same files, indicating a structural relationship; refactor together"
+          },
+          {
+            "type": "apply-suggestion",
+            "auto_fixable": false,
+            "description": "Extract 1 shared clone group (155 lines) from LineRow.tsx, StyledSpan.tsx into a shared directory"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the duplicated code",
+            "comment": "// fallow-ignore-next-line code-duplication"
+          }
+        ]
+      },
+      {
+        "files": [
+          "src/main/translationService/makeSemanticGraph.ts"
+        ],
+        "groups": [
+          {
+            "instances": [
+              {
+                "file": "src/main/translationService/makeSemanticGraph.ts",
+                "start_line": 211,
+                "end_line": 215,
+                "start_col": 8,
+                "end_col": 25,
+                "fragment": "name = node.getName() || 'anonymous';\n  const params = node.getParameters().map(p => p.getName());\n  const body = node.getBody();\n  const children = body && Node.isBlock(body) ? processBlock(body, indent + 1) : [];\n  return makeNodeFromAst("
+              },
+              {
+                "file": "src/main/translationService/makeSemanticGraph.ts",
+                "start_line": 240,
+                "end_line": 244,
+                "start_col": 8,
+                "end_col": 25,
+                "fragment": "name = node.getName();\n  const params = node.getParameters().map(p => p.getName());\n  const body = node.getBody();\n  const children = body && Node.isBlock(body) ? processBlock(body, indent + 1) : [];\n  return makeNodeFromAst("
+              }
+            ],
+            "token_count": 65,
+            "line_count": 5,
+            "fingerprint": "dup:01a08456",
+            "suggested_name": "body",
+            "actions": [
+              {
+                "type": "extract-shared",
+                "auto_fixable": false,
+                "description": "Extract duplicated code (5 lines, 2 instances) into a shared function"
+              },
+              {
+                "type": "suppress-line",
+                "auto_fixable": false,
+                "description": "Suppress with an inline comment above the duplicated code",
+                "comment": "// fallow-ignore-next-line code-duplication"
+              }
+            ]
+          }
+        ],
+        "total_duplicated_lines": 5,
+        "total_duplicated_tokens": 65,
+        "suggestions": [
+          {
+            "kind": "ExtractFunction",
+            "description": "Extract shared function (5 lines) from makeSemanticGraph.ts, makeSemanticGraph.ts",
+            "estimated_savings": 5
+          }
+        ],
+        "actions": [
+          {
+            "type": "extract-shared",
+            "auto_fixable": false,
+            "description": "Extract 1 duplicated code block (5 lines) into a shared module",
+            "note": "These clone groups share the same files, indicating a structural relationship; refactor together"
+          },
+          {
+            "type": "apply-suggestion",
+            "auto_fixable": false,
+            "description": "Extract shared function (5 lines) from makeSemanticGraph.ts, makeSemanticGraph.ts"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the duplicated code",
+            "comment": "// fallow-ignore-next-line code-duplication"
+          }
+        ]
+      },
+      {
+        "files": [
+          "test/annual.spec.ts"
+        ],
+        "groups": [
+          {
+            "instances": [
+              {
+                "file": "test/annual.spec.ts",
+                "start_line": 26,
+                "end_line": 30,
+                "start_col": 74,
+                "end_col": 71,
+                "fragment": "type: 'file' as const }];\n    (window as any).electronAPI = {\n      loadProject: async ({ path: _p }: { path: string }) => ({ tree, path: '/tmp/annual' }),\n      getTree: async () => ({ tree }),\n      loadFileSource: async ({ path: _p }: { path: string }) => ({ path"
+              },
+              {
+                "file": "test/annual.spec.ts",
+                "start_line": 133,
+                "end_line": 137,
+                "start_col": 56,
+                "end_col": 73,
+                "fragment": "type: 'file' as const }];\n      (window as any).electronAPI = {\n        loadProject: async ({ path: _p }: { path: string }) => ({ tree, path: '/tmp/annual' }),\n        getTree: async () => ({ tree }),\n        loadFileSource: async ({ path: _p }: { path: string }) => ({ path"
+              },
+              {
+                "file": "test/annual.spec.ts",
+                "start_line": 173,
+                "end_line": 177,
+                "start_col": 60,
+                "end_col": 73,
+                "fragment": "type: 'file' as const }];\n      (window as any).electronAPI = {\n        loadProject: async ({ path: _p }: { path: string }) => ({ tree, path: '/tmp/annual' }),\n        getTree: async () => ({ tree }),\n        loadFileSource: async ({ path: _p }: { path: string }) => ({ path"
+              },
+              {
+                "file": "test/annual.spec.ts",
+                "start_line": 218,
+                "end_line": 222,
+                "start_col": 68,
+                "end_col": 73,
+                "fragment": "type: 'file' as const }];\n      (window as any).electronAPI = {\n        loadProject: async ({ path: _p }: { path: string }) => ({ tree, path: '/tmp/annual' }),\n        getTree: async () => ({ tree }),\n        loadFileSource: async ({ path: _p }: { path: string }) => ({ path"
+              }
+            ],
+            "token_count": 63,
+            "line_count": 5,
+            "fingerprint": "dup:c9836dd9",
+            "suggested_name": "path",
+            "actions": [
+              {
+                "type": "extract-shared",
+                "auto_fixable": false,
+                "description": "Extract duplicated code (5 lines, 4 instances) into a shared function"
+              },
+              {
+                "type": "suppress-line",
+                "auto_fixable": false,
+                "description": "Suppress with an inline comment above the duplicated code",
+                "comment": "// fallow-ignore-next-line code-duplication"
+              }
+            ]
+          },
+          {
+            "instances": [
+              {
+                "file": "test/annual.spec.ts",
+                "start_line": 31,
+                "end_line": 37,
+                "start_col": 70,
+                "end_col": 16,
+                "fragment": "{ viewModel: data.viewModel, path: data.filePath }),\n      browseDirectory: async ({ requestedPath: _p }: { requestedPath?: string }) => ({ currentPath: '/tmp', parentPath: null, directories: [] }),\n      uploadFolder: async ({ files: _f }: { files: any[] }) => ({ tree, path: '/tmp/annual' }),\n      openDirectorySelector: async () => null,\n      onMenuLoadFolder: () => () => {},\n    };\n  }, { viewModel"
+              },
+              {
+                "file": "test/annual.spec.ts",
+                "start_line": 138,
+                "end_line": 144,
+                "start_col": 72,
+                "end_col": 18,
+                "fragment": "{ viewModel: data.viewModel, path: 'App.tsx' }),\n        browseDirectory: async ({ requestedPath: _p }: { requestedPath?: string }) => ({ currentPath: '/tmp', parentPath: null, directories: [] }),\n        uploadFolder: async ({ files: _f }: { files: any[] }) => ({ tree, path: '/tmp/annual' }),\n        openDirectorySelector: async () => null,\n        onMenuLoadFolder: () => () => {},\n      };\n    }, { viewModel"
+              },
+              {
+                "file": "test/annual.spec.ts",
+                "start_line": 178,
+                "end_line": 184,
+                "start_col": 72,
+                "end_col": 18,
+                "fragment": "{ viewModel: data.viewModel, path: 'Props.tsx' }),\n        browseDirectory: async ({ requestedPath: _p }: { requestedPath?: string }) => ({ currentPath: '/tmp', parentPath: null, directories: [] }),\n        uploadFolder: async ({ files: _f }: { files: any[] }) => ({ tree, path: '/tmp/annual' }),\n        openDirectorySelector: async () => null,\n        onMenuLoadFolder: () => () => {},\n      };\n    }, { viewModel"
+              },
+              {
+                "file": "test/annual.spec.ts",
+                "start_line": 223,
+                "end_line": 229,
+                "start_col": 72,
+                "end_col": 18,
+                "fragment": "{ viewModel: data.viewModel, path: 'FilterBar.tsx' }),\n        browseDirectory: async ({ requestedPath: _p }: { requestedPath?: string }) => ({ currentPath: '/tmp', parentPath: null, directories: [] }),\n        uploadFolder: async ({ files: _f }: { files: any[] }) => ({ tree, path: '/tmp/annual' }),\n        openDirectorySelector: async () => null,\n        onMenuLoadFolder: () => () => {},\n      };\n    }, { viewModel"
+              }
+            ],
+            "token_count": 69,
+            "line_count": 7,
+            "fingerprint": "dup:1bbe3d86",
+            "suggested_name": "viewModel",
+            "actions": [
+              {
+                "type": "extract-shared",
+                "auto_fixable": false,
+                "description": "Extract duplicated code (7 lines, 4 instances) into a shared function"
+              },
+              {
+                "type": "suppress-line",
+                "auto_fixable": false,
+                "description": "Suppress with an inline comment above the duplicated code",
+                "comment": "// fallow-ignore-next-line code-duplication"
+              }
+            ]
+          },
+          {
+            "instances": [
+              {
+                "file": "test/annual.spec.ts",
+                "start_line": 51,
+                "end_line": 57,
+                "start_col": 57,
+                "end_col": 53,
+                "fragment": ", async ({ page }) => {\n    await loadAppWithFile(page);\n\n    // Select the file in the sidebar.\n    await page.getByText('AnnualSummary.tsx', { exact: false }).first().click();\n    // Wait for the function-definition line to render.\n    await expect(page.locator('body')).toContainText("
+              },
+              {
+                "file": "test/annual.spec.ts",
+                "start_line": 102,
+                "end_line": 105,
+                "start_col": 71,
+                "end_col": 53,
+                "fragment": ", async ({ page }) => {\n    await loadAppWithFile(page);\n    await page.getByText('AnnualSummary.tsx', { exact: false }).first().click();\n    await expect(page.locator('body')).toContainText("
+              }
+            ],
+            "token_count": 54,
+            "line_count": 7,
+            "fingerprint": "dup:cf0ba936",
+            "actions": [
+              {
+                "type": "extract-shared",
+                "auto_fixable": false,
+                "description": "Extract duplicated code (7 lines, 2 instances) into a shared function"
+              },
+              {
+                "type": "suppress-line",
+                "auto_fixable": false,
+                "description": "Suppress with an inline comment above the duplicated code",
+                "comment": "// fallow-ignore-next-line code-duplication"
+              }
+            ]
+          }
+        ],
+        "total_duplicated_lines": 19,
+        "total_duplicated_tokens": 186,
+        "suggestions": [
+          {
+            "kind": "ExtractFunction",
+            "description": "Extract shared function (7 lines) from annual.spec.ts, annual.spec.ts, annual.spec.ts, annual.spec.ts",
+            "estimated_savings": 21
+          },
+          {
+            "kind": "ExtractFunction",
+            "description": "Extract shared function (5 lines) from annual.spec.ts, annual.spec.ts, annual.spec.ts, annual.spec.ts",
+            "estimated_savings": 15
+          },
+          {
+            "kind": "ExtractFunction",
+            "description": "Extract shared function (7 lines) from annual.spec.ts, annual.spec.ts",
+            "estimated_savings": 7
+          }
+        ],
+        "actions": [
+          {
+            "type": "extract-shared",
+            "auto_fixable": false,
+            "description": "Extract 3 duplicated code blocks (19 lines) into a shared module",
+            "note": "These clone groups share the same files, indicating a structural relationship; refactor together"
+          },
+          {
+            "type": "apply-suggestion",
+            "auto_fixable": false,
+            "description": "Extract shared function (7 lines) from annual.spec.ts, annual.spec.ts, annual.spec.ts, annual.spec.ts"
+          },
+          {
+            "type": "apply-suggestion",
+            "auto_fixable": false,
+            "description": "Extract shared function (5 lines) from annual.spec.ts, annual.spec.ts, annual.spec.ts, annual.spec.ts"
+          },
+          {
+            "type": "apply-suggestion",
+            "auto_fixable": false,
+            "description": "Extract shared function (7 lines) from annual.spec.ts, annual.spec.ts"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the duplicated code",
+            "comment": "// fallow-ignore-next-line code-duplication"
+          }
+        ]
+      },
+      {
+        "files": [
+          "test/annual.spec.ts",
+          "test/navigation.spec.ts"
+        ],
+        "groups": [
+          {
+            "instances": [
+              {
+                "file": "test/annual.spec.ts",
+                "start_line": 220,
+                "end_line": 225,
+                "start_col": 64,
+                "end_col": 78,
+                "fragment": "{ tree, path: '/tmp/annual' }),\n        getTree: async () => ({ tree }),\n        loadFileSource: async ({ path: _p }: { path: string }) => ({ path: 'FilterBar.tsx', lines: data.sourceLines }),\n        loadFileTranslation: async ({ path: _p }: { path: string }) => ({ viewModel: data.viewModel, path: 'FilterBar.tsx' }),\n        browseDirectory: async ({ requestedPath: _p }: { requestedPath?: string }) => ({ currentPath: '/tmp', parentPath: null, directories: [] }),\n        uploadFolder: async ({ files: _f }: { files: any[] }) => ({ tree, path"
+              },
+              {
+                "file": "test/navigation.spec.ts",
+                "start_line": 202,
+                "end_line": 207,
+                "start_col": 64,
+                "end_col": 78,
+                "fragment": "{ tree, path: '/tmp/filter' }),\n        getTree: async () => ({ tree }),\n        loadFileSource: async ({ path: _p }: { path: string }) => ({ path: 'FilterBar.tsx', lines: data.sourceLines }),\n        loadFileTranslation: async ({ path: _p }: { path: string }) => ({ viewModel: data.viewModel, path: 'FilterBar.tsx' }),\n        browseDirectory: async ({ requestedPath: _p }: { requestedPath?: string }) => ({ currentPath: '/tmp', parentPath: null, directories: [] }),\n        uploadFolder: async ({ files: _f }: { files: any[] }) => ({ tree, path"
+              }
+            ],
+            "token_count": 104,
+            "line_count": 6,
+            "fingerprint": "dup:d04d428c",
+            "suggested_name": "path",
+            "actions": [
+              {
+                "type": "extract-shared",
+                "auto_fixable": false,
+                "description": "Extract duplicated code (6 lines, 2 instances) into a shared function"
+              },
+              {
+                "type": "suppress-line",
+                "auto_fixable": false,
+                "description": "Suppress with an inline comment above the duplicated code",
+                "comment": "// fallow-ignore-next-line code-duplication"
+              }
+            ]
+          }
+        ],
+        "total_duplicated_lines": 6,
+        "total_duplicated_tokens": 104,
+        "suggestions": [
+          {
+            "kind": "ExtractFunction",
+            "description": "Extract shared function (6 lines) from annual.spec.ts, navigation.spec.ts",
+            "estimated_savings": 6
+          }
+        ],
+        "actions": [
+          {
+            "type": "extract-shared",
+            "auto_fixable": false,
+            "description": "Extract 1 duplicated code block (6 lines) into a shared module",
+            "note": "These clone groups share the same files, indicating a structural relationship; refactor together"
+          },
+          {
+            "type": "apply-suggestion",
+            "auto_fixable": false,
+            "description": "Extract shared function (6 lines) from annual.spec.ts, navigation.spec.ts"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the duplicated code",
+            "comment": "// fallow-ignore-next-line code-duplication"
+          }
+        ]
+      },
+      {
+        "files": [
+          "test/hover.spec.ts",
+          "test/navigation.spec.ts"
+        ],
+        "groups": [
+          {
+            "instances": [
+              {
+                "file": "test/hover.spec.ts",
+                "start_line": 18,
+                "end_line": 27,
+                "start_col": 2,
+                "end_col": 118,
+                "fragment": "const viewModel = buildFileData(SOURCE, 'Demo.tsx').viewModel;\n  const sourceLines = viewModel.lines.map((l) => ({ lineNumber: l.lineNumber, text: l.sourceText }));\n  await page.addInitScript((data) => {\n    localStorage.setItem('repoPath', '/tmp/demo');\n    const tree = [{ name: 'Demo.tsx', path: 'Demo.tsx', type: 'file' as const }];\n    (window as any).electronAPI = {\n      loadProject: async ({ path: _p }: { path: string }) => ({ tree, path: '/tmp/demo' }),\n      getTree: async () => ({ tree }),\n      loadFileSource: async ({ path: _p }: { path: string }) => ({ path: 'Demo.tsx', lines: data.sourceLines }),\n      loadFileTranslation: async ({ path: _p }: { path: string }) => ({ viewModel: data.viewModel, path: 'Demo.tsx' })"
+              },
+              {
+                "file": "test/navigation.spec.ts",
+                "start_line": 18,
+                "end_line": 27,
+                "start_col": 2,
+                "end_col": 118,
+                "fragment": "const viewModel = buildFileData(SOURCE, 'Demo.tsx').viewModel;\n  const sourceLines = viewModel.lines.map((l) => ({ lineNumber: l.lineNumber, text: l.sourceText }));\n  await page.addInitScript((data) => {\n    localStorage.setItem('repoPath', '/tmp/demo');\n    const tree = [{ name: 'Demo.tsx', path: 'Demo.tsx', type: 'file' as const }];\n    (window as any).electronAPI = {\n      loadProject: async ({ path: _p }: { path: string }) => ({ tree, path: '/tmp/demo' }),\n      getTree: async () => ({ tree }),\n      loadFileSource: async ({ path: _p }: { path: string }) => ({ path: 'Demo.tsx', lines: data.sourceLines }),\n      loadFileTranslation: async ({ path: _p }: { path: string }) => ({ viewModel: data.viewModel, path: 'Demo.tsx' })"
+              }
+            ],
+            "token_count": 166,
+            "line_count": 10,
+            "fingerprint": "dup:72b28929",
+            "suggested_name": "path",
+            "actions": [
+              {
+                "type": "extract-shared",
+                "auto_fixable": false,
+                "description": "Extract duplicated code (10 lines, 2 instances) into a shared function"
+              },
+              {
+                "type": "suppress-line",
+                "auto_fixable": false,
+                "description": "Suppress with an inline comment above the duplicated code",
+                "comment": "// fallow-ignore-next-line code-duplication"
+              }
+            ]
+          },
+          {
+            "instances": [
+              {
+                "file": "test/hover.spec.ts",
+                "start_line": 28,
+                "end_line": 35,
+                "start_col": 34,
+                "end_col": 18,
+                "fragment": "{ sections: [] }),\n      browseDirectory: async ({ requestedPath: _p }: { requestedPath?: string }) => ({ currentPath: '/tmp', parentPath: null, directories: [] }),\n      uploadFolder: async ({ files: _f }: { files: any[] }) => ({ tree, path: '/tmp/demo' }),\n      openDirectorySelector: async () => null,\n      onMenuLoadFolder: () => () => {},\n    };\n  }, { viewModel, sourceLines });\n  await page.goto("
+              },
+              {
+                "file": "test/navigation.spec.ts",
+                "start_line": 27,
+                "end_line": 34,
+                "start_col": 70,
+                "end_col": 18,
+                "fragment": "{ viewModel: data.viewModel, path: 'Demo.tsx' }),\n      browseDirectory: async ({ requestedPath: _p }: { requestedPath?: string }) => ({ currentPath: '/tmp', parentPath: null, directories: [] }),\n      uploadFolder: async ({ files: _f }: { files: any[] }) => ({ tree, path: '/tmp/demo' }),\n      openDirectorySelector: async () => null,\n      onMenuLoadFolder: () => () => {},\n    };\n  }, { viewModel, sourceLines });\n  await page.goto("
+              }
+            ],
+            "token_count": 81,
+            "line_count": 8,
+            "fingerprint": "dup:e1a9fa71",
+            "suggested_name": "requestedPath",
+            "actions": [
+              {
+                "type": "extract-shared",
+                "auto_fixable": false,
+                "description": "Extract duplicated code (8 lines, 2 instances) into a shared function"
+              },
+              {
+                "type": "suppress-line",
+                "auto_fixable": false,
+                "description": "Suppress with an inline comment above the duplicated code",
+                "comment": "// fallow-ignore-next-line code-duplication"
+              }
+            ]
+          }
+        ],
+        "total_duplicated_lines": 18,
+        "total_duplicated_tokens": 247,
+        "suggestions": [
+          {
+            "kind": "ExtractFunction",
+            "description": "Extract shared function (10 lines) from hover.spec.ts, navigation.spec.ts",
+            "estimated_savings": 10
+          },
+          {
+            "kind": "ExtractFunction",
+            "description": "Extract shared function (8 lines) from hover.spec.ts, navigation.spec.ts",
+            "estimated_savings": 8
+          }
+        ],
+        "actions": [
+          {
+            "type": "extract-shared",
+            "auto_fixable": false,
+            "description": "Extract 2 duplicated code blocks (18 lines) into a shared module",
+            "note": "These clone groups share the same files, indicating a structural relationship; refactor together"
+          },
+          {
+            "type": "apply-suggestion",
+            "auto_fixable": false,
+            "description": "Extract shared function (10 lines) from hover.spec.ts, navigation.spec.ts"
+          },
+          {
+            "type": "apply-suggestion",
+            "auto_fixable": false,
+            "description": "Extract shared function (8 lines) from hover.spec.ts, navigation.spec.ts"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the duplicated code",
+            "comment": "// fallow-ignore-next-line code-duplication"
+          }
+        ]
+      },
+      {
+        "files": [
+          "test/navigation.spec.ts"
+        ],
+        "groups": [
+          {
+            "instances": [
+              {
+                "file": "test/navigation.spec.ts",
+                "start_line": 29,
+                "end_line": 39,
+                "start_col": 64,
+                "end_col": 25,
+                "fragment": "{ tree, path: '/tmp/demo' }),\n      openDirectorySelector: async () => null,\n      onMenuLoadFolder: () => () => {},\n    };\n  }, { viewModel, sourceLines });\n  await page.goto(`http://localhost:5174/${extraHash || ''}`);\n\n  // If we already navigated via hash URL, just wait for the file to load.\n  // Otherwise, select the file from the sidebar.\n  if (!extraHash) {\n    await page.getByText("
+              },
+              {
+                "file": "test/navigation.spec.ts",
+                "start_line": 207,
+                "end_line": 214,
+                "start_col": 66,
+                "end_col": 27,
+                "fragment": "{ tree, path: '/tmp/filter' }),\n        openDirectorySelector: async () => null,\n        onMenuLoadFolder: () => () => {},\n      };\n    }, { viewModel, sourceLines });\n    await page.goto(`http://localhost:5174/${extraHash || ''}`);\n    if (!extraHash) {\n      await page.getByText("
+              }
+            ],
+            "token_count": 52,
+            "line_count": 11,
+            "fingerprint": "dup:2047c85f",
+            "actions": [
+              {
+                "type": "extract-shared",
+                "auto_fixable": false,
+                "description": "Extract duplicated code (11 lines, 2 instances) into a shared function"
+              },
+              {
+                "type": "suppress-line",
+                "auto_fixable": false,
+                "description": "Suppress with an inline comment above the duplicated code",
+                "comment": "// fallow-ignore-next-line code-duplication"
+              }
+            ]
+          }
+        ],
+        "total_duplicated_lines": 11,
+        "total_duplicated_tokens": 52,
+        "suggestions": [
+          {
+            "kind": "ExtractFunction",
+            "description": "Extract shared function (11 lines) from navigation.spec.ts, navigation.spec.ts",
+            "estimated_savings": 11
+          }
+        ],
+        "actions": [
+          {
+            "type": "extract-shared",
+            "auto_fixable": false,
+            "description": "Extract 1 duplicated code block (11 lines) into a shared module",
+            "note": "These clone groups share the same files, indicating a structural relationship; refactor together"
+          },
+          {
+            "type": "apply-suggestion",
+            "auto_fixable": false,
+            "description": "Extract shared function (11 lines) from navigation.spec.ts, navigation.spec.ts"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the duplicated code",
+            "comment": "// fallow-ignore-next-line code-duplication"
+          }
+        ]
+      }
+    ],
+    "stats": {
+      "total_files": 51,
+      "files_with_clones": 6,
+      "total_lines": 5740,
+      "duplicated_lines": 358,
+      "total_tokens": 34870,
+      "duplicated_tokens": 1144,
+      "clone_groups": 9,
+      "clone_instances": 22,
+      "duplication_percentage": 6.2369337979094075
+    }
+  },
+  "health": {
+    "findings": [
+      {
+        "path": "src/main/translationService/jsxHandler.ts",
+        "name": "processAttributes",
+        "line": 568,
+        "col": 0,
+        "cyclomatic": 72,
+        "cognitive": 109,
+        "line_count": 174,
+        "param_count": 2,
+        "exceeded": "all",
+        "severity": "critical",
+        "crap": 5256.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "refactor-function",
+            "auto_fixable": false,
+            "description": "Refactor `processAttributes` to reduce complexity (extract helper functions, simplify branching)",
+            "note": "Consider splitting into smaller functions with single responsibilities"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/main/translationService/jsxHandler.ts",
+        "name": "translateSingleClass",
+        "line": 416,
+        "col": 0,
+        "cyclomatic": 24,
+        "cognitive": 41,
+        "line_count": 55,
+        "param_count": 1,
+        "exceeded": "all",
+        "severity": "critical",
+        "crap": 600.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `translateSingleClass` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "refactor-function",
+            "auto_fixable": false,
+            "description": "Refactor `translateSingleClass` to reduce complexity (extract helper functions, simplify branching)",
+            "note": "Consider splitting into smaller functions with single responsibilities"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/main/translationService/renderable/translateType.ts",
+        "name": "translateType",
+        "line": 1,
+        "col": 7,
+        "cyclomatic": 22,
+        "cognitive": 16,
+        "line_count": 56,
+        "param_count": 1,
+        "exceeded": "all",
+        "severity": "critical",
+        "crap": 506.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `translateType` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "refactor-function",
+            "auto_fixable": false,
+            "description": "Refactor `translateType` to reduce complexity (extract helper functions, simplify branching)",
+            "note": "Consider splitting into smaller functions with single responsibilities"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/main/translationService/makeSemanticGraph.ts",
+        "name": "processStatement",
+        "line": 109,
+        "col": 0,
+        "cyclomatic": 20,
+        "cognitive": 20,
+        "line_count": 50,
+        "param_count": 2,
+        "exceeded": "cognitive_crap",
+        "severity": "critical",
+        "crap": 420.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `processStatement` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "refactor-function",
+            "auto_fixable": false,
+            "description": "Refactor `processStatement` to reduce complexity (extract helper functions, simplify branching)",
+            "note": "Consider splitting into smaller functions with single responsibilities"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "test/enrichment.spec.ts",
+        "name": "getNodeDetail",
+        "line": 30,
+        "col": 23,
+        "cyclomatic": 18,
+        "cognitive": 9,
+        "line_count": 25,
+        "param_count": 1,
+        "exceeded": "crap",
+        "severity": "high",
+        "crap": 88.0,
+        "coverage_tier": "partial",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "increase-coverage",
+            "auto_fixable": false,
+            "description": "Increase test coverage for `getNodeDetail` (file is reachable from existing tests; add targeted assertions for uncovered branches)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; targeted branch coverage is more efficient than scaffolding new test files when the file already has coverage"
+          },
+          {
+            "type": "refactor-function",
+            "auto_fixable": false,
+            "description": "Refactor `getNodeDetail` to reduce complexity (extract helper functions, simplify branching)",
+            "note": "Consider splitting into smaller functions with single responsibilities"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/main/translationService/jsxHandler.ts",
+        "name": "describeEventHandler",
+        "line": 503,
+        "col": 0,
+        "cyclomatic": 17,
+        "cognitive": 38,
+        "line_count": 38,
+        "param_count": 2,
+        "exceeded": "cognitive_crap",
+        "severity": "critical",
+        "crap": 306.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `describeEventHandler` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "refactor-function",
+            "auto_fixable": false,
+            "description": "Refactor `describeEventHandler` to reduce complexity (extract helper functions, simplify branching)",
+            "note": "Consider splitting into smaller functions with single responsibilities"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/main/translationService/jsxHandler.ts",
+        "name": "processMapCall",
+        "line": 753,
+        "col": 0,
+        "cyclomatic": 14,
+        "cognitive": 20,
+        "line_count": 54,
+        "param_count": 2,
+        "exceeded": "cognitive_crap",
+        "severity": "critical",
+        "crap": 210.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `processMapCall` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "refactor-function",
+            "auto_fixable": false,
+            "description": "Refactor `processMapCall` to reduce complexity (extract helper functions, simplify branching)",
+            "note": "Consider splitting into smaller functions with single responsibilities"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/main/translationService/makeSemanticGraph.ts",
+        "name": "getIdentifierPos",
+        "line": 68,
+        "col": 0,
+        "cyclomatic": 14,
+        "cognitive": 6,
+        "line_count": 32,
+        "param_count": 2,
+        "exceeded": "crap",
+        "severity": "critical",
+        "crap": 210.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `getIdentifierPos` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/main/translationService/jsxHandler.ts",
+        "name": "processJsxExpression",
+        "line": 935,
+        "col": 0,
+        "cyclomatic": 13,
+        "cognitive": 21,
+        "line_count": 71,
+        "param_count": 2,
+        "exceeded": "cognitive_crap",
+        "severity": "critical",
+        "crap": 182.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `processJsxExpression` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "refactor-function",
+            "auto_fixable": false,
+            "description": "Refactor `processJsxExpression` to reduce complexity (extract helper functions, simplify branching)",
+            "note": "Consider splitting into smaller functions with single responsibilities"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/main/translationService/renderable/phrasing.ts",
+        "name": "phraseJsxAttrs",
+        "line": 143,
+        "col": 0,
+        "cyclomatic": 13,
+        "cognitive": 17,
+        "line_count": 58,
+        "param_count": 1,
+        "exceeded": "cognitive_crap",
+        "severity": "critical",
+        "crap": 182.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `phraseJsxAttrs` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "refactor-function",
+            "auto_fixable": false,
+            "description": "Refactor `phraseJsxAttrs` to reduce complexity (extract helper functions, simplify branching)",
+            "note": "Consider splitting into smaller functions with single responsibilities"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/main/translationService/jsxHandler.ts",
+        "name": "processTernary",
+        "line": 862,
+        "col": 0,
+        "cyclomatic": 13,
+        "cognitive": 12,
+        "line_count": 72,
+        "param_count": 2,
+        "exceeded": "crap",
+        "severity": "critical",
+        "crap": 182.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `processTernary` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/App/components/LineRow.tsx",
+        "name": "LineRow",
+        "line": 64,
+        "col": 7,
+        "cyclomatic": 13,
+        "cognitive": 10,
+        "line_count": 120,
+        "param_count": 1,
+        "exceeded": "crap",
+        "severity": "critical",
+        "crap": 182.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `LineRow` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/App/components/FolderBrowser.tsx",
+        "name": "FolderBrowser",
+        "line": 9,
+        "col": 15,
+        "cyclomatic": 11,
+        "cognitive": 6,
+        "line_count": 93,
+        "param_count": 1,
+        "exceeded": "crap",
+        "severity": "critical",
+        "crap": 132.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `FolderBrowser` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/App/components/CodeTable.tsx",
+        "name": "dedupMatches",
+        "line": 36,
+        "col": 0,
+        "cyclomatic": 10,
+        "cognitive": 26,
+        "line_count": 32,
+        "param_count": 3,
+        "exceeded": "cognitive_crap",
+        "severity": "critical",
+        "crap": 110.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `dedupMatches` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "refactor-function",
+            "auto_fixable": false,
+            "description": "Refactor `dedupMatches` to reduce complexity (extract helper functions, simplify branching)",
+            "note": "Consider splitting into smaller functions with single responsibilities"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/main/translationService/jsxHandler.ts",
+        "name": "<arrow>",
+        "line": 325,
+        "col": 9,
+        "cyclomatic": 10,
+        "cognitive": 9,
+        "line_count": 12,
+        "param_count": 1,
+        "exceeded": "crap",
+        "severity": "critical",
+        "crap": 110.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `<arrow>` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/App/components/hover/ToolTip.tsx",
+        "name": "ToolTip",
+        "line": 13,
+        "col": 7,
+        "cyclomatic": 10,
+        "cognitive": 8,
+        "line_count": 73,
+        "param_count": 1,
+        "exceeded": "crap",
+        "severity": "critical",
+        "crap": 110.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `ToolTip` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/main/translationService/renderable/phrasing.ts",
+        "name": "phraseCall",
+        "line": 118,
+        "col": 0,
+        "cyclomatic": 10,
+        "cognitive": 10,
+        "line_count": 19,
+        "param_count": 1,
+        "exceeded": "crap",
+        "severity": "critical",
+        "crap": 110.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `phraseCall` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/main/translationService/makeSemanticGraph.ts",
+        "name": "processVariableDeclaration",
+        "line": 280,
+        "col": 0,
+        "cyclomatic": 10,
+        "cognitive": 11,
+        "line_count": 24,
+        "param_count": 2,
+        "exceeded": "crap",
+        "severity": "critical",
+        "crap": 110.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `processVariableDeclaration` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/main/translationService/renderable/hover.ts",
+        "name": "formatMetadata",
+        "line": 14,
+        "col": 7,
+        "cyclomatic": 10,
+        "cognitive": 15,
+        "line_count": 20,
+        "param_count": 1,
+        "exceeded": "crap",
+        "severity": "critical",
+        "crap": 110.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `formatMetadata` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/main/translationService/jsxHandler.ts",
+        "name": "colorIntensity",
+        "line": 260,
+        "col": 0,
+        "cyclomatic": 9,
+        "cognitive": 8,
+        "line_count": 12,
+        "param_count": 1,
+        "exceeded": "crap",
+        "severity": "high",
+        "crap": 90.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `colorIntensity` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/main/translationService/jsxHandler.ts",
+        "name": "processChildren",
+        "line": 1021,
+        "col": 0,
+        "cyclomatic": 9,
+        "cognitive": 13,
+        "line_count": 21,
+        "param_count": 2,
+        "exceeded": "crap",
+        "severity": "high",
+        "crap": 90.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `processChildren` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/main/translationService/renderable/viewModel.ts",
+        "name": "applyRowSpans",
+        "line": 32,
+        "col": 0,
+        "cyclomatic": 8,
+        "cognitive": 13,
+        "line_count": 21,
+        "param_count": 2,
+        "exceeded": "crap",
+        "severity": "high",
+        "crap": 72.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `applyRowSpans` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/App/App.tsx",
+        "name": "FileView",
+        "line": 16,
+        "col": 0,
+        "cyclomatic": 8,
+        "cognitive": 10,
+        "line_count": 68,
+        "param_count": 1,
+        "exceeded": "crap",
+        "severity": "high",
+        "crap": 72.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `FileView` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/App/components/LineRow.tsx",
+        "name": "searchCtxValue",
+        "line": 116,
+        "col": 33,
+        "cyclomatic": 8,
+        "cognitive": 7,
+        "line_count": 14,
+        "param_count": 0,
+        "exceeded": "crap",
+        "severity": "high",
+        "crap": 72.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `searchCtxValue` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/main/translationService/cache/astCache.ts",
+        "name": "isWriteReference",
+        "line": 116,
+        "col": 0,
+        "cyclomatic": 8,
+        "cognitive": 7,
+        "line_count": 21,
+        "param_count": 1,
+        "exceeded": "crap",
+        "severity": "high",
+        "crap": 72.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `isWriteReference` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/App/components/CodeTable.tsx",
+        "name": "<arrow>",
+        "line": 309,
+        "col": 31,
+        "cyclomatic": 7,
+        "cognitive": 4,
+        "line_count": 21,
+        "param_count": 2,
+        "exceeded": "crap",
+        "severity": "high",
+        "crap": 56.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `<arrow>` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/App/LandingPage.tsx",
+        "name": "handleDrop",
+        "line": 54,
+        "col": 33,
+        "cyclomatic": 7,
+        "cognitive": 6,
+        "line_count": 29,
+        "param_count": 1,
+        "exceeded": "crap",
+        "severity": "high",
+        "crap": 56.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `handleDrop` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/main/translationService/cache/astCache.ts",
+        "name": "getDefinition",
+        "line": 39,
+        "col": 15,
+        "cyclomatic": 7,
+        "cognitive": 8,
+        "line_count": 25,
+        "param_count": 1,
+        "exceeded": "crap",
+        "severity": "high",
+        "crap": 56.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `getDefinition` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/main/translationService/makeSemanticGraph.ts",
+        "name": "processCall",
+        "line": 392,
+        "col": 0,
+        "cyclomatic": 7,
+        "cognitive": 9,
+        "line_count": 31,
+        "param_count": 2,
+        "exceeded": "crap",
+        "severity": "high",
+        "crap": 56.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `processCall` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/main/translationService/makeSemanticGraph.ts",
+        "name": "summarizeParamName",
+        "line": 463,
+        "col": 0,
+        "cyclomatic": 7,
+        "cognitive": 10,
+        "line_count": 16,
+        "param_count": 2,
+        "exceeded": "crap",
+        "severity": "high",
+        "crap": 56.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `summarizeParamName` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/main/translationService/jsxHandler.ts",
+        "name": "<arrow>",
+        "line": 396,
+        "col": 14,
+        "cyclomatic": 6,
+        "cognitive": 5,
+        "line_count": 8,
+        "param_count": 1,
+        "exceeded": "crap",
+        "severity": "moderate",
+        "crap": 42.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `<arrow>` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/main/translationService/jsxHandler.ts",
+        "name": "processFilterCall",
+        "line": 808,
+        "col": 0,
+        "cyclomatic": 6,
+        "cognitive": 5,
+        "line_count": 27,
+        "param_count": 2,
+        "exceeded": "crap",
+        "severity": "moderate",
+        "crap": 42.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `processFilterCall` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/App/components/Sidebar.tsx",
+        "name": "FileTreeItem",
+        "line": 18,
+        "col": 0,
+        "cyclomatic": 6,
+        "cognitive": 5,
+        "line_count": 48,
+        "param_count": 1,
+        "exceeded": "crap",
+        "severity": "moderate",
+        "crap": 42.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `FileTreeItem` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/App/components/CodeTable.tsx",
+        "name": "handleKeyDown",
+        "line": 154,
+        "col": 26,
+        "cyclomatic": 6,
+        "cognitive": 5,
+        "line_count": 18,
+        "param_count": 1,
+        "exceeded": "crap",
+        "severity": "moderate",
+        "crap": 42.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `handleKeyDown` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/App/components/CodeTable.tsx",
+        "name": "CodeTableInner",
+        "line": 81,
+        "col": 0,
+        "cyclomatic": 6,
+        "cognitive": 5,
+        "line_count": 255,
+        "param_count": 1,
+        "exceeded": "crap",
+        "severity": "moderate",
+        "crap": 42.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `CodeTableInner` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/App/components/hover/useSafePolygonDismiss.ts",
+        "name": "evaluate",
+        "line": 42,
+        "col": 21,
+        "cyclomatic": 6,
+        "cognitive": 5,
+        "line_count": 14,
+        "param_count": 2,
+        "exceeded": "crap",
+        "severity": "moderate",
+        "crap": 42.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `evaluate` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/main/translationService/cache/astCache.ts",
+        "name": "getReferences",
+        "line": 65,
+        "col": 15,
+        "cyclomatic": 6,
+        "cognitive": 5,
+        "line_count": 27,
+        "param_count": 1,
+        "exceeded": "crap",
+        "severity": "moderate",
+        "crap": 42.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `getReferences` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/main/translationService/makeSemanticGraph.ts",
+        "name": "processClass",
+        "line": 221,
+        "col": 0,
+        "cyclomatic": 6,
+        "cognitive": 6,
+        "line_count": 17,
+        "param_count": 2,
+        "exceeded": "crap",
+        "severity": "moderate",
+        "crap": 42.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `processClass` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/main/translationService/makeSemanticGraph.ts",
+        "name": "processExpression",
+        "line": 378,
+        "col": 0,
+        "cyclomatic": 6,
+        "cognitive": 5,
+        "line_count": 13,
+        "param_count": 2,
+        "exceeded": "crap",
+        "severity": "moderate",
+        "crap": 42.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `processExpression` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/App/components/nodes/StyledSpan.tsx",
+        "name": "highlightText",
+        "line": 17,
+        "col": 0,
+        "cyclomatic": 5,
+        "cognitive": 5,
+        "line_count": 34,
+        "param_count": 3,
+        "exceeded": "crap",
+        "severity": "moderate",
+        "crap": 30.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `highlightText` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/App/components/nodes/StyledSpan.tsx",
+        "name": "handleEnter",
+        "line": 67,
+        "col": 22,
+        "cyclomatic": 5,
+        "cognitive": 3,
+        "line_count": 7,
+        "param_count": 0,
+        "exceeded": "crap",
+        "severity": "moderate",
+        "crap": 30.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `handleEnter` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/App/components/nodes/StyledSpan.tsx",
+        "name": "<arrow>",
+        "line": 75,
+        "col": 12,
+        "cyclomatic": 5,
+        "cognitive": 3,
+        "line_count": 5,
+        "param_count": 0,
+        "exceeded": "crap",
+        "severity": "moderate",
+        "crap": 30.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `<arrow>` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/main/translationService/jsxHandler.ts",
+        "name": "<arrow>",
+        "line": 337,
+        "col": 9,
+        "cyclomatic": 5,
+        "cognitive": 4,
+        "line_count": 7,
+        "param_count": 1,
+        "exceeded": "crap",
+        "severity": "moderate",
+        "crap": 30.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `<arrow>` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/main/translationService/jsxHandler.ts",
+        "name": "translateStyleObject",
+        "line": 482,
+        "col": 0,
+        "cyclomatic": 5,
+        "cognitive": 5,
+        "line_count": 20,
+        "param_count": 1,
+        "exceeded": "crap",
+        "severity": "moderate",
+        "crap": 30.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `translateStyleObject` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/main/translationService/jsxHandler.ts",
+        "name": "jsx-element",
+        "line": 1125,
+        "col": 17,
+        "cyclomatic": 5,
+        "cognitive": 4,
+        "line_count": 10,
+        "param_count": 1,
+        "exceeded": "crap",
+        "severity": "moderate",
+        "crap": 30.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `jsx-element` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/main/project/projectService.ts",
+        "name": "buildFileTree",
+        "line": 7,
+        "col": 0,
+        "cyclomatic": 5,
+        "cognitive": 7,
+        "line_count": 36,
+        "param_count": 2,
+        "exceeded": "crap",
+        "severity": "moderate",
+        "crap": 30.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `buildFileTree` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/App/components/CodeTable.tsx",
+        "name": "parentIndices",
+        "line": 23,
+        "col": 0,
+        "cyclomatic": 5,
+        "cognitive": 7,
+        "line_count": 12,
+        "param_count": 1,
+        "exceeded": "crap",
+        "severity": "moderate",
+        "crap": 30.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `parentIndices` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/main/translationService/renderable/phrasing.ts",
+        "name": "phraseExport",
+        "line": 29,
+        "col": 0,
+        "cyclomatic": 5,
+        "cognitive": 5,
+        "line_count": 12,
+        "param_count": 1,
+        "exceeded": "crap",
+        "severity": "moderate",
+        "crap": 30.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `phraseExport` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/App/components/hover/useSafePolygonDismiss.ts",
+        "name": "pointInRect",
+        "line": 6,
+        "col": 0,
+        "cyclomatic": 5,
+        "cognitive": 2,
+        "line_count": 9,
+        "param_count": 3,
+        "exceeded": "crap",
+        "severity": "moderate",
+        "crap": 30.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `pointInRect` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/App/components/LineRow.tsx",
+        "name": "highlightSourceText",
+        "line": 29,
+        "col": 0,
+        "cyclomatic": 5,
+        "cognitive": 5,
+        "line_count": 34,
+        "param_count": 3,
+        "exceeded": "crap",
+        "severity": "moderate",
+        "crap": 30.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `highlightSourceText` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/App/LandingPage.tsx",
+        "name": "LandingPage",
+        "line": 48,
+        "col": 15,
+        "cyclomatic": 5,
+        "cognitive": 4,
+        "line_count": 93,
+        "param_count": 1,
+        "exceeded": "crap",
+        "severity": "moderate",
+        "crap": 30.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `LandingPage` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/main/translationService/makeSemanticGraph.ts",
+        "name": "processImport",
+        "line": 168,
+        "col": 0,
+        "cyclomatic": 5,
+        "cognitive": 8,
+        "line_count": 25,
+        "param_count": 2,
+        "exceeded": "crap",
+        "severity": "moderate",
+        "crap": 30.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `processImport` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/main/translationService/makeSemanticGraph.ts",
+        "name": "processFunction",
+        "line": 210,
+        "col": 0,
+        "cyclomatic": 5,
+        "cognitive": 4,
+        "line_count": 10,
+        "param_count": 2,
+        "exceeded": "crap",
+        "severity": "moderate",
+        "crap": 30.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `processFunction` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/main/translationService/makeSemanticGraph.ts",
+        "name": "processInterface",
+        "line": 258,
+        "col": 0,
+        "cyclomatic": 5,
+        "cognitive": 5,
+        "line_count": 15,
+        "param_count": 2,
+        "exceeded": "crap",
+        "severity": "moderate",
+        "crap": 30.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `processInterface` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/main/translationService/makeSemanticGraph.ts",
+        "name": "processReturn",
+        "line": 305,
+        "col": 0,
+        "cyclomatic": 5,
+        "cognitive": 6,
+        "line_count": 16,
+        "param_count": 2,
+        "exceeded": "crap",
+        "severity": "moderate",
+        "crap": 30.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `processReturn` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/main/translationService/makeSemanticGraph.ts",
+        "name": "processArrowFunction",
+        "line": 424,
+        "col": 0,
+        "cyclomatic": 5,
+        "cognitive": 8,
+        "line_count": 21,
+        "param_count": 2,
+        "exceeded": "crap",
+        "severity": "moderate",
+        "crap": 30.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `processArrowFunction` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/main/translationService/makeSemanticGraph.ts",
+        "name": "processImplicitReturn",
+        "line": 446,
+        "col": 0,
+        "cyclomatic": 5,
+        "cognitive": 6,
+        "line_count": 16,
+        "param_count": 2,
+        "exceeded": "crap",
+        "severity": "moderate",
+        "crap": 30.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `processImplicitReturn` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      },
+      {
+        "path": "src/main/decoration/decorationService.ts",
+        "name": "getNodeDetail",
+        "line": 21,
+        "col": 7,
+        "cyclomatic": 5,
+        "cognitive": 4,
+        "line_count": 35,
+        "param_count": 1,
+        "exceeded": "crap",
+        "severity": "moderate",
+        "crap": 30.0,
+        "coverage_tier": "none",
+        "coverage_source": "estimated",
+        "actions": [
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `getNodeDetail` to lower its CRAP score (coverage reduces risk even without refactoring)",
+            "note": "CRAP = CC^2 * (1 - cov/100)^3 + CC; higher coverage is the fastest way to bring CRAP under threshold"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress with an inline comment above the function declaration",
+            "comment": "// fallow-ignore-next-line complexity",
+            "placement": "above-function-declaration"
+          }
+        ]
+      }
+    ],
+    "summary": {
+      "files_analyzed": 62,
+      "functions_analyzed": 605,
+      "functions_above_threshold": 58,
+      "max_cyclomatic_threshold": 20,
+      "max_cognitive_threshold": 15,
+      "max_crap_threshold": 30.0,
+      "files_scored": 49,
+      "average_maintainability": 91.2,
+      "coverage_model": "static_estimated",
+      "coverage_source_consistency": "uniform",
+      "severity_critical_count": 18,
+      "severity_high_count": 12,
+      "severity_moderate_count": 28
+    },
+    "vital_signs": {
+      "dead_file_pct": 3.2,
+      "dead_export_pct": 1.1,
+      "avg_cyclomatic": 2.3,
+      "critical_complexity_pct": 0.2,
+      "p90_cyclomatic": 4,
+      "hotspot_count": 3,
+      "hotspot_top_pct_count": 1,
+      "maintainability_avg": 91.2,
+      "maintainability_low_pct": 0.0,
+      "unused_dep_count": 1,
+      "unused_deps_per_k_files": 16.1,
+      "circular_dep_count": 0,
+      "circular_deps_per_k_files": 0.0,
+      "counts": {
+        "total_files": 62,
+        "total_exports": 92,
+        "dead_files": 2,
+        "dead_exports": 1,
+        "total_lines": 6068,
+        "files_scored": 49,
+        "total_deps": 0
+      },
+      "unit_size_profile": {
+        "low_risk": 83.5,
+        "medium_risk": 8.8,
+        "high_risk": 5.1,
+        "very_high_risk": 2.6
+      },
+      "functions_over_60_loc_per_k": 26.4,
+      "unit_interfacing_profile": {
+        "low_risk": 98.5,
+        "medium_risk": 1.3,
+        "high_risk": 0.0,
+        "very_high_risk": 0.2
+      },
+      "p95_fan_in": 3,
+      "coupling_high_pct": 0.0,
+      "total_loc": 6068
+    },
+    "file_scores": [
+      {
+        "path": "src/main/translationService/jsxHandler.ts",
+        "fan_in": 1,
+        "fan_out": 1,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.3,
+        "maintainability_index": 88.2,
+        "total_cyclomatic": 356,
+        "total_cognitive": 354,
+        "function_count": 105,
+        "lines": 1179,
+        "crap_max": 5256.0,
+        "crap_above_threshold": 14
+      },
+      {
+        "path": "src/main/translationService/renderable/translateType.ts",
+        "fan_in": 1,
+        "fan_out": 0,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.42,
+        "maintainability_index": 87.4,
+        "total_cyclomatic": 24,
+        "total_cognitive": 16,
+        "function_count": 3,
+        "lines": 57,
+        "crap_max": 506.0,
+        "crap_above_threshold": 1
+      },
+      {
+        "path": "src/main/translationService/makeSemanticGraph.ts",
+        "fan_in": 5,
+        "fan_out": 1,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.29,
+        "maintainability_index": 88.5,
+        "total_cyclomatic": 143,
+        "total_cognitive": 132,
+        "function_count": 32,
+        "lines": 487,
+        "crap_max": 420.0,
+        "crap_above_threshold": 13
+      },
+      {
+        "path": "src/App/components/LineRow.tsx",
+        "fan_in": 1,
+        "fan_out": 5,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.27,
+        "maintainability_index": 84.7,
+        "total_cyclomatic": 50,
+        "total_cognitive": 37,
+        "function_count": 13,
+        "lines": 184,
+        "crap_max": 182.0,
+        "crap_above_threshold": 3
+      },
+      {
+        "path": "src/main/translationService/renderable/phrasing.ts",
+        "fan_in": 1,
+        "fan_out": 4,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.27,
+        "maintainability_index": 85.5,
+        "total_cyclomatic": 76,
+        "total_cognitive": 61,
+        "function_count": 24,
+        "lines": 283,
+        "crap_max": 182.0,
+        "crap_above_threshold": 3
+      },
+      {
+        "path": "src/App/components/FolderBrowser.tsx",
+        "fan_in": 1,
+        "fan_out": 1,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.21,
+        "maintainability_index": 90.9,
+        "total_cyclomatic": 21,
+        "total_cognitive": 10,
+        "function_count": 7,
+        "lines": 102,
+        "crap_max": 132.0,
+        "crap_above_threshold": 1
+      },
+      {
+        "path": "src/App/components/CodeTable.tsx",
+        "fan_in": 1,
+        "fan_out": 6,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.28,
+        "maintainability_index": 83.8,
+        "total_cyclomatic": 95,
+        "total_cognitive": 72,
+        "function_count": 41,
+        "lines": 344,
+        "crap_max": 110.0,
+        "crap_above_threshold": 5
+      },
+      {
+        "path": "src/App/components/hover/ToolTip.tsx",
+        "fan_in": 1,
+        "fan_out": 4,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.19,
+        "maintainability_index": 87.9,
+        "total_cyclomatic": 16,
+        "total_cognitive": 10,
+        "function_count": 4,
+        "lines": 86,
+        "crap_max": 110.0,
+        "crap_above_threshold": 1
+      },
+      {
+        "path": "src/main/translationService/renderable/hover.ts",
+        "fan_in": 2,
+        "fan_out": 1,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.12,
+        "maintainability_index": 93.6,
+        "total_cyclomatic": 19,
+        "total_cognitive": 19,
+        "function_count": 5,
+        "lines": 159,
+        "crap_max": 110.0,
+        "crap_above_threshold": 1
+      },
+      {
+        "path": "test/enrichment.spec.ts",
+        "fan_in": 0,
+        "fan_out": 0,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.36,
+        "maintainability_index": 89.2,
+        "total_cyclomatic": 31,
+        "total_cognitive": 9,
+        "function_count": 14,
+        "lines": 85,
+        "crap_max": 88.0,
+        "crap_above_threshold": 1
+      },
+      {
+        "path": "src/main/translationService/renderable/viewModel.ts",
+        "fan_in": 2,
+        "fan_out": 4,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.3,
+        "maintainability_index": 84.6,
+        "total_cyclomatic": 22,
+        "total_cognitive": 16,
+        "function_count": 12,
+        "lines": 73,
+        "crap_max": 72.0,
+        "crap_above_threshold": 1
+      },
+      {
+        "path": "src/App/App.tsx",
+        "fan_in": 1,
+        "fan_out": 6,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.16,
+        "maintainability_index": 87.4,
+        "total_cyclomatic": 25,
+        "total_cognitive": 16,
+        "function_count": 12,
+        "lines": 161,
+        "crap_max": 72.0,
+        "crap_above_threshold": 1
+      },
+      {
+        "path": "src/main/translationService/cache/astCache.ts",
+        "fan_in": 2,
+        "fan_out": 0,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.25,
+        "maintainability_index": 92.5,
+        "total_cyclomatic": 36,
+        "total_cognitive": 27,
+        "function_count": 11,
+        "lines": 142,
+        "crap_max": 72.0,
+        "crap_above_threshold": 3
+      },
+      {
+        "path": "src/App/LandingPage.tsx",
+        "fan_in": 1,
+        "fan_out": 2,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.22,
+        "maintainability_index": 89.0,
+        "total_cyclomatic": 31,
+        "total_cognitive": 16,
+        "function_count": 17,
+        "lines": 141,
+        "crap_max": 56.0,
+        "crap_above_threshold": 2
+      },
+      {
+        "path": "src/App/components/hover/useSafePolygonDismiss.ts",
+        "fan_in": 1,
+        "fan_out": 0,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.29,
+        "maintainability_index": 91.3,
+        "total_cyclomatic": 23,
+        "total_cognitive": 11,
+        "function_count": 10,
+        "lines": 80,
+        "crap_max": 42.0,
+        "crap_above_threshold": 2
+      },
+      {
+        "path": "src/App/components/Sidebar.tsx",
+        "fan_in": 1,
+        "fan_out": 0,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.11,
+        "maintainability_index": 96.7,
+        "total_cyclomatic": 12,
+        "total_cognitive": 6,
+        "function_count": 6,
+        "lines": 111,
+        "crap_max": 42.0,
+        "crap_above_threshold": 1
+      },
+      {
+        "path": "src/App/components/nodes/StyledSpan.tsx",
+        "fan_in": 2,
+        "fan_out": 5,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.23,
+        "maintainability_index": 85.9,
+        "total_cyclomatic": 23,
+        "total_cognitive": 17,
+        "function_count": 6,
+        "lines": 98,
+        "crap_max": 30.0,
+        "crap_above_threshold": 3
+      },
+      {
+        "path": "src/main/project/projectService.ts",
+        "fan_in": 1,
+        "fan_out": 2,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.19,
+        "maintainability_index": 89.9,
+        "total_cyclomatic": 16,
+        "total_cognitive": 15,
+        "function_count": 5,
+        "lines": 84,
+        "crap_max": 30.0,
+        "crap_above_threshold": 1
+      },
+      {
+        "path": "src/main/decoration/decorationService.ts",
+        "fan_in": 1,
+        "fan_out": 2,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.18,
+        "maintainability_index": 90.2,
+        "total_cyclomatic": 10,
+        "total_cognitive": 7,
+        "function_count": 4,
+        "lines": 56,
+        "crap_max": 30.0,
+        "crap_above_threshold": 1
+      },
+      {
+        "path": "src/main/index.ts",
+        "fan_in": 0,
+        "fan_out": 5,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.16,
+        "maintainability_index": 88.0,
+        "total_cyclomatic": 14,
+        "total_cognitive": 9,
+        "function_count": 6,
+        "lines": 86,
+        "crap_max": 20.0,
+        "crap_above_threshold": 0
+      },
+      {
+        "path": "src/App/components/hover/TooltipContent.tsx",
+        "fan_in": 1,
+        "fan_out": 3,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.17,
+        "maintainability_index": 89.4,
+        "total_cyclomatic": 15,
+        "total_cognitive": 4,
+        "function_count": 9,
+        "lines": 88,
+        "crap_max": 20.0,
+        "crap_above_threshold": 0
+      },
+      {
+        "path": "src/main/project/projectSelectService.ts",
+        "fan_in": 1,
+        "fan_out": 1,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.26,
+        "maintainability_index": 90.7,
+        "total_cyclomatic": 11,
+        "total_cognitive": 6,
+        "function_count": 5,
+        "lines": 42,
+        "crap_max": 20.0,
+        "crap_above_threshold": 0
+      },
+      {
+        "path": "src/main/translationService/translationService.ts",
+        "fan_in": 1,
+        "fan_out": 4,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.14,
+        "maintainability_index": 91.2,
+        "total_cyclomatic": 4,
+        "total_cognitive": 3,
+        "function_count": 1,
+        "lines": 28,
+        "crap_max": 20.0,
+        "crap_above_threshold": 0
+      },
+      {
+        "path": "src/App/lib/dev/profiler.tsx",
+        "fan_in": 0,
+        "fan_out": 0,
+        "dead_code_ratio": 1.0,
+        "complexity_density": 0.18,
+        "maintainability_index": 75.7,
+        "total_cyclomatic": 7,
+        "total_cognitive": 4,
+        "function_count": 3,
+        "lines": 40,
+        "crap_max": 12.0,
+        "crap_above_threshold": 0
+      },
+      {
+        "path": "src/App/components/hover/HoverPopover.tsx",
+        "fan_in": 1,
+        "fan_out": 3,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.14,
+        "maintainability_index": 90.3,
+        "total_cyclomatic": 9,
+        "total_cognitive": 4,
+        "function_count": 5,
+        "lines": 65,
+        "crap_max": 12.0,
+        "crap_above_threshold": 0
+      },
+      {
+        "path": "src/main/translationService/renderable/bucket.ts",
+        "fan_in": 3,
+        "fan_out": 2,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.11,
+        "maintainability_index": 92.3,
+        "total_cyclomatic": 8,
+        "total_cognitive": 6,
+        "function_count": 3,
+        "lines": 72,
+        "crap_max": 12.0,
+        "crap_above_threshold": 0
+      },
+      {
+        "path": "src/App/components/hover/HoverContext.tsx",
+        "fan_in": 1,
+        "fan_out": 1,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.16,
+        "maintainability_index": 92.4,
+        "total_cyclomatic": 8,
+        "total_cognitive": 3,
+        "function_count": 6,
+        "lines": 50,
+        "crap_max": 6.0,
+        "crap_above_threshold": 0
+      },
+      {
+        "path": "src/main/translationService/buildFileData.ts",
+        "fan_in": 1,
+        "fan_out": 4,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.08,
+        "maintainability_index": 92.4,
+        "total_cyclomatic": 2,
+        "total_cognitive": 1,
+        "function_count": 1,
+        "lines": 24,
+        "crap_max": 6.0,
+        "crap_above_threshold": 0
+      },
+      {
+        "path": "src/App/components/hover/TooltipSnippetBlock.tsx",
+        "fan_in": 1,
+        "fan_out": 2,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.12,
+        "maintainability_index": 92.7,
+        "total_cyclomatic": 5,
+        "total_cognitive": 1,
+        "function_count": 4,
+        "lines": 41,
+        "crap_max": 6.0,
+        "crap_above_threshold": 0
+      },
+      {
+        "path": "src/App/components/nodes/PlainNodeLayer.tsx",
+        "fan_in": 1,
+        "fan_out": 2,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.2,
+        "maintainability_index": 93.2,
+        "total_cyclomatic": 4,
+        "total_cognitive": 1,
+        "function_count": 3,
+        "lines": 20,
+        "crap_max": 6.0,
+        "crap_above_threshold": 0
+      },
+      {
+        "path": "src/App/components/hover/useHover.ts",
+        "fan_in": 3,
+        "fan_out": 1,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.16,
+        "maintainability_index": 93.6,
+        "total_cyclomatic": 6,
+        "total_cognitive": 1,
+        "function_count": 5,
+        "lines": 38,
+        "crap_max": 6.0,
+        "crap_above_threshold": 0
+      },
+      {
+        "path": "src/App/components/nodes/NodeLayer.tsx",
+        "fan_in": 1,
+        "fan_out": 2,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.12,
+        "maintainability_index": 93.7,
+        "total_cyclomatic": 3,
+        "total_cognitive": 1,
+        "function_count": 2,
+        "lines": 26,
+        "crap_max": 6.0,
+        "crap_above_threshold": 0
+      },
+      {
+        "path": "src/main/sourceService/sourceService.ts",
+        "fan_in": 1,
+        "fan_out": 2,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.14,
+        "maintainability_index": 93.8,
+        "total_cyclomatic": 3,
+        "total_cognitive": 1,
+        "function_count": 2,
+        "lines": 21,
+        "crap_max": 6.0,
+        "crap_above_threshold": 0
+      },
+      {
+        "path": "src/main/project/projectSelectController.ts",
+        "fan_in": 1,
+        "fan_out": 1,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.31,
+        "maintainability_index": 94.8,
+        "total_cyclomatic": 4,
+        "total_cognitive": 0,
+        "function_count": 3,
+        "lines": 13,
+        "crap_max": 6.0,
+        "crap_above_threshold": 0
+      },
+      {
+        "path": "test/astCache.vitest.ts",
+        "fan_in": 0,
+        "fan_out": 0,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.21,
+        "maintainability_index": 93.7,
+        "total_cyclomatic": 33,
+        "total_cognitive": 4,
+        "function_count": 26,
+        "lines": 156,
+        "crap_max": 4.9,
+        "crap_above_threshold": 0
+      },
+      {
+        "path": "test/navigation.spec.ts",
+        "fan_in": 0,
+        "fan_out": 0,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.19,
+        "maintainability_index": 94.3,
+        "total_cyclomatic": 50,
+        "total_cognitive": 4,
+        "function_count": 46,
+        "lines": 257,
+        "crap_max": 4.9,
+        "crap_above_threshold": 0
+      },
+      {
+        "path": "test/authcontext.spec.ts",
+        "fan_in": 0,
+        "fan_out": 0,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.16,
+        "maintainability_index": 95.2,
+        "total_cyclomatic": 17,
+        "total_cognitive": 3,
+        "function_count": 15,
+        "lines": 105,
+        "crap_max": 4.9,
+        "crap_above_threshold": 0
+      },
+      {
+        "path": "test/annual.spec.ts",
+        "fan_in": 0,
+        "fan_out": 0,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.31,
+        "maintainability_index": 90.7,
+        "total_cyclomatic": 80,
+        "total_cognitive": 12,
+        "function_count": 68,
+        "lines": 255,
+        "crap_max": 2.9,
+        "crap_above_threshold": 0
+      },
+      {
+        "path": "src/main/preload.ts",
+        "fan_in": 0,
+        "fan_out": 1,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.28,
+        "maintainability_index": 90.7,
+        "total_cyclomatic": 11,
+        "total_cognitive": 0,
+        "function_count": 11,
+        "lines": 39,
+        "crap_max": 2.0,
+        "crap_above_threshold": 0
+      },
+      {
+        "path": "src/main/translationService/cache/projectCache.ts",
+        "fan_in": 4,
+        "fan_out": 2,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.16,
+        "maintainability_index": 92.6,
+        "total_cyclomatic": 5,
+        "total_cognitive": 0,
+        "function_count": 5,
+        "lines": 31,
+        "crap_max": 2.0,
+        "crap_above_threshold": 0
+      },
+      {
+        "path": "test/hover.spec.ts",
+        "fan_in": 0,
+        "fan_out": 0,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.23,
+        "maintainability_index": 93.1,
+        "total_cyclomatic": 21,
+        "total_cognitive": 0,
+        "function_count": 21,
+        "lines": 90,
+        "crap_max": 1.2,
+        "crap_above_threshold": 0
+      },
+      {
+        "path": "src/App/components/nodes/DisplayNode.tsx",
+        "fan_in": 1,
+        "fan_out": 2,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.15,
+        "maintainability_index": 94.4,
+        "total_cyclomatic": 2,
+        "total_cognitive": 0,
+        "function_count": 2,
+        "lines": 13,
+        "crap_max": 2.0,
+        "crap_above_threshold": 0
+      },
+      {
+        "path": "src/main/decoration/decorationController.ts",
+        "fan_in": 1,
+        "fan_out": 2,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.2,
+        "maintainability_index": 94.4,
+        "total_cyclomatic": 2,
+        "total_cognitive": 0,
+        "function_count": 2,
+        "lines": 10,
+        "crap_max": 2.0,
+        "crap_above_threshold": 0
+      },
+      {
+        "path": "src/main/project/projectController.ts",
+        "fan_in": 1,
+        "fan_out": 1,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.24,
+        "maintainability_index": 94.8,
+        "total_cyclomatic": 4,
+        "total_cognitive": 0,
+        "function_count": 4,
+        "lines": 17,
+        "crap_max": 2.0,
+        "crap_above_threshold": 0
+      },
+      {
+        "path": "src/main/sourceService/sourceController.ts",
+        "fan_in": 1,
+        "fan_out": 1,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.22,
+        "maintainability_index": 96.0,
+        "total_cyclomatic": 2,
+        "total_cognitive": 0,
+        "function_count": 2,
+        "lines": 9,
+        "crap_max": 2.0,
+        "crap_above_threshold": 0
+      },
+      {
+        "path": "src/main/translationService/translationController.ts",
+        "fan_in": 1,
+        "fan_out": 1,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.22,
+        "maintainability_index": 96.0,
+        "total_cyclomatic": 2,
+        "total_cognitive": 0,
+        "function_count": 2,
+        "lines": 9,
+        "crap_max": 2.0,
+        "crap_above_threshold": 0
+      },
+      {
+        "path": "scripts/build-electron.mjs",
+        "fan_in": 0,
+        "fan_out": 0,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.04,
+        "maintainability_index": 98.8,
+        "total_cyclomatic": 2,
+        "total_cognitive": 0,
+        "function_count": 2,
+        "lines": 48,
+        "crap_max": 2.0,
+        "crap_above_threshold": 0
+      },
+      {
+        "path": "src/App/components/nodes/styleHelpers.ts",
+        "fan_in": 3,
+        "fan_out": 0,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.25,
+        "maintainability_index": 99.4,
+        "total_cyclomatic": 1,
+        "total_cognitive": 0,
+        "function_count": 1,
+        "lines": 4,
+        "crap_max": 2.0,
+        "crap_above_threshold": 0
+      },
+      {
+        "path": "test/importedTypes.spec.ts",
+        "fan_in": 0,
+        "fan_out": 0,
+        "dead_code_ratio": 0.0,
+        "complexity_density": 0.33,
+        "maintainability_index": 94.7,
+        "total_cyclomatic": 9,
+        "total_cognitive": 0,
+        "function_count": 9,
+        "lines": 27,
+        "crap_max": 1.2,
+        "crap_above_threshold": 0
+      }
+    ],
+    "hotspots": [
+      {
+        "path": "test/annual.spec.ts",
+        "score": 85.9,
+        "commits": 5,
+        "weighted_commits": 4.92,
+        "lines_added": 312,
+        "lines_deleted": 58,
+        "complexity_density": 0.31,
+        "fan_in": 0,
+        "trend": "cooling",
+        "is_test_path": true,
+        "actions": [
+          {
+            "type": "refactor-file",
+            "auto_fixable": false,
+            "description": "Refactor `test/annual.spec.ts`, high complexity combined with frequent changes makes this a maintenance risk",
+            "note": "Prioritize extracting complex functions, adding tests, or splitting the module"
+          },
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `test/annual.spec.ts` to reduce change risk",
+            "note": "Frequently changed complex files benefit most from comprehensive test coverage"
+          }
+        ]
+      },
+      {
+        "path": "test/enrichment.spec.ts",
+        "score": 80.7,
+        "commits": 4,
+        "weighted_commits": 3.98,
+        "lines_added": 98,
+        "lines_deleted": 14,
+        "complexity_density": 0.36,
+        "fan_in": 0,
+        "trend": "stable",
+        "is_test_path": true,
+        "actions": [
+          {
+            "type": "refactor-file",
+            "auto_fixable": false,
+            "description": "Refactor `test/enrichment.spec.ts`, high complexity combined with frequent changes makes this a maintenance risk",
+            "note": "Prioritize extracting complex functions, adding tests, or splitting the module"
+          },
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `test/enrichment.spec.ts` to reduce change risk",
+            "note": "Frequently changed complex files benefit most from comprehensive test coverage"
+          }
+        ]
+      },
+      {
+        "path": "test/hover.spec.ts",
+        "score": 63.9,
+        "commits": 5,
+        "weighted_commits": 4.93,
+        "lines_added": 105,
+        "lines_deleted": 16,
+        "complexity_density": 0.23,
+        "fan_in": 0,
+        "trend": "cooling",
+        "is_test_path": true,
+        "actions": [
+          {
+            "type": "refactor-file",
+            "auto_fixable": false,
+            "description": "Refactor `test/hover.spec.ts`, high complexity combined with frequent changes makes this a maintenance risk",
+            "note": "Prioritize extracting complex functions, adding tests, or splitting the module"
+          },
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `test/hover.spec.ts` to reduce change risk",
+            "note": "Frequently changed complex files benefit most from comprehensive test coverage"
+          }
+        ]
+      },
+      {
+        "path": "test/authcontext.spec.ts",
+        "score": 35.4,
+        "commits": 4,
+        "weighted_commits": 3.93,
+        "lines_added": 119,
+        "lines_deleted": 15,
+        "complexity_density": 0.16,
+        "fan_in": 0,
+        "trend": "cooling",
+        "is_test_path": true,
+        "actions": [
+          {
+            "type": "refactor-file",
+            "auto_fixable": false,
+            "description": "Refactor `test/authcontext.spec.ts`, high complexity combined with frequent changes makes this a maintenance risk",
+            "note": "Prioritize extracting complex functions, adding tests, or splitting the module"
+          },
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `test/authcontext.spec.ts` to reduce change risk",
+            "note": "Frequently changed complex files benefit most from comprehensive test coverage"
+          }
+        ]
+      },
+      {
+        "path": "src/main/decoration/decorationService.ts",
+        "score": 30.3,
+        "commits": 3,
+        "weighted_commits": 2.99,
+        "lines_added": 70,
+        "lines_deleted": 15,
+        "complexity_density": 0.18,
+        "fan_in": 1,
+        "trend": "accelerating",
+        "actions": [
+          {
+            "type": "refactor-file",
+            "auto_fixable": false,
+            "description": "Refactor `src/main/decoration/decorationService.ts`, high complexity combined with frequent changes makes this a maintenance risk",
+            "note": "Prioritize extracting complex functions, adding tests, or splitting the module"
+          },
+          {
+            "type": "add-tests",
+            "auto_fixable": false,
+            "description": "Add test coverage for `src/main/decoration/decorationService.ts` to reduce change risk",
+            "note": "Frequently changed complex files benefit most from comprehensive test coverage"
+          }
+        ]
+      }
+    ],
+    "hotspot_summary": {
+      "since": "6 months",
+      "min_commits": 3,
+      "files_analyzed": 5,
+      "files_excluded": 11,
+      "shallow_clone": false
+    },
+    "targets": [
+      {
+        "path": "src/main/translationService/jsxHandler.ts",
+        "priority": 13.3,
+        "efficiency": 4.4,
+        "recommendation": "Extract processAttributes (cognitive: 109) and translateSingleClass (cognitive: 41) in 1179-LOC file into smaller functions",
+        "category": "extract_complex_functions",
+        "effort": "high",
+        "confidence": "high",
+        "factors": [
+          {
+            "metric": "cognitive_complexity",
+            "value": 109.0,
+            "threshold": 30.0,
+            "detail": "processAttributes has cognitive complexity 109"
+          },
+          {
+            "metric": "crap_max",
+            "value": 5256.0,
+            "threshold": 30.0,
+            "detail": "14 functions with untested complexity risk"
+          }
+        ],
+        "evidence": {
+          "complex_functions": [
+            {
+              "name": "processAttributes",
+              "line": 568,
+              "cognitive": 109
+            },
+            {
+              "name": "translateSingleClass",
+              "line": 416,
+              "cognitive": 41
+            },
+            {
+              "name": "describeEventHandler",
+              "line": 503,
+              "cognitive": 38
+            }
+          ],
+          "direct_callers": [
+            {
+              "path": "src/main/translationService/makeSemanticGraph.ts",
+              "symbols": [
+                {
+                  "imported": "getJsxFromExpression",
+                  "local": "getJsxFromExpression",
+                  "type_only": false
+                },
+                {
+                  "imported": "isJsxNode",
+                  "local": "isJsxNode",
+                  "type_only": false
+                },
+                {
+                  "imported": "processJsxNode",
+                  "local": "processJsxNode",
+                  "type_only": false
+                }
+              ]
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "apply-refactoring",
+            "auto_fixable": false,
+            "description": "Extract processAttributes (cognitive: 109) and translateSingleClass (cognitive: 41) in 1179-LOC file into smaller functions",
+            "category": "extract_complex_functions"
+          },
+          {
+            "type": "suppress-line",
+            "auto_fixable": false,
+            "description": "Suppress the underlying complexity finding",
+            "comment": "// fallow-ignore-next-line complexity"
+          }
+        ]
+      }
+    ],
+    "target_thresholds": {
+      "fan_in_p95": 5.0,
+      "fan_in_p75": 3.0,
+      "fan_out_p95": 8.0,
+      "fan_out_p90": 5
+    }
+  },
+  "next_steps": [
+    {
+      "id": "setup",
+      "command": "fallow schema",
+      "reason": "fallow has no config here; the manifest lists guided-setup commands (agent guide, commit gate) to offer the user"
+    },
+    {
+      "id": "trace-clone",
+      "command": "fallow dupes --trace dup:01a08456",
+      "reason": "see sibling locations and an extract-function suggestion"
+    },
+    {
+      "id": "complexity-breakdown",
+      "command": "fallow health --complexity-breakdown",
+      "reason": "see per-decision-point contributions for a hotspot"
+    }
+  ]
+}

@@ -1,7 +1,8 @@
 import { app, BrowserWindow, dialog, Menu } from 'electron';
 import { join } from 'path';
 import { registerProjectHandlers } from './project/projectController';
-import { registerFileHandlers } from './file/fileController';
+import { registerSourceHandlers } from './sourceService/sourceController';
+import { registerTranslationHandlers } from './translationService/translationController';
 import { registerDecorationHandlers } from './decoration/decorationController';
 import { registerProjectSelectHandlers } from './project/projectSelectController';
 
@@ -64,7 +65,8 @@ function createWindow() {
 app.whenReady().then(() => {
   setupMenu();
   registerProjectHandlers();
-  registerFileHandlers();
+  registerSourceHandlers();
+  registerTranslationHandlers();
   registerDecorationHandlers();
   registerProjectSelectHandlers();
   createWindow();

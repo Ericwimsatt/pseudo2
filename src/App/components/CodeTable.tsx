@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import type { LineRenderable, ViewModel } from '../lib/renderable/types';
-import { BUCKET_STYLES } from '../lib/renderable/bucket';
+import type { LineRenderable, ViewModel } from '../../main/translationService/renderable/types';
+import { BUCKET_STYLES } from '../../main/translationService/renderable/bucket';
 import { HoverProvider } from './hover/HoverContext';
 import { LineRow } from './LineRow';
 import { HoverPopover } from './hover/HoverPopover';

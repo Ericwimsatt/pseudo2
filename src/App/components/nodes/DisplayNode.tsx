@@ -1,4 +1,4 @@
-import type { DisplayNodeData } from '../../lib/renderable/types';
+import type { DisplayNodeData } from '../../../main/translationService/renderable/types';
 import { StyledSpan } from './StyledSpan';
 
 export function DisplayNode({ node }: { node: DisplayNodeData }) {

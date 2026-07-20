@@ -23,8 +23,6 @@ export class AstCache {
     this.sourceFile = sourceFile;
   }
 
-  // ── Node lookup (cached) ──────────────────────────────────────────
-
   private lookupNode(refPos: number): Node | null {
     const cached = this.nodeByOffset.get(refPos);
     if (cached !== undefined) return cached;
@@ -37,8 +35,6 @@ export class AstCache {
     this.nodeByOffset.set(refPos, node);
     return node;
   }
-
-  // ── Public query methods ──────────────────────────────────────────
 
   getDefinition(refPos: number): AstDefinition | null {
     const key = `def:${refPos}`;
@@ -117,13 +113,10 @@ export class AstCache {
   }
 }
 
-// ── Helpers ──────────────────────────────────────────────────────────
-
 function isWriteReference(node: Node): boolean {
   const parent = node.getParent();
   if (!parent) return false;
 
-  // Left side of an assignment
   if (
     'getLeft' in parent &&
     typeof (parent as any).getLeft === 'function'
@@ -136,7 +129,6 @@ function isWriteReference(node: Node): boolean {
     }
   }
 
-  // ++ or -- prefix/postfix
   const parentText = parent.getText?.() ?? '';
   if (/^(?:\+\+|--)/.test(parentText)) return true;
 

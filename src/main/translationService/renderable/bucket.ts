@@ -1,5 +1,5 @@
 import type { NodeBucket } from './types';
-import type { SemanticNode } from '../../main/file/makeSemanticGraph';
+import type { SemanticNode } from '../makeSemanticGraph';
 
 export const TYPE_TO_BUCKET: Record<string, NodeBucket> = {
   import: 'import',

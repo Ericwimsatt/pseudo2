@@ -28,9 +28,7 @@ export interface HoverContent {
 export interface DisplaySpan {
   text: string;
   variant?: NodeVariant;
-  /** 0-based character offset for async enrichment queries (AstCache) */
   refPos?: number;
-  /** If true, this span triggers a tooltip on hover */
   hasHover?: boolean;
   hover?: HoverContent;
 }
@@ -53,8 +51,6 @@ export interface LineRenderable {
 export interface ViewModel {
   lines: LineRenderable[];
 }
-
-// ── Tooltip / enrichment API ────────────────────────────────────────
 
 export interface SnippetLine {
   lineNumber: number;

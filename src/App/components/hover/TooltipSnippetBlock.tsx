@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import type { SnippetLine } from '../../lib/renderable/types';
+import type { SnippetLine } from '../../../main/translationService/renderable/types';
 import { PlainNodeLayer } from '../nodes/PlainNodeLayer';
 
 interface Props {

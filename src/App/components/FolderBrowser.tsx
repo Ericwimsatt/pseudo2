@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { BrowseResult } from '../shared/api';
+import type { BrowseResult } from '../../shared/api';
 
 interface FolderBrowserProps {
   onSelect: (path: string) => void;
@@ -72,7 +72,7 @@ export default function FolderBrowser({ onSelect, onClose }: FolderBrowserProps)
                   onClick={() => browse(dir.path)}
                   className="w-full text-left px-3 py-2 rounded hover:bg-blue-50 flex items-center gap-2 text-sm"
                 >
-                  <span className="text-blue-500 text-base">&#128193;</span>
+                  <span className="text-blue-500 text-base">📁</span>
                   <span>{dir.name}</span>
                 </button>
               ))
