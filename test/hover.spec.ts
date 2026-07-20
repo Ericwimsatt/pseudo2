@@ -25,6 +25,7 @@ async function loadApp(page: Page) {
       getTree: async () => ({ tree }),
       loadFileSource: async ({ path: _p }: { path: string }) => ({ path: 'Demo.tsx', lines: data.sourceLines }),
       loadFileTranslation: async ({ path: _p }: { path: string }) => ({ viewModel: data.viewModel, path: 'Demo.tsx' }),
+      getNodeDetail: async () => ({ sections: [] }),
       browseDirectory: async ({ requestedPath: _p }: { requestedPath?: string }) => ({ currentPath: '/tmp', parentPath: null, directories: [] }),
       uploadFolder: async ({ files: _f }: { files: any[] }) => ({ tree, path: '/tmp/demo' }),
       openDirectorySelector: async () => null,

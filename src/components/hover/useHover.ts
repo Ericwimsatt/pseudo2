@@ -4,6 +4,8 @@ import type { HoverContent } from '../../lib/renderable/types';
 export interface HoverState {
   hover: HoverContent | null;
   trigger: HTMLElement | null;
+  refPos?: number;
+  filePath?: string;
 }
 
 export interface HoverContextValue {

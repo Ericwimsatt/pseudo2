@@ -26,7 +26,7 @@ test.describe('enrichment hover', () => {
         loadProject: async ({ path: _path }: { path: string }) => ({ tree, path: '/tmp/enrich' }),
         getTree: async () => ({ tree }),
         loadFileSource: async ({ path: _path }: { path: string }) => ({ path: 'Demo.tsx', lines: sourceLines }),
-        loadFileTranslation: async ({ path: _path }: { path: string }) => data,
+        loadFileTranslation: async ({ path: _path }: { path: string }) => ({ ...data, path: 'Demo.tsx' }),
         getNodeDetail: async ({ query }: { query: any }) => {
           if (query.refPos > 0) {
             const answer: TooltipData = {

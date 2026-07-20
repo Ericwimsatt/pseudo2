@@ -44,7 +44,6 @@ export class AstCache {
     const key = `def:${refPos}`;
     const cached = this.resultCache.get(key) as AstDefinition | null | undefined;
     if (cached !== undefined) return cached;
-
     let result: AstDefinition | null = null;
     try {
       const node = this.lookupNode(refPos);
@@ -71,7 +70,6 @@ export class AstCache {
     const key = `ref:${refPos}`;
     const cached = this.resultCache.get(key) as AstReference[] | undefined;
     if (cached !== undefined) return cached;
-
     let result: AstReference[] = [];
     try {
       const node = this.lookupNode(refPos);

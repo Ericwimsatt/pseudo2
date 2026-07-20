@@ -57,3 +57,7 @@ Clicking the plus shows a snippet where its used.
 Reorganize the lib files that are only used by 1 controller so they share a parent folder with the controller.
 
 ## Back/Forward button for navigation
+
+## Yellow Highlight shouldn't be permanent when navigating to specific line.
+
+## Imports should count as vars for purpose of hovers--Do this at same time we do the multi-file stuff

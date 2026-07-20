@@ -28,11 +28,11 @@ export interface HoverContent {
 export interface DisplaySpan {
   text: string;
   variant?: NodeVariant;
-  hover?: HoverContent;
   /** 0-based character offset for async enrichment queries (AstCache) */
   refPos?: number;
   /** If true, this span triggers a tooltip on hover */
   hasHover?: boolean;
+  hover?: HoverContent;
 }
 
 export interface DisplayNodeData {

@@ -3,6 +3,7 @@ import { cx } from './styleHelpers';
 import { useHover } from '../hover/useHover';
 import type { HoverContent } from '../../lib/renderable/types';
 import { SearchContext } from '../../lib/searchContext';
+import { FilePathContext } from '../../lib/filePathContext';
 
 interface Props {
   text: string;
@@ -10,6 +11,7 @@ interface Props {
   hover?: HoverContent;
   onClick?: (e: React.MouseEvent) => void;
   onHover?: () => void;
+  refPos?: number;
 }
 
 function highlightText(text: string, term: string, isActive: boolean) {
@@ -53,27 +55,28 @@ export function StyledSpan({
   hover,
   onClick,
   onHover,
+  refPos,
 }: Props) {
   const { setHovered, scheduleHide, cancelClear } = useHover();
   const searchCtx = useContext(SearchContext);
+  const filePath = useContext(FilePathContext);
   const elRef = useRef<HTMLSpanElement>(null);
   const hoveredRef = useRef(false);
+  const hasTooltip = !!(hover || refPos !== undefined);
 
   const handleEnter = () => {
-    if (hover && elRef.current) {
-      setHovered({ hover, trigger: elRef.current });
+    if (hasTooltip && elRef.current) {
+      setHovered({ hover: hover ?? { title: '' }, trigger: elRef.current, refPos, filePath });
       hoveredRef.current = true;
     }
     onHover?.();
   };
 
-  // When enrichment data arrives after the mouse is already inside,
-  // push the updated hover to the context so the popover updates live.
   useEffect(() => {
-    if (hoveredRef.current && hover && elRef.current) {
-      setHovered({ hover, trigger: elRef.current });
+    if (hoveredRef.current && hasTooltip && elRef.current) {
+      setHovered({ hover: hover ?? { title: '' }, trigger: elRef.current, refPos, filePath });
     }
-  }, [hover, setHovered]);
+  }, [hover, refPos, setHovered, filePath]);
 
   const handleLeave = () => {
     hoveredRef.current = false;
@@ -83,7 +86,7 @@ export function StyledSpan({
   return (
     <span
       ref={elRef}
-      className={cx(classes?.join(' '), hover && 'cursor-help underline decoration-dotted underline-offset-2')}
+      className={cx(classes?.join(' '), hasTooltip && 'cursor-help underline decoration-dotted underline-offset-2')}
       onMouseEnter={handleEnter}
       onMouseLeave={handleLeave}
       onClick={onClick}

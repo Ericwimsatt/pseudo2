@@ -64,7 +64,7 @@ function FileView({ tree, onFileSelect }: { tree: FileNode[]; onFileSelect: (pat
           Error: {error}
         </div>
       ) : viewModel ? (
-        <FilePathContext.Provider value={filePath}>
+        <FilePathContext.Provider value={filePath ?? ''}>
           <CodeTable
             viewModel={viewModel}
             fileName={filePath}

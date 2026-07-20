@@ -1,5 +1,6 @@
 import type { EnrichQuery, QueryAnswer, SnippetLine, TooltipSection } from '../../lib/renderable/types';
 import { getCache } from '../cache/projectCache';
+import { size } from '@floating-ui/react';
 
 function extractSnippet(lines: { lineNumber: number; sourceText: string; nodes: import('../../lib/renderable/types').DisplayNodeData[] }[], anchorLine: number): SnippetLine[] {
   const snippet: SnippetLine[] = [];
@@ -22,7 +23,6 @@ export function getNodeDetail(arg: { filePath: string; query: EnrichQuery }): Qu
   if (!cache) {
     return { sections: [] };
   }
-
   const { astCache, viewModel } = cache;
   const refPos = arg.query.refPos;
   const sections: TooltipSection[] = [];
@@ -45,7 +45,6 @@ export function getNodeDetail(arg: { filePath: string; query: EnrichQuery }): Qu
     }));
     sections.push({ type: 'references', items });
   }
-
   // Type
   const typeData = astCache.getType(refPos);
   if (typeData) {

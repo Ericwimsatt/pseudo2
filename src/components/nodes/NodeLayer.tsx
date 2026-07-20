@@ -1,5 +1,5 @@
 import type { DisplayNodeData } from '../../lib/renderable/types';
-import { DisplayNode } from './node';
+import { DisplayNode } from './DisplayNode';
 
 interface LayerProps {
   nodes: DisplayNodeData[];
