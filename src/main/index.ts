@@ -3,7 +3,7 @@ import { join } from 'path';
 import { registerProjectHandlers } from './project/projectController';
 import { registerSourceHandlers } from './sourceService/sourceController';
 import { registerTranslationHandlers } from './translationService/translationController';
-import { registerDecorationHandlers } from './decoration/decorationController';
+import { registerTooltipHandlers } from './tooltip/tooltipController';
 import { registerProjectSelectHandlers } from './project/projectSelectController';
 
 const isDev = !app.isPackaged;
@@ -67,7 +67,7 @@ app.whenReady().then(() => {
   registerProjectHandlers();
   registerSourceHandlers();
   registerTranslationHandlers();
-  registerDecorationHandlers();
+  registerTooltipHandlers();
   registerProjectSelectHandlers();
   createWindow();
 

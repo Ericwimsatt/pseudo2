@@ -53,10 +53,6 @@ export interface ApiInvoke {
   };
 }
 
-export interface ApiSend {
-  menuLoadFolder: { path: string };
-}
-
 export type ElectronAPI = {
   [K in keyof ApiInvoke]: (
     arg: ApiInvoke[K]['arg']

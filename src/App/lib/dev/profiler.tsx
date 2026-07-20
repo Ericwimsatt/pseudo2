@@ -1,3 +1,5 @@
+// fallow-ignore-file unused-file
+
 interface Profile {
   startTime: number;
   lastTime: number;

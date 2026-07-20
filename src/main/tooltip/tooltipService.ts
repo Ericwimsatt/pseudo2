@@ -1,6 +1,5 @@
 import type { EnrichQuery, QueryAnswer, SnippetLine, TooltipSection } from '../translationService/renderable/types';
 import { getCache } from '../translationService/cache/projectCache';
-import { size } from '@floating-ui/react';
 
 function extractSnippet(lines: { lineNumber: number; sourceText: string; nodes: import('../translationService/renderable/types').DisplayNodeData[] }[], anchorLine: number): SnippetLine[] {
   const snippet: SnippetLine[] = [];

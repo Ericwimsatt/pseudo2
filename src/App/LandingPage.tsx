@@ -1,6 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
 import FolderBrowser from './components/FolderBrowser';
-import type { FileNode } from '../shared/api';
 
 interface LandingPageProps {
   onLoadRepo: (path: string) => Promise<void>;
