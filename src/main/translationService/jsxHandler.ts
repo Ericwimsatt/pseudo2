@@ -619,7 +619,15 @@ function processAttributes(
 
     if (name.startsWith('on') && name.length > 2 && /[A-Z]/.test(name[2])) {
       const eventDesc = describeEventHandler(name, value);
-      metadata.events.push({ name, description: eventDesc });
+      const eventObj: Record<string, any> = { name, description: eventDesc };
+      if (value && Node.isJsxExpression(value) && value.getExpression()) {
+        const expr = value.getExpression()!;
+        if (Node.isIdentifier(expr)) {
+          eventObj.handlerRefPos = expr.getStart();
+          eventObj.handlerName = expr.getText();
+        }
+      }
+      metadata.events.push(eventObj);
       descriptions.push(eventDesc);
       continue;
     }
@@ -994,6 +1002,17 @@ function processJsxExpression(node: JsxExpression, indent: number): SemanticNode
   }
 
   const lines = getNodeLineRange(node);
+  if (Node.isIdentifier(unwrapped)) {
+    return {
+      type: 'jsx-expression',
+      refPos: unwrapped.getStart(),
+      children: [],
+      metadata: { expression: unwrapped.getText(), isSimpleIdentifier: true },
+      indent,
+      sourceStartLine: lines.start,
+      sourceEndLine: lines.end,
+    };
+  }
   return {
     type: 'jsx-expression',
     children: [],
@@ -1041,9 +1060,11 @@ function processChildren(children: Node[], indent: number): SemanticNode[] {
 }
 
 function processElement(node: JsxElement, indent: number): SemanticNode {
-  const tagName = getTagName(node.getOpeningElement().getTagNameNode());
+  const tagNameNode = node.getOpeningElement().getTagNameNode();
+  const tagName = getTagName(tagNameNode);
   const tagDesc = describeTag(tagName);
   const isComp = isComponentTag(tagName);
+  const refPos = isComp && Node.isIdentifier(tagNameNode) ? tagNameNode.getStart() : undefined;
   const { description: attrDesc, metadata: attrMeta } = processAttributes(node.getOpeningElement().getAttributes(), tagName);
   const children = processChildren(node.getJsxChildren(), indent + 1);
 
@@ -1052,6 +1073,7 @@ function processElement(node: JsxElement, indent: number): SemanticNode {
     type: 'jsx-element',
     name: tagName,
     children,
+    refPos,
     metadata: {
       isComponent: isComp,
       tagDescription: tagDesc,
@@ -1065,9 +1087,11 @@ function processElement(node: JsxElement, indent: number): SemanticNode {
 }
 
 function processSelfClosing(node: JsxSelfClosingElement, indent: number): SemanticNode {
-  const tagName = getTagName(node.getTagNameNode());
+  const tagNameNode = node.getTagNameNode();
+  const tagName = getTagName(tagNameNode);
   const tagDesc = describeTag(tagName);
   const isComp = isComponentTag(tagName);
+  const refPos = isComp && Node.isIdentifier(tagNameNode) ? tagNameNode.getStart() : undefined;
   const { description: attrDesc, metadata: attrMeta } = processAttributes(node.getAttributes(), tagName);
 
   const lines = getNodeLineRange(node);
@@ -1075,6 +1099,7 @@ function processSelfClosing(node: JsxSelfClosingElement, indent: number): Semant
     type: 'jsx-element',
     name: tagName,
     children: [],
+    refPos,
     metadata: {
       isComponent: isComp,
       tagDescription: tagDesc,

@@ -25,6 +25,9 @@ export const TYPE_TO_BUCKET: Record<string, NodeBucket> = {
   variable: 'standard',
   property: 'standard',
   call: 'standard',
+  'object-literal': 'standard',
+  'object-property': 'standard',
+  'object-literal-close': 'standard',
 };
 
 export const BUCKET_PRIORITY: NodeBucket[] = [

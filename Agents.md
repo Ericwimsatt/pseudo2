@@ -8,3 +8,6 @@ For every change, run the app and exercise the new behavior. Test it from a few 
 ### Lint
 Always run a lint to check for syntax and type errors. Generally the solution to the type error is to fix the type or fix the call, not to bypass typechecking or make things options
 npx tsc --noEmit
+
+## Translation principle
+Keep it as simple as possible. Lua, the language, only has variables, tables, and functions. I want to represent typescript as close to this as possible

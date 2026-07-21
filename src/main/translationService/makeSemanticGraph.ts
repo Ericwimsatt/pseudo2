@@ -45,6 +45,24 @@ function truncate(text: string, _max = 80): string {
   return text.replace(/\s+/g, ' ').trim();
 }
 
+function makeNodeOnLine(
+  type: string,
+  name: string | undefined,
+  line: number,
+  indent: number,
+  metadata: Record<string, any> = {},
+): SemanticNode {
+  return {
+    type,
+    name,
+    children: [],
+    metadata,
+    indent,
+    sourceStartLine: line,
+    sourceEndLine: line,
+  };
+}
+
 function makeNodeFromAst(
   type: string,
   name: string | undefined,
@@ -298,6 +316,16 @@ function processVariableDeclaration(
 
   if (initializer) {
     const unwrapped = unwrapExpression(initializer);
+    if (Node.isObjectLiteralExpression(unwrapped)) {
+      const { open: _open, properties, close } = processObjectLiteral(unwrapped, indent);
+      const children = [...properties, close];
+      return [makeNodeFromAst('variable', name, decl, indent, {
+        type: (decl.getTypeNode()?.getText() ?? decl.getType().getText()) || 'any',
+        initializer: null,
+        exported: exported ?? false,
+        isObjectLiteral: true,
+      }, children, decl.getNameNode().getStart())];
+    }
     if (Node.isArrowFunction(unwrapped) || Node.isFunctionExpression(unwrapped)) {
       const fn = processArrowFunction(unwrapped, indent);
       const fnMeta = { ...fn.metadata, anonymous: false };
@@ -305,9 +333,8 @@ function processVariableDeclaration(
     }
   }
 
-  const child = initializer ? processExpression(initializer, indent + 1) : null;
-  const children = child ? [child] : [];
-  const initText = child ? null : (initializer ? truncate(initializer.getText()) : null);
+  const children = initializer ? processExpression(initializer, indent + 1) : [];
+  const initText = children.length > 0 ? null : (initializer ? truncate(initializer.getText()) : null);
   return [makeNodeFromAst('variable', name, decl, indent, {
     type: (decl.getTypeNode()?.getText() ?? decl.getType().getText()) || 'any',
     initializer: initText,
@@ -315,19 +342,79 @@ function processVariableDeclaration(
   }, children, decl.getNameNode().getStart())];
 }
 
+function processObjectLiteral(
+  expr: import('ts-morph').ObjectLiteralExpression,
+  indent: number,
+): { open: SemanticNode; properties: SemanticNode[]; close: SemanticNode } {
+  const openLine = expr.getStartLineNumber();
+  const closeLine = expr.getEndLineNumber();
+  const properties: SemanticNode[] = [];
+
+  for (const prop of expr.getProperties()) {
+    if (Node.isPropertyAssignment(prop)) {
+      const propName = prop.getName();
+      const valueText = prop.getInitializer()?.getText() ?? '';
+      const propLine = prop.getStartLineNumber();
+      properties.push(makeNodeOnLine('object-property', propName, propLine, indent + 1, {
+        value: truncate(valueText),
+      }));
+    } else if (Node.isShorthandPropertyAssignment(prop)) {
+      const propName = prop.getName();
+      const propLine = prop.getStartLineNumber();
+      properties.push(makeNodeOnLine('object-property', propName, propLine, indent + 1, {
+        value: '',
+        shorthand: true,
+      }));
+    } else if (Node.isSpreadAssignment(prop)) {
+      const exprText = prop.getExpression().getText();
+      const propLine = prop.getStartLineNumber();
+      properties.push(makeNodeOnLine('object-property', `...${truncate(exprText)}`, propLine, indent + 1, {
+        value: '',
+        isSpread: true,
+      }));
+    } else if (Node.isMethodDeclaration(prop)) {
+      const propName = prop.getName();
+      const propLine = prop.getStartLineNumber();
+      properties.push(makeNodeOnLine('object-property', propName, propLine, indent + 1, {
+        value: '<method>',
+        isMethod: true,
+      }));
+    }
+  }
+
+  const open = makeNodeOnLine('object-literal', undefined, openLine, indent, {});
+  const close = makeNodeOnLine('object-literal-close', undefined, closeLine, indent, {});
+
+  return { open, properties, close };
+}
+
 function processReturn(node: ReturnStatement, indent: number): SemanticNode {
   const children: SemanticNode[] = [];
   let hasJsx = false;
 
-  const jsxNode = getJsxFromExpression(node.getExpression());
-  if (jsxNode) {
-    hasJsx = true;
-    const result = processJsxNode(jsxNode, indent + 1);
-    if (result) children.push(result);
+  const expr = node.getExpression();
+  if (expr) {
+    const unwrapped = unwrapExpression(expr);
+    if (Node.isObjectLiteralExpression(unwrapped)) {
+      const { open: _open, properties, close } = processObjectLiteral(unwrapped, indent);
+      children.push(...properties, close);
+      return makeNodeFromAst('return', undefined, node, indent, {
+        value: null,
+        hasJsx: false,
+        isObjectLiteral: true,
+      }, children);
+    }
+
+    const jsxNode = getJsxFromExpression(expr);
+    if (jsxNode) {
+      hasJsx = true;
+      const result = processJsxNode(jsxNode, indent + 1);
+      if (result) children.push(result);
+    }
   }
 
   return makeNodeFromAst('return', undefined, node, indent, {
-    value: hasJsx ? null : (node.getExpression() ? truncate(node.getExpression()!.getText()) : null),
+    value: hasJsx ? null : (expr ? truncate(expr.getText()) : null),
     hasJsx,
   }, children);
 }
@@ -448,31 +535,31 @@ function processExpressionStatement(node: ExpressionStatement, indent: number): 
     const result = processJsxNode(expr, indent);
     return result ? [result] : [];
   }
-  const child = processExpression(expr, indent);
-  return child ? [child] : [];
+  return processExpression(expr, indent);
 }
 
-function processExpression(expr: Node, indent: number): SemanticNode | null {
+function processExpression(expr: Node, indent: number): SemanticNode[] {
   const unwrapped = unwrapExpression(expr);
   if (isJsxNode(unwrapped)) {
-    return processJsxNode(unwrapped, indent);
+    const result = processJsxNode(unwrapped, indent);
+    return result ? [result] : [];
   }
   if (Node.isCallExpression(unwrapped) || Node.isNewExpression(unwrapped)) {
     return processCall(unwrapped, indent);
   }
   if (Node.isArrowFunction(unwrapped) || Node.isFunctionExpression(unwrapped)) {
-    return processArrowFunction(unwrapped, indent);
+    const result = processArrowFunction(unwrapped, indent);
+    return result ? [result] : [];
   }
-  return null;
+  return [];
 }
 
 function processCall(
   node: CallExpression | NewExpression,
   indent: number,
-): SemanticNode {
+): SemanticNode[] {
   const isNew = Node.isNewExpression(node);
   const callee = node.getExpression();
-  const calleeText = truncate(callee.getText(), 100);
   const args = node.getArguments() ?? [];
   const children: SemanticNode[] = [];
   const argSummaries: string[] = [];
@@ -483,27 +570,51 @@ function processCall(
       const child = processArrowFunction(unwrapped, indent + 1);
       if (child) {
         children.push(child);
-        argSummaries.push('<function>');
+        const params = (child.metadata.parameters as string[]) ?? [];
+        const paramDesc = params.length > 0 ? params.join(', ') : '';
+        argSummaries.push(`callback(${paramDesc})`);
         continue;
       }
     }
     if (Node.isCallExpression(unwrapped) || Node.isNewExpression(unwrapped)) {
-      const child = processCall(unwrapped, indent + 1);
-      if (child) {
-        children.push(child);
-        argSummaries.push('<call>');
-        continue;
-      }
+      const nodes = processCall(unwrapped, indent + 1);
+      children.push(...nodes);
+      const callNames = nodes.map(n => n.metadata.function).join(' -> ');
+      argSummaries.push(`call ${callNames}`);
+      continue;
+    }
+    if (Node.isObjectLiteralExpression(unwrapped)) {
+      const { open, properties, close } = processObjectLiteral(unwrapped, indent);
+      children.push(open, ...properties, close);
+      argSummaries.push('{...}');
+      continue;
     }
     argSummaries.push(truncate(arg.getText(), 80));
   }
 
-  return makeNodeFromAst('call', undefined, node, indent, {
-    function: calleeText,
+  let chainPrefix: SemanticNode[] = [];
+  let functionName: string;
+
+  if (Node.isPropertyAccessExpression(callee)) {
+    const objectExpr = callee.getExpression();
+    if (Node.isCallExpression(objectExpr) || Node.isNewExpression(objectExpr)) {
+      chainPrefix = processCall(objectExpr, indent);
+      functionName = truncate('.' + callee.getName(), 100);
+    } else {
+      functionName = truncate(callee.getText(), 100);
+    }
+  } else {
+    functionName = truncate(callee.getText(), 100);
+  }
+
+  const result = makeNodeFromAst('call', undefined, node, indent, {
+    function: functionName,
     arguments: argSummaries,
     argCount: args.length,
     isNew,
   }, children, getIdentifierPos(node, 'call'));
+
+  return [...chainPrefix, result];
 }
 
 function processArrowFunction(

@@ -58,7 +58,7 @@ test.describe('AnnualSummary translation', () => {
 
     // Line 2 should hold the years/useMemo/anonymous-function nodes (nested, no duplication).
     const line2 = await translationTextsForLine(page, 2);
-    expect(line2.some((t) => t.includes('Declare variable') && t.includes('years'))).toBeTruthy();
+    expect(line2.some((t) => t.includes('years'))).toBeTruthy();
     expect(line2.some((t) => t.includes('Call') && t.includes('useMemo'))).toBeTruthy();
     expect(line2.some((t) => t.includes('Function anonymous'))).toBeTruthy();
     // No exact duplicate strings on line 2.
@@ -67,7 +67,7 @@ test.describe('AnnualSummary translation', () => {
 
     // The arrow body now shows up nested on lines 3-6.
     const line3 = await translationTextsForLine(page, 3);
-    expect(line3.some((t) => t.includes('Declare variable') && t.includes('s'))).toBeTruthy();
+    expect(line3.some((t) => t.includes('`s`'))).toBeTruthy();
     expect(line3.some((t) => t.includes('Instantiate') && t.includes('Set'))).toBeTruthy();
 
     const line5 = await translationTextsForLine(page, 5);
@@ -84,14 +84,14 @@ test.describe('AnnualSummary translation', () => {
     expect(returnYears.length).toBe(1);
 
     // Indentation increases down the tree: line-2 "Define function anonymous" is
-    // more indented than "Declare variable years".
+    // more indented than the "years" variable.
     const nodeDivs = page.locator('table tbody td:last-child > div > div');
     const line2indent = await nodeDivs
       .filter({ hasText: /Function anonymous/ })
       .first()
       .evaluate((el) => parseInt(getComputedStyle(el).paddingLeft || '0', 10));
     const yearsIndent = await nodeDivs
-      .filter({ hasText: /Declare variable.*years/ })
+      .filter({ hasText: /`years`/ })
       .first()
       .evaluate((el) => parseInt(getComputedStyle(el).paddingLeft || '0', 10));
     expect(line2indent).toBeGreaterThan(yearsIndent);

@@ -42,6 +42,8 @@ function FileView({ tree, onFileSelect }: { tree: FileNode[]; onFileSelect: (pat
         .then(([_sourceResult, translationResult]) => {
           setFilePath(translationResult.path);
           setViewModel(translationResult.viewModel);
+          console.log('Loaded file translation for', translationResult.path);
+          console.log(translationResult.viewModel);
         })
         .catch(err => {
           console.error('Failed to load file:', err);

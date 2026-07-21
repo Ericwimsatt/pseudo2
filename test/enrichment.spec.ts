@@ -62,7 +62,7 @@ test.describe('enrichment hover', () => {
     await page.goto('http://localhost:5174/#/file/Demo.tsx');
 
     // Wait for the variable declaration to render
-    await expect(page.locator('body')).toContainText('Declare variable');
+    await expect(page.locator('body')).toContainText('`count`');
 
     // The span with "count" in the translation should have cursor-help if hasHover is set
     const countSpan = page.locator('span.cursor-help').filter({ hasText: 'count' }).first();

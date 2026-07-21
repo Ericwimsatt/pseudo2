@@ -6,14 +6,16 @@ Viewer to show the hierarchy from selected node down. Fill with dummy data.
 
 ## Deeper unpacking of values (function params stay compact now)
 
-
-## Concept of "Path/Stack" for preferentially showing references down the stack or for showing variables in the cheater render from other places
-
-
-
 ## Back/Forward button for navigation
 
+## ? clause handling:
+`met` = reverse ? current <= target : current >= target
+  const warning = reverse ? pct >= 75 && !met : pct >= 75 && pct < 100;
+`warning` = reverse ? pct >= 75 && !met : pct >= 75 && pct < 100
 
+## Collapsible
+
+## Visual markers around hierarchies
 
 ## Simpler Testing primitives
 
@@ -47,3 +49,8 @@ FileName:LineNnumber[+]
 FileName:LineNnumber[+]
 FileName:LineNnumber [+]
 Clicking the plus shows a snippet where its used.
+
+# Deep Future
+
+## Concept of "Path/Stack" for preferentially showing references down the stack or for showing variables in the cheater render from other places
+
