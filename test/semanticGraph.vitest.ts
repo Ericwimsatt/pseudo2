@@ -15,17 +15,23 @@ describe('semantic graph - call argument labeling', () => {
 
     const lines = viewModel.lines.filter((l: any) => l.nodes.length > 0);
 
-    // Line 1: variable declaration with = and setTimeout call
-    const line1 = lines[0];
-    const line1Texts = line1.nodes.map((n: any) => n.spans.map((s: any) => s.text).join(''));
+    // Line 1: variable-assignment `timeout` =, call-function Call setTimeout,
+    // param_1 =, and Function (no parameters) all start on line 1
+    const line1Texts = lines[0].nodes.map((n: any) => n.spans.map((s: any) => s.text).join(''));
     expect(line1Texts.some((t: string) => t.includes('`timeout` ='))).toBeTruthy();
-    expect(line1Texts.some((t: string) => t.includes('Call setTimeout with callback(), TOAST_REMOVE_DELAY'))).toBeTruthy();
-    expect(line1Texts.some((t: string) => t.includes('Function anonymous'))).toBeTruthy();
+    expect(line1Texts.some((t: string) => t.includes('Call setTimeout'))).toBeTruthy();
+    expect(line1Texts.some((t: string) => t.includes('`param_1` ='))).toBeTruthy();
+    expect(line1Texts.some((t: string) => t.includes('Function (no parameters)'))).toBeTruthy();
 
-    // Line 2: the callback body — first statement
-    const line2 = lines[1];
-    const line2Texts = line2.nodes.map((n: any) => n.spans.map((s: any) => s.text).join(''));
-    expect(line2Texts.some((t: string) => t.includes('Call toastTimeouts.delete with toastId'))).toBeTruthy();
+    // Line 2: toastTimepoints.delete call in the callback body
+    const line2Texts = lines[1].nodes.map((n: any) => n.spans.map((s: any) => s.text).join(''));
+    expect(line2Texts.some((t: string) => t.includes('Call toastTimeouts.delete'))).toBeTruthy();
+
+    // param_2 = TOAST_REMOVE_DELAY is on line 7
+    const line7 = lines[6];
+    const line7Texts = line7.nodes.map((n: any) => n.spans.map((s: any) => s.text).join(''));
+    expect(line7Texts.some((t: string) => t.includes('`param_2` ='))).toBeTruthy();
+    expect(line7Texts.some((t: string) => t.includes('TOAST_REMOVE_DELAY'))).toBeTruthy();
   });
 
   it('labels inline function args and preserves argument order', () => {
@@ -34,16 +40,18 @@ describe('semantic graph - call argument labeling', () => {
     const { viewModel } = buildFileData(source, 'test.ts');
 
     const lines = viewModel.lines.filter((l: any) => l.nodes.length > 0);
-    const line1 = lines[0];
-    const line1Texts = line1.nodes.map((n: any) => n.spans.map((s: any) => s.text).join(''));
-    const callText = line1Texts.find((t: string) => t.includes('Call'));
-    // Arguments should appear in order: a, callback(), c
-    expect(callText).toBeDefined();
-    if (callText) {
-      expect(callText).toContain(' a, ');
-      expect(callText).toContain('callback()');
-      expect(callText).toContain(', c');
-    }
+    const line1Nodes = lines[0].nodes;
+    const nodeTexts = line1Nodes.map((n: any) => n.spans.map((s: any) => s.text).join(''));
+
+    // Arguments as child variable-assignments in order: param_1, param_2, param_3
+    expect(nodeTexts.some((t: string) => t.includes('Call execute'))).toBeTruthy();
+    expect(nodeTexts.some((t: string) => t.includes('`param_1` = a'))).toBeTruthy();
+    expect(nodeTexts.some((t: string) => t.includes('`param_2` ='))).toBeTruthy();
+    expect(nodeTexts.some((t: string) => t.includes('`param_3` = c'))).toBeTruthy();
+
+    // param_2 has a function child
+    expect(nodeTexts.some((t: string) => t.includes('Function (no parameters)'))).toBeTruthy();
+    expect(nodeTexts.some((t: string) => t.includes('return'))).toBeTruthy();
   });
 
   it('shows variable assignment marker when initializer has children', () => {
@@ -68,7 +76,9 @@ const y = 42;
     const { viewModel } = buildFileData(source, 'test.ts');
     const lines = viewModel.lines.filter((l: any) => l.nodes.length > 0);
     const line1Texts = lines[0].nodes.map((n: any) => n.spans.map((s: any) => s.text).join(''));
-    const fnText = line1Texts.find((t: string) => t.includes('Function f'));
-    expect(fnText).toBe('Function f');
+    // variable-assignment with = since it has a child function-definition
+    expect(line1Texts.some((t: string) => t.includes('`f` ='))).toBeTruthy();
+    // function-definition with (no parameters) on same line
+    expect(line1Texts.some((t: string) => t.includes('Function (no parameters)'))).toBeTruthy();
   });
 });

@@ -40,11 +40,20 @@ async function loadAppWithFile(page: Page) {
 
 // Collect the rendered translation strings for a given source line number.
 async function translationTextsForLine(page: Page, lineNumber: number): Promise<string[]> {
-  const row = page.locator('tr', { has: page.locator('td', { hasText: String(lineNumber) }).first() });
-  // The translation cell contains divs per node; each div's text is one node's rendered line.
-  const cells = row.locator('td').last();
-  const texts = await cells.locator('div > div').allTextContents();
-  return texts.map((t) => t.trim()).filter(Boolean);
+  return page.evaluate((ln) => {
+    const rows = document.querySelectorAll('tr');
+    for (const row of rows) {
+      const cells = row.querySelectorAll('td');
+      // cell[0] is the row handle, cell[1] is the source line number
+      if (cells.length >= 2 && cells[1]?.textContent?.trim() === String(ln)) {
+        const last = cells[cells.length - 1];
+        const innerDivs = last.querySelector(':scope > div')?.querySelectorAll('div');
+        if (!innerDivs) return [];
+        return Array.from(innerDivs).map(d => d.textContent?.trim() ?? '').filter(Boolean);
+      }
+    }
+    return [];
+  }, lineNumber);
 }
 
 test.describe('AnnualSummary translation', () => {
@@ -60,7 +69,7 @@ test.describe('AnnualSummary translation', () => {
     const line2 = await translationTextsForLine(page, 2);
     expect(line2.some((t) => t.includes('years'))).toBeTruthy();
     expect(line2.some((t) => t.includes('Call') && t.includes('useMemo'))).toBeTruthy();
-    expect(line2.some((t) => t.includes('Function anonymous'))).toBeTruthy();
+    expect(line2.some((t) => t.includes('Function (no parameters)'))).toBeTruthy();
     // No exact duplicate strings on line 2.
     const dupes = line2.filter((t, i) => line2.indexOf(t) !== i);
     expect(dupes).toEqual([]);
@@ -83,11 +92,11 @@ test.describe('AnnualSummary translation', () => {
     const returnYears = line8.filter((t) => t.includes('return') && t.includes('years'));
     expect(returnYears.length).toBe(1);
 
-    // Indentation increases down the tree: line-2 "Define function anonymous" is
+    // Indentation increases down the tree: line-2 "Function (no parameters)" is
     // more indented than the "years" variable.
     const nodeDivs = page.locator('table tbody td:last-child > div > div');
     const line2indent = await nodeDivs
-      .filter({ hasText: /Function anonymous/ })
+      .filter({ hasText: /Function \(no parameters\)/ })
       .first()
       .evaluate((el) => parseInt(getComputedStyle(el).paddingLeft || '0', 10));
     const yearsIndent = await nodeDivs
@@ -230,13 +239,14 @@ interface Props {
     await page.goto('http://localhost:5174/');
     await page.getByText('FilterBar.tsx', { exact: false }).first().click();
 
-    // The function definition is present, with single-line destructured params.
-    await expect(page.locator('body')).toContainText('Function FilterBar');
-    const defText = await page
+    // The variable-assignment is present, with child function-definition.
+    await expect(page.locator('body')).toContainText('`FilterBar`');
+    const defTexts = await page
       .locator('table tbody td:last-child div > div')
-      .filter({ hasText: /Function FilterBar/ })
-      .first()
-      .textContent();
+      .allTextContents();
+    const filtered = defTexts.map(t => t.trim()).filter(t => t.includes('Parameters:'));
+    expect(filtered.length).toBeGreaterThan(0);
+    const defText = filtered[0];
     expect(defText).not.toContain('\n');
     expect(defText).toContain('{ period, onPeriodChange, comparePeriod }');
 

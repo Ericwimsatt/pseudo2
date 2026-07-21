@@ -88,11 +88,10 @@ function makeNodeFromAst(
 function getIdentifierPos(node: Node, type: string): number | undefined {
   try {
     switch (type) {
-      case 'variable':
+      case 'variable-assignment':
         return (node as import('ts-morph').VariableDeclaration).getNameNode().getStart();
-      case 'function':
-      case 'method':
-        return (node as import('ts-morph').FunctionDeclaration | import('ts-morph').MethodDeclaration).getNameNode()?.getStart();
+      case 'function-definition':
+        return (node as any).getNameNode?.()?.getStart();
       case 'class':
         return (node as import('ts-morph').ClassDeclaration).getNameNode()?.getStart();
       case 'interface':
@@ -101,7 +100,7 @@ function getIdentifierPos(node: Node, type: string): number | undefined {
         return (node as import('ts-morph').TypeAliasDeclaration).getNameNode()?.getStart();
       case 'property':
         return (node as import('ts-morph').PropertyDeclaration | import('ts-morph').PropertySignature).getNameNode().getStart();
-      case 'call': {
+      case 'call-function': {
         const callee = (node as import('ts-morph').CallExpression).getExpression();
         if (Node.isIdentifier(callee)) return callee.getStart();
         if (Node.isPropertyAccessExpression(callee)) return callee.getNameNode().getStart();
@@ -134,7 +133,7 @@ function processStatement(node: Node, indent: number): SemanticNode[] {
     return [processExport(node, indent)];
   }
   if (Node.isFunctionDeclaration(node)) {
-    return [processFunction(node, indent)];
+    return [processFunctionDefinition(node, indent)];
   }
   if (Node.isClassDeclaration(node)) {
     return [processClass(node, indent)];
@@ -231,16 +230,46 @@ function processExport(node: ExportDeclaration, indent: number): SemanticNode {
   });
 }
 
-function processFunction(node: FunctionDeclaration, indent: number): SemanticNode {
-  const name = node.getName() || 'anonymous';
-  const params = node.getParameters().map(p => p.getName());
+function processFunctionDefinition(
+  node: FunctionDeclaration | FunctionExpression | ArrowFunction | MethodDeclaration,
+  indent: number,
+  overrideName?: string,
+): SemanticNode {
+  const name = overrideName ?? (Node.isArrowFunction(node) ? undefined : node.getName() ?? undefined);
+  const params = node.getParameters().map(p => summarizeParamName(p));
+  const returnType = node.getReturnType().getText() || 'void';
   const body = node.getBody();
-  const children = body && Node.isBlock(body) ? processBlock(body, indent + 1) : [];
-  return makeNodeFromAst('function', name, node, indent, {
+
+  const children: SemanticNode[] = [];
+  if (body) {
+    if (Node.isBlock(body)) {
+      children.push(...processBlock(body, indent + 1));
+    } else {
+      const retChildren: SemanticNode[] = [];
+      let hasJsx = false;
+      const jsxNode = getJsxFromExpression(body);
+      if (jsxNode) {
+        hasJsx = true;
+        const result = processJsxNode(jsxNode, indent + 2);
+        if (result) retChildren.push(result);
+      }
+      children.push(makeNodeFromAst('return', undefined, body, indent + 1, {
+        value: hasJsx ? null : (body ? truncate(body.getText()) : null),
+        hasJsx,
+      }, retChildren));
+    }
+  }
+
+  const metadata: Record<string, any> = {
     parameters: params,
-    returnType: node.getReturnType().getText() || 'void',
-    exported: node.hasExportKeyword(),
-  }, children, getIdentifierPos(node, 'function'));
+    returnType,
+  };
+
+  if (Node.isFunctionDeclaration(node)) {
+    metadata.exported = node.hasExportKeyword();
+  }
+
+  return makeNodeFromAst('function-definition', name, node, indent, metadata, children, getIdentifierPos(node, 'function-definition'));
 }
 
 function processClass(node: ClassDeclaration, indent: number): SemanticNode {
@@ -249,7 +278,7 @@ function processClass(node: ClassDeclaration, indent: number): SemanticNode {
 
   for (const member of node.getMembers()) {
     if (Node.isMethodDeclaration(member)) {
-      children.push(processMethod(member, indent + 1));
+      children.push(processFunctionDefinition(member, indent + 1));
     } else if (Node.isPropertyDeclaration(member)) {
       children.push(processProperty(member, indent + 1));
     }
@@ -262,16 +291,7 @@ function processClass(node: ClassDeclaration, indent: number): SemanticNode {
   }, children, getIdentifierPos(node, 'class'));
 }
 
-function processMethod(node: MethodDeclaration, indent: number): SemanticNode {
-  const name = node.getName();
-  const params = node.getParameters().map(p => p.getName());
-  const body = node.getBody();
-  const children = body && Node.isBlock(body) ? processBlock(body, indent + 1) : [];
-  return makeNodeFromAst('method', name, node, indent, {
-    parameters: params,
-    returnType: node.getReturnType().getText() || 'void',
-  }, children, getIdentifierPos(node, 'method'));
-}
+
 
 function processProperty(node: PropertyDeclaration, indent: number): SemanticNode {
   const name = node.getName();
@@ -313,29 +333,9 @@ function processVariableDeclaration(
 ): SemanticNode[] {
   const name = decl.getName();
   const initializer = decl.getInitializer();
-
-  if (initializer) {
-    const unwrapped = unwrapExpression(initializer);
-    if (Node.isObjectLiteralExpression(unwrapped)) {
-      const { open: _open, properties, close } = processObjectLiteral(unwrapped, indent);
-      const children = [...properties, close];
-      return [makeNodeFromAst('variable', name, decl, indent, {
-        type: (decl.getTypeNode()?.getText() ?? decl.getType().getText()) || 'any',
-        initializer: null,
-        exported: exported ?? false,
-        isObjectLiteral: true,
-      }, children, decl.getNameNode().getStart())];
-    }
-    if (Node.isArrowFunction(unwrapped) || Node.isFunctionExpression(unwrapped)) {
-      const fn = processArrowFunction(unwrapped, indent);
-      const fnMeta = { ...fn.metadata, anonymous: false };
-      return [makeNodeFromAst('function', name, decl, indent, fnMeta, fn.children, decl.getNameNode().getStart())];
-    }
-  }
-
   const children = initializer ? processExpression(initializer, indent + 1) : [];
   const initText = children.length > 0 ? null : (initializer ? truncate(initializer.getText()) : null);
-  return [makeNodeFromAst('variable', name, decl, indent, {
+  return [makeNodeFromAst('variable-assignment', name, decl, indent, {
     type: (decl.getTypeNode()?.getText() ?? decl.getType().getText()) || 'any',
     initializer: initText,
     exported: exported ?? false,
@@ -394,27 +394,18 @@ function processReturn(node: ReturnStatement, indent: number): SemanticNode {
 
   const expr = node.getExpression();
   if (expr) {
-    const unwrapped = unwrapExpression(expr);
-    if (Node.isObjectLiteralExpression(unwrapped)) {
-      const { open: _open, properties, close } = processObjectLiteral(unwrapped, indent);
-      children.push(...properties, close);
-      return makeNodeFromAst('return', undefined, node, indent, {
-        value: null,
-        hasJsx: false,
-        isObjectLiteral: true,
-      }, children);
-    }
-
     const jsxNode = getJsxFromExpression(expr);
     if (jsxNode) {
       hasJsx = true;
       const result = processJsxNode(jsxNode, indent + 1);
       if (result) children.push(result);
+    } else {
+      children.push(...processExpression(expr, indent + 1));
     }
   }
 
   return makeNodeFromAst('return', undefined, node, indent, {
-    value: hasJsx ? null : (expr ? truncate(expr.getText()) : null),
+    value: hasJsx ? null : (children.length > 0 ? null : (expr ? truncate(expr.getText()) : null)),
     hasJsx,
   }, children);
 }
@@ -545,16 +536,20 @@ function processExpression(expr: Node, indent: number): SemanticNode[] {
     return result ? [result] : [];
   }
   if (Node.isCallExpression(unwrapped) || Node.isNewExpression(unwrapped)) {
-    return processCall(unwrapped, indent);
+    return processCallFunction(unwrapped, indent);
   }
   if (Node.isArrowFunction(unwrapped) || Node.isFunctionExpression(unwrapped)) {
-    const result = processArrowFunction(unwrapped, indent);
+    const result = processFunctionDefinition(unwrapped, indent);
     return result ? [result] : [];
+  }
+  if (Node.isObjectLiteralExpression(unwrapped)) {
+    const { open, properties, close } = processObjectLiteral(unwrapped, indent);
+    return [open, ...properties, close];
   }
   return [];
 }
 
-function processCall(
+function processCallFunction(
   node: CallExpression | NewExpression,
   indent: number,
 ): SemanticNode[] {
@@ -562,35 +557,21 @@ function processCall(
   const callee = node.getExpression();
   const args = node.getArguments() ?? [];
   const children: SemanticNode[] = [];
-  const argSummaries: string[] = [];
 
-  for (const arg of args) {
+  args.forEach((arg, i) => {
     const unwrapped = unwrapExpression(arg);
-    if (Node.isArrowFunction(unwrapped) || Node.isFunctionExpression(unwrapped)) {
-      const child = processArrowFunction(unwrapped, indent + 1);
-      if (child) {
-        children.push(child);
-        const params = (child.metadata.parameters as string[]) ?? [];
-        const paramDesc = params.length > 0 ? params.join(', ') : '';
-        argSummaries.push(`callback(${paramDesc})`);
-        continue;
-      }
+    const paramName = `param_${i + 1}`;
+    if (Node.isIdentifier(unwrapped) || Node.isLiteralExpression(unwrapped)) {
+      children.push(makeNodeFromAst('variable-assignment', paramName, arg, indent + 1, {
+        initializer: truncate(arg.getText()),
+      }));
+    } else {
+      const argChildren = processExpression(unwrapped, indent + 2);
+      children.push(makeNodeFromAst('variable-assignment', paramName, arg, indent + 1, {
+        initializer: argChildren.length === 0 ? truncate(arg.getText()) : null,
+      }, argChildren));
     }
-    if (Node.isCallExpression(unwrapped) || Node.isNewExpression(unwrapped)) {
-      const nodes = processCall(unwrapped, indent + 1);
-      children.push(...nodes);
-      const callNames = nodes.map(n => n.metadata.function).join(' -> ');
-      argSummaries.push(`call ${callNames}`);
-      continue;
-    }
-    if (Node.isObjectLiteralExpression(unwrapped)) {
-      const { open, properties, close } = processObjectLiteral(unwrapped, indent);
-      children.push(open, ...properties, close);
-      argSummaries.push('{...}');
-      continue;
-    }
-    argSummaries.push(truncate(arg.getText(), 80));
-  }
+  });
 
   let chainPrefix: SemanticNode[] = [];
   let functionName: string;
@@ -598,7 +579,7 @@ function processCall(
   if (Node.isPropertyAccessExpression(callee)) {
     const objectExpr = callee.getExpression();
     if (Node.isCallExpression(objectExpr) || Node.isNewExpression(objectExpr)) {
-      chainPrefix = processCall(objectExpr, indent);
+      chainPrefix = processCallFunction(objectExpr, indent);
       functionName = truncate('.' + callee.getName(), 100);
     } else {
       functionName = truncate(callee.getText(), 100);
@@ -607,54 +588,16 @@ function processCall(
     functionName = truncate(callee.getText(), 100);
   }
 
-  const result = makeNodeFromAst('call', undefined, node, indent, {
+  const result = makeNodeFromAst('call-function', undefined, node, indent, {
     function: functionName,
-    arguments: argSummaries,
     argCount: args.length,
     isNew,
-  }, children, getIdentifierPos(node, 'call'));
+  }, children, getIdentifierPos(node, 'call-function'));
 
   return [...chainPrefix, result];
 }
 
-function processArrowFunction(
-  node: ArrowFunction | FunctionExpression,
-  indent: number,
-): SemanticNode {
-  const params = node.getParameters().map(p => summarizeParamName(p));
-  const children: SemanticNode[] = [];
-  const body = node.getBody();
-  if (body) {
-    if (Node.isBlock(body)) {
-      children.push(...processBlock(body, indent + 1));
-    } else {
-      const ret = processImplicitReturn(body, indent + 1);
-      if (ret) children.push(ret);
-    }
-  }
-  return makeNodeFromAst('function', undefined, node, indent, {
-    parameters: params,
-    returnType: node.getReturnType().getText() || 'void',
-    anonymous: true,
-  }, children);
-}
 
-function processImplicitReturn(expr: Node, indent: number): SemanticNode | null {
-  const children: SemanticNode[] = [];
-  let hasJsx = false;
-
-  const jsxNode = getJsxFromExpression(expr);
-  if (jsxNode) {
-    hasJsx = true;
-    const result = processJsxNode(jsxNode, indent + 1);
-    if (result) children.push(result);
-  }
-
-  return makeNodeFromAst('return', undefined, expr, indent, {
-    value: hasJsx ? null : (expr ? truncate(expr.getText()) : null),
-    hasJsx,
-  }, children);
-}
 
 function summarizeParamName(p: ParameterDeclaration, max = 80): string {
   const nameNode = p.getNameNode();
