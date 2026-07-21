@@ -20,9 +20,9 @@ export const TYPE_TO_BUCKET: Record<string, NodeBucket> = {
   return: 'control',
   if: 'control',
   loop: 'control',
-  variable: 'standard',
+  'variable-assignment': 'standard',
   property: 'standard',
-  call: 'standard',
+  'call-function': 'standard',
 };
 
 export const BUCKET_PRIORITY: NodeBucket[] = [

@@ -213,7 +213,7 @@ test.describe('rowSpan dedup', () => {
     if (!extraHash) {
       await page.getByText('FilterBar.tsx', { exact: false }).first().click();
     }
-    await expect(page.locator('body')).toContainText('Function FilterBar');
+    await expect(page.locator('body')).toContainText('`FilterBar`');
   }
 
   test('search for param in multi-line function dedupes spanned source into parent match', async ({ page }) => {

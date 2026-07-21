@@ -46,14 +46,15 @@ function phraseExport(node: SemanticNode): DisplaySpan[] {
   return spans;
 }
 
-function phraseFunction(node: SemanticNode): DisplaySpan[] {
+function phraseFunctionDefinition(node: SemanticNode): DisplaySpan[] {
   const params = (node.metadata.parameters as string[]) ?? [];
   const paramText = params.length > 0 ? `Parameters: ${params.join(', ')}` : '';
   const suffix = paramText ? `. ${paramText}` : '';
+  const nameDisplay = node.name ?? (params.length === 0 ? '(no parameters)' : 'anonymous');
   return [
     ...exportedPrefix(node),
     span(`Function `),
-    span(node.name ?? 'anonymous', undefined, node.refPos),
+    span(nameDisplay, undefined, node.refPos),
     span(suffix),
   ];
 }
@@ -94,16 +95,8 @@ function phraseProperty(node: SemanticNode): DisplaySpan[] {
   return spans;
 }
 
-function phraseVariable(node: SemanticNode): DisplaySpan[] {
+function phraseVariableAssignment(node: SemanticNode): DisplaySpan[] {
   const init = node.metadata.initializer as string | null;
-  if (node.metadata.isObjectLiteral) {
-    return [
-      ...exportedPrefix(node),
-      span('`'),
-      span(node.name ?? 'anonymous', undefined, node.refPos),
-      span('` = {'),
-    ];
-  }
   const spans = [
     ...exportedPrefix(node),
     span('`'),
@@ -120,7 +113,6 @@ function phraseVariable(node: SemanticNode): DisplaySpan[] {
 
 function phraseReturn(node: SemanticNode): DisplaySpan[] {
   if (node.metadata.hasJsx) return [span('Return Visual Elements:')];
-  if (node.metadata.isObjectLiteral) return [span('return {')];
   const value = node.metadata.value as string | null;
   if (value) {
     return [span('return '), span('`'), span(value), span('`')];
@@ -146,22 +138,13 @@ function phraseLoop(node: SemanticNode): DisplaySpan[] {
   return [span(text)];
 }
 
-function phraseCall(node: SemanticNode): DisplaySpan[] {
+function phraseCallFunction(node: SemanticNode): DisplaySpan[] {
   const fn = String(node.metadata.function ?? '');
-  const allArgs = (node.metadata.arguments as string[]) ?? [];
   const verb = node.metadata.isNew ? 'Instantiate' : 'Call';
-
-  let argPart = '';
-  if (allArgs.length > 0) {
-    argPart = ` with ${allArgs.join(', ')}`;
-  }
-
-  const spans = [
+  return [
     span(`${verb} `),
     span(fn, getReactHookTooltip(fn) ?? undefined, node.refPos),
   ];
-  if (argPart) spans.push(span(argPart));
-  return spans;
 }
 
 interface EventItem {
@@ -320,17 +303,16 @@ function phraseFallback(node: SemanticNode): DisplaySpan[] {
 const PHRASERS: Record<string, Phraser> = {
   import: phraseImport,
   export: phraseExport,
-  function: phraseFunction,
-  method: phraseFunction,
+  'function-definition': phraseFunctionDefinition,
   class: phraseClass,
   interface: phraseInterface,
   typeAlias: phraseTypeAlias,
   property: phraseProperty,
-  variable: phraseVariable,
+  'variable-assignment': phraseVariableAssignment,
   return: phraseReturn,
   if: phraseIf,
   loop: phraseLoop,
-  call: phraseCall,
+  'call-function': phraseCallFunction,
   'jsx-element': phraseJsxElement,
   'jsx-fragment': phraseJsxFragment,
   'jsx-list': phraseJsxList,
