@@ -3,7 +3,9 @@ import type {
   ArrowFunction,
   Block,
   CallExpression,
+  CaseClause,
   ClassDeclaration,
+  DefaultClause,
   DoStatement,
   ExportDeclaration,
   ExpressionStatement,
@@ -20,6 +22,7 @@ import type {
   ParameterDeclaration,
   PropertyDeclaration,
   ReturnStatement,
+  SwitchStatement,
   TypeAliasDeclaration,
   VariableDeclaration,
   WhileStatement,
@@ -127,8 +130,9 @@ function processStatement(node: Node, indent: number): SemanticNode[] {
   }
   if (Node.isVariableStatement(node)) {
     const nodes: SemanticNode[] = [];
+    const exported = node.hasExportKeyword();
     for (const decl of node.getDeclarationList().getDeclarations()) {
-      nodes.push(...processVariableDeclaration(decl, indent));
+      nodes.push(...processVariableDeclaration(decl, indent, exported));
     }
     return nodes;
   }
@@ -143,6 +147,9 @@ function processStatement(node: Node, indent: number): SemanticNode[] {
   }
   if (Node.isWhileStatement(node) || Node.isDoStatement(node)) {
     return [processWhile(node, indent)];
+  }
+  if (Node.isSwitchStatement(node)) {
+    return [processSwitch(node, indent)];
   }
   if (Node.isBlock(node)) {
     return processBlock(node, indent);
@@ -215,6 +222,7 @@ function processFunction(node: FunctionDeclaration, indent: number): SemanticNod
   return makeNodeFromAst('function', name, node, indent, {
     parameters: params,
     returnType: node.getReturnType().getText() || 'void',
+    exported: node.hasExportKeyword(),
   }, children, getIdentifierPos(node, 'function'));
 }
 
@@ -233,6 +241,7 @@ function processClass(node: ClassDeclaration, indent: number): SemanticNode {
   const extendsClause = node.getExtends();
   return makeNodeFromAst('class', name, node, indent, {
     extends: extendsClause ? extendsClause.getExpression().getText() : null,
+    exported: node.hasExportKeyword(),
   }, children, getIdentifierPos(node, 'class'));
 }
 
@@ -268,18 +277,22 @@ function processInterface(node: InterfaceDeclaration, indent: number): SemanticN
     }
   }
 
-  return makeNodeFromAst('interface', name, node, indent, {}, children, getIdentifierPos(node, 'interface'));
+  return makeNodeFromAst('interface', name, node, indent, {
+    exported: node.hasExportKeyword(),
+  }, children, getIdentifierPos(node, 'interface'));
 }
 
 function processTypeAlias(node: TypeAliasDeclaration, indent: number): SemanticNode {
   return makeNodeFromAst('typeAlias', node.getName(), node, indent, {
     type: node.getTypeNode()?.getText() ?? node.getType().getText(),
+    exported: node.hasExportKeyword(),
   }, [], getIdentifierPos(node, 'typeAlias'));
 }
 
 function processVariableDeclaration(
   decl: VariableDeclaration,
   indent: number,
+  exported?: boolean,
 ): SemanticNode[] {
   const name = decl.getName();
   const initializer = decl.getInitializer();
@@ -299,6 +312,7 @@ function processVariableDeclaration(
   return [makeNodeFromAst('variable', name, decl, indent, {
     type: (decl.getTypeNode()?.getText() ?? decl.getType().getText()) || 'any',
     initializer: initText,
+    exported: exported ?? false,
   }, children, decl.getNameNode().getStart())];
 }
 
@@ -356,6 +370,70 @@ function processWhile(node: WhileStatement | DoStatement, indent: number): Seman
   return makeNodeFromAst('loop', undefined, node, indent, {
     loopType: 'while',
     condition: truncate(node.getExpression().getText()),
+  }, children);
+}
+
+function processCaseBody(
+  clause: CaseClause | DefaultClause,
+  indent: number,
+): SemanticNode[] {
+  const nodes: SemanticNode[] = [];
+  for (const stmt of clause.getStatements()) {
+    nodes.push(...processStatement(stmt, indent));
+  }
+  return nodes;
+}
+
+function processSwitch(node: SwitchStatement, indent: number): SemanticNode {
+  const expression = truncate(node.getExpression().getText());
+  const clauses = node.getCaseBlock().getClauses();
+
+  if (clauses.length === 0) {
+    return makeNodeFromAst('if', undefined, node, indent, {
+      condition: expression,
+      hasElse: false,
+    }, []);
+  }
+
+  const first = clauses[0];
+  const rest = clauses.slice(1);
+  const firstBody = processCaseBody(first, indent + 1);
+  const restChain = buildSwitchChain(rest, expression, indent + 1);
+
+  if (Node.isDefaultClause(first)) {
+    const children = restChain ? [...firstBody, restChain] : firstBody;
+    return makeNodeFromAst('otherwise', undefined, node, indent, {}, children);
+  }
+
+  const label = truncate(first.getExpression().getText());
+  const condition = `${expression} === ${label}`;
+  const children = restChain ? [...firstBody, restChain] : firstBody;
+  return makeNodeFromAst('if', undefined, node, indent, {
+    condition,
+    hasElse: !!restChain,
+  }, children);
+}
+
+function buildSwitchChain(
+  clauses: (CaseClause | DefaultClause)[],
+  expression: string,
+  indent: number,
+): SemanticNode | null {
+  if (clauses.length === 0) return null;
+  const clause = clauses[0];
+  const rest = clauses.slice(1);
+  const body = processCaseBody(clause, indent + 1);
+  const next = buildSwitchChain(rest, expression, indent + 1);
+  const children = next ? [...body, next] : body;
+
+  if (Node.isDefaultClause(clause)) {
+    return makeNodeFromAst('otherwise', undefined, clause, indent, {}, children);
+  }
+  const label = truncate(clause.getExpression().getText());
+  const condition = `${expression} === ${label}`;
+  return makeNodeFromAst('otherwise-if', undefined, clause, indent, {
+    condition,
+    hasElse: !!next,
   }, children);
 }
 

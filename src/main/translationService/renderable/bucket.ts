@@ -19,6 +19,8 @@ export const TYPE_TO_BUCKET: Record<string, NodeBucket> = {
   'jsx-expression': 'jsx',
   return: 'control',
   if: 'control',
+  'otherwise-if': 'control',
+  otherwise: 'control',
   loop: 'control',
   variable: 'standard',
   property: 'standard',

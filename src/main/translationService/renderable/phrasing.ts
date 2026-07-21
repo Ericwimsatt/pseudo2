@@ -1,6 +1,6 @@
 import type { SemanticNode } from '../makeSemanticGraph';
 import type { DisplayNodeData, DisplaySpan, HoverContent } from './types';
-import { buildHover, getReactHookTooltip } from './hover';
+import { buildHover, getKeywordTooltip, getReactHookTooltip } from './hover';
 import { translateType } from './translateType';
 
 type Phraser = (node: SemanticNode) => DisplaySpan[];
@@ -13,6 +13,12 @@ function span(text: string, hover?: HoverContent, refPos?: number): DisplaySpan 
     result.hasHover = true;
   }
   return result;
+}
+
+function exportedPrefix(node: SemanticNode): DisplaySpan[] {
+  if (!node.metadata.exported) return [];
+  const tooltip = getKeywordTooltip('export');
+  return [span('Export: ', tooltip ?? undefined)];
 }
 
 function phraseImport(node: SemanticNode): DisplaySpan[] {
@@ -30,7 +36,8 @@ function phraseExport(node: SemanticNode): DisplaySpan[] {
   const names = String(node.name ?? '');
   const module = String(node.metadata.module ?? '');
   const verb = names.includes(',') ? 'are' : 'is';
-  const spans = [span('export '), span(names, undefined, node.refPos)];
+  const exportTooltip = getKeywordTooltip('export');
+  const spans = [span('export ', exportTooltip ?? undefined), span(names, undefined, node.refPos)];
   if (module) {
     spans.push(span(` ${verb} re-exported from `), span(module, buildHover('Module', module)));
   } else {
@@ -43,6 +50,7 @@ function phraseFunction(node: SemanticNode): DisplaySpan[] {
   const params = (node.metadata.parameters as string[]) ?? [];
   const paramText = `Parameters: ${params.join(', ')}`;
   return [
+    ...exportedPrefix(node),
     span(`Function `),
     span(node.name ?? 'anonymous', undefined, node.refPos),
     span(`. ${paramText}`),
@@ -50,7 +58,7 @@ function phraseFunction(node: SemanticNode): DisplaySpan[] {
 }
 
 function phraseClass(node: SemanticNode): DisplaySpan[] {
-  const spans = [span('Class '), span(node.name ?? 'anonymous', undefined, node.refPos)];
+  const spans = [...exportedPrefix(node), span('Class '), span(node.name ?? 'anonymous', undefined, node.refPos)];
   if (node.metadata.extends) {
     spans.push(span(` (extends ${node.metadata.extends})`));
   }
@@ -58,11 +66,12 @@ function phraseClass(node: SemanticNode): DisplaySpan[] {
 }
 
 function phraseInterface(node: SemanticNode): DisplaySpan[] {
-  return [span('Interface '), span(node.name ?? 'anonymous', undefined, node.refPos)];
+  return [...exportedPrefix(node), span('Interface '), span(node.name ?? 'anonymous', undefined, node.refPos)];
 }
 
 function phraseTypeAlias(node: SemanticNode): DisplaySpan[] {
   return [
+    ...exportedPrefix(node),
     span('Type '),
     span(node.name ?? 'anonymous', undefined, node.refPos),
     span(' as '),
@@ -87,6 +96,7 @@ function phraseProperty(node: SemanticNode): DisplaySpan[] {
 function phraseVariable(node: SemanticNode): DisplaySpan[] {
   const init = node.metadata.initializer as string | null;
   const spans = [
+    ...exportedPrefix(node),
     span('Declare variable '),
     span('`'),
     span(node.name ?? 'anonymous', undefined, node.refPos),
@@ -107,6 +117,14 @@ function phraseReturn(node: SemanticNode): DisplaySpan[] {
 
 function phraseIf(node: SemanticNode): DisplaySpan[] {
   return [span(`If ${node.metadata.condition}`)];
+}
+
+function phraseOtherwiseIf(node: SemanticNode): DisplaySpan[] {
+  return [span(`otherwise if ${node.metadata.condition}`)];
+}
+
+function phraseOtherwise(): DisplaySpan[] {
+  return [span('otherwise')];
 }
 
 function phraseLoop(node: SemanticNode): DisplaySpan[] {
@@ -274,6 +292,8 @@ const PHRASERS: Record<string, Phraser> = {
   'jsx-conditional-alt': phraseJsxConditional,
   'jsx-text': phraseJsxText,
   'jsx-expression': phraseJsxExpression,
+  'otherwise-if': phraseOtherwiseIf,
+  otherwise: phraseOtherwise,
 };
 
 export function toDisplayNode(node: SemanticNode): DisplayNodeData {

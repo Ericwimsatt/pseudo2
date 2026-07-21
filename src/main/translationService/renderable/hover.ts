@@ -156,3 +156,13 @@ export function getReactHookTooltip(name: string): HoverContent | null {
   if (!hook) return null;
   return buildHover(hook.title, hook.body);
 }
+
+const KEYWORD_TOOLTIPS: Record<string, string> = {
+  export: "The 'export' keyword makes the declared value available to other modules via import. Other files can import the exported value to reuse it.",
+};
+
+export function getKeywordTooltip(name: string): HoverContent | null {
+  const body = KEYWORD_TOOLTIPS[name];
+  if (!body) return null;
+  return buildHover(name, body);
+}
