@@ -14,13 +14,13 @@ interface CodeTableProps {
   targetVar?: string | null;
 }
 
-interface SearchMatch {
+export interface SearchMatch {
   lineIndex: number;
   inSource: boolean;
   inTranslation: boolean;
 }
 
-function parentIndices(lines: LineRenderable[]): (number | null)[] {
+export function parentIndices(lines: LineRenderable[]): (number | null)[] {
   const result: (number | null)[] = new Array(lines.length).fill(null);
   for (let i = 0; i < lines.length; i++) {
     const rs = lines[i].translationRowSpan;
@@ -33,7 +33,7 @@ function parentIndices(lines: LineRenderable[]): (number | null)[] {
   return result;
 }
 
-function dedupMatches(lines: LineRenderable[], matches: SearchMatch[], lowerTerm: string): SearchMatch[] {
+export function dedupMatches(lines: LineRenderable[], matches: SearchMatch[], lowerTerm: string): SearchMatch[] {
   const parentMap = parentIndices(lines);
   const merged = new Map<number, SearchMatch>();
 
@@ -66,7 +66,7 @@ function dedupMatches(lines: LineRenderable[], matches: SearchMatch[], lowerTerm
   return [...merged.values()];
 }
 
-function computeMatches(lines: LineRenderable[], lowerTerm: string): SearchMatch[] {
+export function computeMatches(lines: LineRenderable[], lowerTerm: string): SearchMatch[] {
   return lines
     .map((line, i) => {
       const inSource = line.sourceText.toLowerCase().includes(lowerTerm);

@@ -1,6 +1,7 @@
-import { test, expect, type Page } from '@playwright/test';
-import { buildFileData } from '../src/lib/buildFileData';
-import type { TooltipData } from '../src/lib/renderable/types';
+// @regression @p2 @ui:hover
+import { test, expect } from '@playwright/test';
+import { buildFileData } from '../../src/main/translationService/buildFileData';
+import type { TooltipData } from '../../src/lib/renderable/types';
 
 const SOURCE = `import { useState } from 'react';
 
@@ -13,7 +14,7 @@ export function Demo() {
 }
 `;
 
-test.describe('enrichment hover', () => {
+test.describe('enrichment hover @regression @p2 @ui:hover', () => {
   test('shows loading then enrichment data on hover', async ({ page }) => {
     const { viewModel } = buildFileData(SOURCE, 'Demo.tsx');
     const serializable = { viewModel };

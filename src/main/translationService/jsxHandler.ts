@@ -413,7 +413,7 @@ const PREFIX_TRANSLATORS: Array<[string, (value: string) => string]> = [
   ['divide-y-', (v) => `horizontal dividers ${v}`],
 ];
 
-function translateSingleClass(cls: string): string {
+export function translateSingleClass(cls: string): string {
   let prefix = '';
   let base = cls;
 
@@ -469,7 +469,7 @@ function translateSingleClass(cls: string): string {
   return prefix ? `${cls} ${prefix}` : cls;
 }
 
-function translateClassName(className: string): string {
+export function translateClassName(className: string): string {
   const classes = className.split(/\s+/).filter(Boolean);
   if (classes.length === 0) return '';
   const descriptions = classes.map(translateSingleClass);
@@ -500,7 +500,7 @@ function translateStyleObject(styleText: string): string {
   return `with inline styles: ${descriptions.join(', ')}`;
 }
 
-function describeEventHandler(name: string, value: Node | undefined): string {
+export function describeEventHandler(name: string, value: Node | undefined): string {
   const eventDesc = EVENT_DESCRIPTIONS[name] || name.replace(/^on/, 'when ').replace(/([A-Z])/g, ' $1').toLowerCase();
 
   if (!value) return eventDesc;
@@ -565,7 +565,7 @@ interface AttributeResult {
   metadata: Record<string, any>;
 }
 
-function processAttributes(
+export function processAttributes(
   attrs: Node[],
   _tagName: string
 ): AttributeResult {

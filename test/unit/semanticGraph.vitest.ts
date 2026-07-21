@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildFileData } from '../src/lib/buildFileData';
+import { buildFileData } from '../../src/main/translationService/buildFileData';
 
 describe('semantic graph - call argument labeling', () => {
   it('labels function arguments as callback with params and shows variable assignment', () => {

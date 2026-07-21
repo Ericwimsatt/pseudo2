@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Project, Node, SourceFile } from 'ts-morph';
-import { AstCache } from '../src/lib/astCache';
+import { AstCache } from '../../src/main/translationService/cache/astCache';
 
 const SOURCE = [
   'function greet(name: string): string {',

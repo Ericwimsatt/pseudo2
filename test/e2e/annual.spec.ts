@@ -1,5 +1,6 @@
+// @smoke @p0 @core:translation
 import { test, expect, type Page } from '@playwright/test';
-import { buildFileData } from '../src/lib/buildFileData';
+import { buildFileData } from '../../src/main/translationService/buildFileData';
 
 const SOURCE = `function AnnualSummary() {
   const years = useMemo(() => {
@@ -56,7 +57,7 @@ async function translationTextsForLine(page: Page, lineNumber: number): Promise<
   }, lineNumber);
 }
 
-test.describe('AnnualSummary translation', () => {
+test.describe('AnnualSummary translation @smoke @p0 @core:translation', () => {
   test('renders a nested graph without duplicating lines', async ({ page }) => {
     await loadAppWithFile(page);
 

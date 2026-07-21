@@ -1,7 +1,8 @@
+// @critical @p1 @core:translation
 import { test, expect } from '@playwright/test';
-import { buildFileData } from '../src/lib/buildFileData';
+import { buildFileData } from '../../src/main/translationService/buildFileData';
 
-test.describe('type alias display', () => {
+test.describe('type alias display @critical @p1 @core:translation', () => {
 
   test('locally-defined type alias should not show full import path', () => {
     const source = `export type AnalyticsPeriod = "this_week" | "this_month" | "this_quarter" | "this_year" | "last_month" | "last_quarter" | "last_year" | "custom";`;

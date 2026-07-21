@@ -1,7 +1,7 @@
 export function translateType(rawType: string): string {
   const t = rawType.trim();
 
-  const funcMatch = t.match(/^\((.+)\)\s*=>\s*(.+)$/);
+  const funcMatch = t.match(/^\((.*)\)\s*=>\s*(.+)$/);
   if (funcMatch) {
     const params = funcMatch[1].trim();
     const returns = funcMatch[2].trim();

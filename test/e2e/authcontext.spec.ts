@@ -1,5 +1,6 @@
+// @smoke @p0 @core:rendering
 import { test, expect, type Page } from '@playwright/test';
-import { buildFileData } from '../src/lib/buildFileData';
+import { buildFileData } from '../../src/main/translationService/buildFileData';
 
 // Real-world file reported as crashing DisplayNode (node.spans undefined).
 const SOURCE = `import { createContext, useContext, useEffect, useState } from "react";
@@ -81,7 +82,7 @@ async function loadApp(page: Page) {
   await page.goto('http://localhost:5174/');
 }
 
-test.describe('AuthContext.tsx renders without crashing', () => {
+test.describe('AuthContext.tsx renders without crashing @smoke @p0 @core:rendering', () => {
   test('all node types in the file produce display spans', async ({ page }) => {
     const pageErrors: string[] = [];
     page.on('pageerror', (err) => pageErrors.push(String(err)));

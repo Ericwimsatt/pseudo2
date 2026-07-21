@@ -1,5 +1,6 @@
+// @critical @p1 @ui:search @ui:navigation
 import { test, expect, type Page } from '@playwright/test';
-import { buildFileData } from '../src/lib/buildFileData';
+import { buildFileData } from '../../src/main/translationService/buildFileData';
 
 const SOURCE = `import { useState } from 'react';
 import { formatCount } from './helper';
@@ -41,7 +42,7 @@ async function loadApp(page: Page, extraHash?: string) {
   await expect(page.locator('body')).toContainText('Function Demo');
 }
 
-test.describe('Ctrl+F search', () => {
+test.describe('Ctrl+F search @critical @p1 @ui:search @ui:navigation', () => {
   test('Cmd+F opens search bar and typing shows match count', async ({ page }) => {
     await loadApp(page);
     await page.keyboard.press('Meta+f');
