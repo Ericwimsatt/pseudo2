@@ -64,7 +64,6 @@ export function ToolTip({ hover, refPos, filePath }: Props) {
     return (
       <div data-testid="tooltip-sections">
         {title && <div className="font-semibold text-gray-800 mb-1">{title}</div>}
-        <div>FIRST TYPE: {sections[0]?.type}</div>
         <div className="max-h-80 overflow-y-auto">
           <TooltipContent sections={sections} />
         </div>
