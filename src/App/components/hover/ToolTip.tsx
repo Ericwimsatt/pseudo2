@@ -65,7 +65,9 @@ export function ToolTip({ hover, refPos, filePath }: Props) {
       <div data-testid="tooltip-sections">
         {title && <div className="font-semibold text-gray-800 mb-1">{title}</div>}
         <div>FIRST TYPE: {sections[0]?.type}</div>
-        <TooltipContent sections={sections} />
+        <div className="max-h-80 overflow-y-auto">
+          <TooltipContent sections={sections} />
+        </div>
       </div>
     );
   }
@@ -74,12 +76,14 @@ export function ToolTip({ hover, refPos, filePath }: Props) {
   return (
     <div data-testid="tooltip-static">
       {title && <div className="font-semibold text-gray-800 mb-1">{title}</div>}
-      {hover.body && <div className="text-gray-600 mb-1 whitespace-pre-wrap">{hover.body}</div>}
-      {metaText && (
-        <pre className="text-xs text-gray-500 whitespace-pre-wrap font-mono mt-1 pt-1 border-t border-gray-100">
-          {metaText}
-        </pre>
-      )}
+      <div className="max-h-80 overflow-y-auto">
+        {hover.body && <div className="text-gray-600 mb-1 whitespace-pre-wrap">{hover.body}</div>}
+        {metaText && (
+          <pre className="text-xs text-gray-500 whitespace-pre-wrap font-mono mt-1 pt-1 border-t border-gray-100">
+            {metaText}
+          </pre>
+        )}
+      </div>
     </div>
   );
 }
