@@ -41,9 +41,8 @@ export interface SemanticNode {
   refPos?: number;
 }
 
-function truncate(text: string, max = 80): string {
-  const single = text.replace(/\s+/g, ' ').trim();
-  return single.length > max ? single.slice(0, max - 3) + '...' : single;
+function truncate(text: string, _max = 80): string {
+  return text.replace(/\s+/g, ' ').trim();
 }
 
 function makeNodeFromAst(
@@ -480,11 +479,19 @@ function processCall(
 
   for (const arg of args) {
     const unwrapped = unwrapExpression(arg);
-    if ((Node.isArrowFunction(unwrapped) || Node.isFunctionExpression(unwrapped)) && Node.isBlock(unwrapped.getBody())) {
+    if (Node.isArrowFunction(unwrapped) || Node.isFunctionExpression(unwrapped)) {
       const child = processArrowFunction(unwrapped, indent + 1);
       if (child) {
         children.push(child);
         argSummaries.push('<function>');
+        continue;
+      }
+    }
+    if (Node.isCallExpression(unwrapped) || Node.isNewExpression(unwrapped)) {
+      const child = processCall(unwrapped, indent + 1);
+      if (child) {
+        children.push(child);
+        argSummaries.push('<call>');
         continue;
       }
     }

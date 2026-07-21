@@ -1163,9 +1163,6 @@ export const jsxTranslations: Record<string, Translator> = {
 
   'jsx-text': (node) => {
     const text = node.metadata.text;
-    if (text.length > 60) {
-      return `Show text: "${text.slice(0, 57)}..."`;
-    }
     return `Show text: "${text}"`;
   },
 

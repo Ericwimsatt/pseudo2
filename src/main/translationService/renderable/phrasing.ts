@@ -97,7 +97,6 @@ function phraseVariable(node: SemanticNode): DisplaySpan[] {
   const init = node.metadata.initializer as string | null;
   const spans = [
     ...exportedPrefix(node),
-    span('Declare variable '),
     span('`'),
     span(node.name ?? 'anonymous', undefined, node.refPos),
     span('`'),
@@ -136,13 +135,15 @@ function phraseLoop(node: SemanticNode): DisplaySpan[] {
 function phraseCall(node: SemanticNode): DisplaySpan[] {
   const fn = String(node.metadata.function ?? '');
   const allArgs = (node.metadata.arguments as string[]) ?? [];
-  const displayArgs = allArgs.filter((a) => a !== '<function>');
-  const fnCount = allArgs.length - displayArgs.length;
+  const displayArgs = allArgs.filter((a) => a !== '<function>' && a !== '<call>');
+  const fnCount = allArgs.filter((a) => a === '<function>').length;
+  const callCount = allArgs.filter((a) => a === '<call>').length;
   const verb = node.metadata.isNew ? 'Instantiate' : 'Call';
 
   const parts: string[] = [];
   if (displayArgs.length > 0) parts.push(displayArgs.join(', '));
   if (fnCount > 0) parts.push(`${fnCount} function${fnCount > 1 ? 's' : ''}`);
+  if (callCount > 0) parts.push(`${callCount} call expression${callCount > 1 ? 's' : ''}`);
   const argPart = parts.length > 0 ? ` with ${parts.join(' and ')}` : '';
 
   const spans = [
@@ -255,7 +256,7 @@ function phraseJsxConditional(node: SemanticNode): DisplaySpan[] {
 
 function phraseJsxText(node: SemanticNode): DisplaySpan[] {
   const text = String(node.metadata.text);
-  const display = text.length > 60 ? `${text.slice(0, 57)}...` : text;
+  const display = text;
   return [span(`Show text: "${display}"`)];
 }
 
