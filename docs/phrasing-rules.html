@@ -21,7 +21,7 @@
 </head>
 <body>
 <h1>Pseudo Phrasing Rules</h1>
-<p class="info">Source: <code>config/phrasing-rules.json</code> &mdash; Last generated: 2026-07-22T17:54:35.683Z</p>
+<p class="info">Source: <code>config/phrasing-rules.json</code> &mdash; Last generated: 2026-07-22T18:27:10.951Z</p>
 <table>
   <thead>
     <tr>
@@ -36,35 +36,35 @@
       <tr>
         <td><code>import</code></td>
         <td><code>import { useState } from 'react'</code></td>
-        <td><code>import { {names} } from {module}</code></td>
+        <td><code>import { {names@ref} } from {module@hover}</code></td>
         <td>import { useState } from react</td>
       </tr>
 
       <tr>
         <td><code>export</code></td>
         <td><code>export { x }</code></td>
-        <td><code>export {names} {verb} exported</code></td>
+        <td><code>export {names@ref} {verb} exported</code></td>
         <td>export x is exported</td>
       </tr>
 
       <tr>
         <td><code>export-re-export</code></td>
         <td><code>export { x } from './y'</code></td>
-        <td><code>export {names} {verb} re-exported from {module}</code></td>
+        <td><code>export {names@ref} {verb} re-exported from {module@hover}</code></td>
         <td>export x is re-exported from ./y</td>
       </tr>
 
       <tr>
         <td><code>function-definition</code></td>
         <td><code>function greet(name: string)</code></td>
-        <td><code>Function {name}. Parameters: {params}</code></td>
+        <td><code>Function {name@ref}. Parameters: {params}</code></td>
         <td>Function greet. Parameters: name</td>
       </tr>
 
       <tr>
         <td><code>function-definition-no-params</code></td>
         <td><code>function bar()</code></td>
-        <td><code>Function {name} (no parameters)</code></td>
+        <td><code>Function {name@ref} (no parameters)</code></td>
         <td>Function bar (no parameters)</td>
       </tr>
 
@@ -78,56 +78,56 @@
       <tr>
         <td><code>class</code></td>
         <td><code>class Foo</code></td>
-        <td><code>Class {name}</code></td>
+        <td><code>Class {name@ref}</code></td>
         <td>Class Foo</td>
       </tr>
 
       <tr>
         <td><code>class-extended</code></td>
         <td><code>class Foo extends Bar</code></td>
-        <td><code>Class {name} (extends {extends})</code></td>
+        <td><code>Class {name@ref} (extends {extends})</code></td>
         <td>Class Foo (extends Bar)</td>
       </tr>
 
       <tr>
         <td><code>interface</code></td>
         <td><code>interface Foo</code></td>
-        <td><code>Interface {name}</code></td>
+        <td><code>Interface {name@ref}</code></td>
         <td>Interface Foo</td>
       </tr>
 
       <tr>
         <td><code>type-alias</code></td>
         <td><code>type Foo = string</code></td>
-        <td><code>Type {name} as {type}</code></td>
+        <td><code>Type {name@ref} as {type}</code></td>
         <td>Type Foo as string</td>
       </tr>
 
       <tr>
         <td><code>property</code></td>
         <td><code>name: string</code></td>
-        <td><code>`{name}` is {type}</code></td>
+        <td><code>`{name@ref}` is {type}</code></td>
         <td>`name` is text</td>
       </tr>
 
       <tr>
         <td><code>property-with-init</code></td>
         <td><code>count: number = 42</code></td>
-        <td><code>`{name}` is {type}, initialized to {initializer}</code></td>
+        <td><code>`{name@ref}` is {type}, initialized to {initializer}</code></td>
         <td>`count` is a number, initialized to 42</td>
       </tr>
 
       <tr>
         <td><code>variable-assignment</code></td>
         <td><code>const x = 42</code></td>
-        <td><code>`{name}` = {initializer}</code></td>
+        <td><code>`{name@ref}` = {initializer}</code></td>
         <td>`x` = 42</td>
       </tr>
 
       <tr>
         <td><code>variable-assignment-target</code></td>
         <td><code>let x; x =</code></td>
-        <td><code>`{name}` = </code></td>
+        <td><code>`{name@ref}` = </code></td>
         <td>`x` = </td>
       </tr>
 
@@ -197,14 +197,14 @@
       <tr>
         <td><code>call-function</code></td>
         <td><code>foo()</code></td>
-        <td><code>Call {function}</code></td>
+        <td><code>Call {function@ref}</code></td>
         <td>Call foo</td>
       </tr>
 
       <tr>
         <td><code>instantiate</code></td>
         <td><code>new Foo()</code></td>
-        <td><code>Instantiate {function}</code></td>
+        <td><code>Instantiate {function@ref}</code></td>
         <td>Instantiate Foo</td>
       </tr>
 
@@ -274,7 +274,7 @@
       <tr>
         <td><code>jsx-expression-identifier</code></td>
         <td><code>{name}</code></td>
-        <td><code>Show: {expression}</code></td>
+        <td><code>Show: {expression@ref}</code></td>
         <td>Show: name</td>
       </tr>
 

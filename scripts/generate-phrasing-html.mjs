@@ -54,7 +54,7 @@ const EXAMPLES = {
 };
 
 function fillTemplate(template, vars) {
-  return template.replace(/\{(\w+)\}/g, (_, key) => {
+  return template.replace(/\{(\w+)(?:@(?:ref|hover))?\}/g, (_, key) => {
     if (key in vars) return String(vars[key]);
     return `{${key}}`;
   });
