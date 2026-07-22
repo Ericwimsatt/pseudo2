@@ -9,13 +9,15 @@ interface TreeBoxProps {
 
 export function TreeBox({ node, depth, isLast }: TreeBoxProps) {
   const hasChildren = node.children.length > 0;
+  const isMultiLine = node.spans.some(s => s.text.includes('\n'));
+  const shouldBox = hasChildren || isMultiLine;
 
   const borderColors = ['#93c5fd', '#86efac', '#fde68a'];
   const bgColors = ['#f0f9ff', '#f0fdf4', '#fffbeb'];
-  const color = borderColors[Math.min(depth, borderColors.length - 1)];
-  const bg = bgColors[Math.min(depth, bgColors.length - 1)];
+  const color = borderColors[depth % borderColors.length];
+  const bg = bgColors[depth % bgColors.length];
 
-  if (!hasChildren) {
+  if (!shouldBox) {
     return (
       <div
         className="whitespace-pre-wrap break-words leading-5"

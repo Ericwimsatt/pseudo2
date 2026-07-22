@@ -1,21 +1,16 @@
-## Definition from JSX:
-Hover JSX variable to see where its defined/where it comes from. 
+# display 
+
+## background color cycle stops at yellow and repeats forever
+
+## Use colors, add support for themes
+shiki library for source
 
 ## Rendering components or subcomponents
 Viewer to show the hierarchy from selected node down. Fill with dummy data. 
 
-## Deeper unpacking of values (function params stay compact now)
-
 ## Back/Forward button for navigation
 
-## ? clause handling:
-`met` = reverse ? current <= target : current >= target
-  const warning = reverse ? pct >= 75 && !met : pct >= 75 && pct < 100;
-`warning` = reverse ? pct >= 75 && !met : pct >= 75 && pct < 100
-
-## Collapsible
-
-## Visual markers around hierarchies
+## Collapsible elements
 
 # enrichment
 
@@ -24,7 +19,6 @@ Viewer to show the hierarchy from selected node down. Fill with dummy data.
 ## For enriching, don't show the source of the hover when showing definitions/refrences
 
 ## Yellow Highlight shouldn't be permanent when navigating to specific line.
-
 
 ## References/Definition across different files
 Use ts-morph to show references and definitions of variables/functions/types across the project. Cap it at max 5 references for space. the UI for many references is:
@@ -47,6 +41,28 @@ FileName:LineNnumber[+]
 FileName:LineNnumber[+]
 FileName:LineNnumber [+]
 Clicking the plus shows a snippet where its used.
+
+# Language
+
+## Switch statement, each case gets more indented
+
+## Interfaces are types
+
+## ? clause handling:
+`met` = reverse ? current <= target : current >= target
+  const warning = reverse ? pct >= 75 && !met : pct >= 75 && pct < 100;
+`warning` = reverse ? pct >= 75 && !met : pct >= 75 && pct < 100
+
+## Function invocations should look up function definition and use the real parameter names
+
+## Deeper unpacking of values (function params stay compact now)
+return {
+        ...state,
+        toasts: [action.toast, ...state.toasts].slice(0, TOAST_LIMIT),
+      };
+
+## Declarations are multiline:
+`actionTypes` = { ADD_TOAST: "ADD_TOAST", UPDATE_TOAST: "UPDATE_TOAST", DISMISS_TOAST: "DISMISS_TOAST", REMOVE_TOAST: "REMOVE_TOAST", } as const
 
 # Deep Future
 
