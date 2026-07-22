@@ -1,46 +1,48 @@
 import type { SemanticNode } from '../makeSemanticGraph';
-import type { LineRenderable, ViewModel } from './types';
-import { bucketForNode, pickLineBucket } from './bucket';
+import type { DisplayNodeData, LineRenderable, ViewModel, NodeBucket } from './types';
+import { pickLineBucket } from './bucket';
 import { toDisplayNode } from './phrasing';
 
-function flattenNodes(nodes: SemanticNode[]): SemanticNode[] {
-  const out: SemanticNode[] = [];
-  function walk(n: SemanticNode) {
-    out.push(n);
-    for (const c of n.children) walk(c);
+function collectTreeBuckets(nodes: DisplayNodeData[]): NodeBucket[] {
+  const set = new Set<NodeBucket>();
+  function walk(ns: DisplayNodeData[]) {
+    for (const n of ns) {
+      set.add(n.bucket);
+      walk(n.children);
+    }
   }
-  for (const n of nodes) walk(n);
-  return out;
+  walk(nodes);
+  return [...set];
 }
 
-function buildLineRenderable(
-  lineNumber: number,
-  sourceText: string,
-  starting: SemanticNode[],
-  spanning: SemanticNode[]
-): LineRenderable {
-  const buckets = [...starting, ...spanning].map((n) => bucketForNode(n));
-  return {
-    lineNumber,
-    sourceText,
-    bucket: pickLineBucket(buckets),
-    nodes: starting.map(toDisplayNode),
-    spanningBuckets: spanning.map((n) => bucketForNode(n)),
-  };
+function collectActiveBuckets(nodes: DisplayNodeData[], lineNumber: number): Set<NodeBucket> {
+  const buckets = new Set<NodeBucket>();
+  function walk(ns: DisplayNodeData[]) {
+    for (const n of ns) {
+      if (n.sourceStartLine > lineNumber) continue;
+      if (n.sourceEndLine >= lineNumber) {
+        buckets.add(n.bucket);
+        walk(n.children);
+      }
+    }
+  }
+  walk(nodes);
+  return buckets;
 }
 
-function applyRowSpans(lines: LineRenderable[], startingByLine: SemanticNode[][]): void {
-  for (let i = 0; i < lines.length; i++) {
+function applyRowSpans(lines: LineRenderable[], startingByLine: DisplayNodeData[][]): void {
+  const totalLines = lines.length;
+  for (let i = 0; i < totalLines; i++) {
     const starting = startingByLine[i];
     if (starting.length === 0) continue;
     const lineNumber = i + 1;
     const maxEnd = Math.min(
       Math.max(...starting.map((n) => n.sourceEndLine)),
-      lines.length,
+      totalLines,
     );
     let j = i + 1;
-    while (j < lines.length && lines[j].nodes.length === 0) j++;
-    const nextStartLine = j < lines.length ? j + 1 : lines.length + 1;
+    while (j < totalLines && startingByLine[j].length === 0) j++;
+    const nextStartLine = j < totalLines ? j + 1 : totalLines + 1;
     const span = Math.min(nextStartLine - lineNumber, maxEnd - lineNumber + 1);
     if (span > 1) {
       lines[i].translationRowSpan = span;
@@ -51,20 +53,35 @@ function applyRowSpans(lines: LineRenderable[], startingByLine: SemanticNode[][]
   }
 }
 
+function buildLineRenderable(
+  lineNumber: number,
+  sourceText: string,
+  rootNodes: DisplayNodeData[],
+  spanning: Set<NodeBucket>,
+): LineRenderable {
+  return {
+    lineNumber,
+    sourceText,
+    bucket: rootNodes.length > 0
+      ? pickLineBucket(collectTreeBuckets(rootNodes))
+      : pickLineBucket([...spanning]),
+    nodes: rootNodes,
+    spanningBuckets: [...spanning],
+  };
+}
+
 export function buildViewModel(
   nodes: SemanticNode[],
   sourceCode: string
 ): ViewModel {
-  const flat = flattenNodes(nodes).filter((n) => n.sourceStartLine > 0);
+  const rootNodes = nodes.filter((n) => n.sourceStartLine > 0).map(toDisplayNode);
   const sourceLines = sourceCode.split('\n');
-  const startingByLine: SemanticNode[][] = [];
+  const startingByLine: DisplayNodeData[][] = [];
   const lines = sourceLines.map((text, i) => {
     const lineNumber = i + 1;
-    const starting = flat.filter((r) => r.sourceStartLine === lineNumber);
-    const spanning = flat.filter(
-      (r) => r.sourceStartLine < lineNumber && r.sourceEndLine >= lineNumber
-    );
+    const starting = rootNodes.filter((r) => r.sourceStartLine === lineNumber);
     startingByLine.push(starting);
+    const spanning = collectActiveBuckets(rootNodes, lineNumber);
     return buildLineRenderable(lineNumber, text, starting, spanning);
   });
   applyRowSpans(lines, startingByLine);

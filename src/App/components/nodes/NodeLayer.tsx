@@ -1,5 +1,4 @@
 import type { DisplayNodeData } from '../../../main/translationService/renderable/types';
-import { buildTree } from './buildTree';
 import { TreeBox } from './TreeBox';
 
 interface LayerProps {
@@ -11,16 +10,14 @@ export function NodeLayer({ nodes }: LayerProps) {
     return <div className="text-gray-300 italic">—</div>;
   }
 
-  const tree = buildTree(nodes);
-
   return (
     <div>
-      {tree.map((tn, i) => (
+      {nodes.map((tn, i) => (
         <TreeBox
           key={i}
-          treeNode={tn}
+          node={tn}
           depth={0}
-          isLast={i === tree.length - 1}
+          isLast={i === nodes.length - 1}
         />
       ))}
     </div>

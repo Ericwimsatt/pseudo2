@@ -1,5 +1,6 @@
 import type { SemanticNode } from '../makeSemanticGraph';
 import type { DisplayNodeData, DisplaySpan, HoverContent } from './types';
+import { bucketForNode } from './bucket';
 import { buildHover, getKeywordTooltip, getReactHookTooltip } from './hover';
 import { translateType } from './translateType';
 
@@ -330,5 +331,12 @@ const PHRASERS: Record<string, Phraser> = {
 
 export function toDisplayNode(node: SemanticNode): DisplayNodeData {
   const phrase = PHRASERS[node.type] ?? phraseFallback;
-  return { indent: node.indent, spans: phrase(node) };
+  return {
+    indent: node.indent,
+    spans: phrase(node),
+    children: node.children.map(toDisplayNode),
+    sourceStartLine: node.sourceStartLine,
+    sourceEndLine: node.sourceEndLine,
+    bucket: bucketForNode(node),
+  };
 }

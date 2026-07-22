@@ -1,15 +1,14 @@
-import type { TreeNode } from './buildTree';
+import type { DisplayNodeData } from '../../../main/translationService/renderable/types';
 import { DisplayNode } from './DisplayNode';
 
 interface TreeBoxProps {
-  treeNode: TreeNode;
+  node: DisplayNodeData;
   depth: number;
   isLast: boolean;
 }
 
-export function TreeBox({ treeNode, depth, isLast }: TreeBoxProps) {
-  const node = treeNode.node;
-  const hasChildren = treeNode.children.length > 0;
+export function TreeBox({ node, depth, isLast }: TreeBoxProps) {
+  const hasChildren = node.children.length > 0;
 
   const borderColors = ['#93c5fd', '#86efac', '#fde68a'];
   const bgColors = ['#f0f9ff', '#f0fdf4', '#fffbeb'];
@@ -44,12 +43,12 @@ export function TreeBox({ treeNode, depth, isLast }: TreeBoxProps) {
       </div>
       {hasChildren && (
         <div className="flex flex-col">
-          {treeNode.children.map((child, i) => (
+          {node.children.map((child, i) => (
             <TreeBox
               key={i}
-              treeNode={child}
+              node={child}
               depth={depth + 1}
-              isLast={i === treeNode.children.length - 1}
+              isLast={i === node.children.length - 1}
             />
           ))}
         </div>

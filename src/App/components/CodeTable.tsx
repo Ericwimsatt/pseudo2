@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import type { LineRenderable, ViewModel } from '../../main/translationService/renderable/types';
+import type { DisplayNodeData, LineRenderable, ViewModel } from '../../main/translationService/renderable/types';
 import { BUCKET_STYLES } from '../../main/translationService/renderable/bucket';
 import { HoverProvider } from './hover/HoverContext';
 import { LineRow } from './LineRow';
@@ -42,7 +42,7 @@ export function dedupMatches(lines: LineRenderable[], matches: SearchMatch[], lo
     if (parentIdx !== null) {
       const parentTransMatch = !lines[parentIdx].skipTranslation &&
         lines[parentIdx].nodes.some((n) =>
-          n.spans.some((s) => s.text.toLowerCase().includes(lowerTerm))
+          spansContainTerm(n, lowerTerm)
         );
       if (parentTransMatch) {
         const existing = merged.get(parentIdx);
@@ -66,12 +66,17 @@ export function dedupMatches(lines: LineRenderable[], matches: SearchMatch[], lo
   return [...merged.values()];
 }
 
+function spansContainTerm(node: DisplayNodeData, lowerTerm: string): boolean {
+  return node.spans.some((s) => s.text.toLowerCase().includes(lowerTerm)) ||
+    node.children.some((c) => spansContainTerm(c, lowerTerm));
+}
+
 export function computeMatches(lines: LineRenderable[], lowerTerm: string): SearchMatch[] {
   return lines
     .map((line, i) => {
       const inSource = line.sourceText.toLowerCase().includes(lowerTerm);
       const inTranslation = !line.skipTranslation && line.nodes.some((n) =>
-        n.spans.some((s) => s.text.toLowerCase().includes(lowerTerm))
+        spansContainTerm(n, lowerTerm)
       );
       return { lineIndex: i, inSource, inTranslation };
     })

@@ -1,10 +1,30 @@
 import { describe, it, expect } from 'vitest';
 import { buildFileData } from '../../../src/main/translationService/buildFileData';
 
-function render(viewModel: { lines: { nodes: { spans: { text: string }[] }[] }[] }): string[][] {
+interface RenderNode {
+  spans: { text: string }[];
+  children: RenderNode[];
+}
+interface RenderLine {
+  nodes: RenderNode[];
+}
+
+function collectTexts(nodes: RenderNode[]): string[] {
+  const out: string[] = [];
+  function walk(ns: RenderNode[]) {
+    for (const n of ns) {
+      out.push(n.spans.map(s => s.text).join(''));
+      walk(n.children);
+    }
+  }
+  walk(nodes);
+  return out;
+}
+
+function render(viewModel: { lines: RenderLine[] }): string[][] {
   return viewModel.lines
     .filter(l => l.nodes.length > 0)
-    .map(l => l.nodes.map(n => n.spans.map(s => s.text).join('')));
+    .map(l => collectTexts(l.nodes));
 }
 
 describe('makeSemanticGraph - switch statement', () => {
