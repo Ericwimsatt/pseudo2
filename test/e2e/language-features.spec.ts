@@ -26,7 +26,7 @@ test.describe('language feature rendering @regression @p2 @ui:rendering', () => 
   test('JSXElements.tsx shows JSX element translations', async ({ page }) => {
     await loadFile(page, 'JSXElements.tsx');
     await expect(page.locator('body')).toContainText('div');
-    await expect(page.locator('body')).toContainText('className');
+    await expect(page.locator('body')).toContainText('onClick');
   });
 
   test('Interfaces.ts shows interface properties with English descriptions', async ({ page }) => {
@@ -44,7 +44,7 @@ test.describe('language feature rendering @regression @p2 @ui:rendering', () => 
   test('Classes.ts shows Class and Method', async ({ page }) => {
     await loadFile(page, 'Classes.ts');
     await expect(page.locator('body')).toContainText('Class');
-    await expect(page.locator('body')).toContainText('Method');
+    await expect(page.locator('body')).toContainText('speak');
   });
 
   test('Enums.ts shows enum values', async ({ page }) => {

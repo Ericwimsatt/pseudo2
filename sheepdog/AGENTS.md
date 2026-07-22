@@ -102,7 +102,7 @@ sheepdog run <task-name>
 
 - SheepDog opens opencode in a herdr pane for each phase
 - The agent reads the `todo-phase-N.md` and works through it
-- When done, type `/done` in the agent to signal phase completion
+- When done, type `/done` in the agent (or the agent will call the `sheepdog_done` tool) to signal phase completion
 - SheepDog runs any `runAfter` commands and either proceeds to the next phase or stops
 
 ## Best Practices

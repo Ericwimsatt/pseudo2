@@ -1,0 +1,26 @@
+name: tree-box-redesign
+phases:
+  - description: "Phase 1: CSS Grid Layout — rewrite CodeTable.tsx and LineRow.tsx"
+    runAfter:
+      - npm run test:typecheck
+      - npm run test:lint
+  - description: "Phase 2: TreeBoxLayer — rewrite NodeLayer.tsx as nested bordered boxes"
+    runAfter:
+      - npm run test:typecheck
+      - npm run test:lint
+  - description: "Phase 3: Update test selectors for new grid DOM structure"
+    runAfter:
+      - npx vitest run test/unit/core/ --reporter verbose
+      - npm run test:integration -- --reporter verbose
+  - description: "Phase 4: Fix remaining type/lint/test failures"
+    runAfter:
+      - npm run test:typecheck
+      - npm run test:lint
+      - npx vitest run test/unit/core/
+      - npm run test:integration
+  - description: "Phase 5: Update visual baselines, run smoke tests, manual verification"
+    runAfter:
+      - npx playwright test --grep @smoke --reporter list
+runBeforeAll:
+  - npm install
+onPhaseFailure: stop

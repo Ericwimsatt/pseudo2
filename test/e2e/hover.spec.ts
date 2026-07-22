@@ -19,7 +19,7 @@ async function loadApp(page: Page) {
 // The hoverable spans are the ones StyledSpan marks with cursor-help.
 function hoverable(page: Page, text: string | RegExp) {
   return page
-    .locator('table tbody td:last-child span.cursor-help')
+    .locator('span.cursor-help')
     .filter({ hasText: text });
 }
 
@@ -44,11 +44,7 @@ test.describe('hover popovers @critical @p1 @ui:hover', () => {
     await loadApp(page);
     await hoverable(page, /^useState$/).first().hover();
     await expect(popover(page)).toBeVisible({ timeout: 3000 });
-    await page
-      .locator('table tbody td:last-child')
-      .getByText('Function', { exact: false })
-      .first()
-      .hover();
+    await page.locator('span').filter({ hasText: /^Function / }).first().hover();
     await expect(popover(page)).toBeHidden();
   });
 

@@ -57,7 +57,7 @@ export function StyledSpan({
   onHover,
   refPos,
 }: Props) {
-  const { setHovered, scheduleHide, cancelClear } = useHover();
+  const { setHovered, scheduleHide } = useHover();
   const searchCtx = useContext(SearchContext);
   const filePath = useContext(FilePathContext);
   const elRef = useRef<HTMLSpanElement>(null);
@@ -76,7 +76,7 @@ export function StyledSpan({
     if (hoveredRef.current && hasTooltip && elRef.current) {
       setHovered({ hover: hover ?? { title: '' }, trigger: elRef.current, refPos, filePath });
     }
-  }, [hover, refPos, setHovered, filePath]);
+  }, [hover, refPos, setHovered, filePath, hasTooltip]);
 
   const handleLeave = () => {
     hoveredRef.current = false;

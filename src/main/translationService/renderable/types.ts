@@ -36,6 +36,10 @@ export interface DisplaySpan {
 export interface DisplayNodeData {
   indent: number;
   spans: DisplaySpan[];
+  children: DisplayNodeData[];
+  sourceStartLine: number;
+  sourceEndLine: number;
+  bucket: NodeBucket;
 }
 
 export interface LineRenderable {

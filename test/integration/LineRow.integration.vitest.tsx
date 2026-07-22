@@ -17,19 +17,17 @@ function makeLine(overrides: Partial<LineRenderable>): LineRenderable {
 
 function renderRow(line: LineRenderable, overrides: Record<string, any> = {}) {
   return render(
-    <table>
-      <tbody>
-        <LineRow
-          line={line}
-          lineIndex={0}
-          bucketStyle={BUCKET_STYLES[line.bucket]}
-          isInterface={false}
-          onResizeStart={vi.fn()}
-          sourcePct={50}
-          {...overrides}
-        />
-      </tbody>
-    </table>
+    <div style={{ display: 'grid', gridTemplateColumns: '6px 48px 1fr 4px 20px 1fr' }}>
+      <LineRow
+        line={line}
+        lineIndex={0}
+        rowNum={1}
+        bucketStyle={BUCKET_STYLES[line.bucket]}
+        isInterface={false}
+        onResizeStart={vi.fn()}
+        {...overrides}
+      />
+    </div>
   );
 }
 
@@ -49,8 +47,8 @@ describe('LineRow', () => {
   it('applies bucket class to the row', () => {
     const line = makeLine({ bucket: 'import' });
     renderRow(line);
-    const row = document.querySelector('tr');
-    expect(row?.className).toContain('bg-amber-50/60');
+    const sourceCell = document.querySelector('[data-bucket]');
+    expect(sourceCell?.className).toContain('bg-amber-50/60');
   });
 
   it('shows translation nodes when present', () => {
@@ -64,7 +62,7 @@ describe('LineRow', () => {
   it('shows nbsp for empty source text', () => {
     const line = makeLine({ sourceText: '' });
     renderRow(line);
-    expect(document.querySelector('tr')).toBeTruthy();
+    expect(document.querySelector('[data-line]')).toBeTruthy();
   });
 
   it('renders search highlight marks when searchTerm is provided', () => {
@@ -104,9 +102,10 @@ describe('LineRow', () => {
       translationRowSpan: 3,
     });
     renderRow(line);
-    const cells = document.querySelectorAll('td');
-    const transCell = cells[cells.length - 1];
-    expect(transCell?.getAttribute('rowspan')).toBe('3');
+    const transCell = document.querySelector('[style*="grid-column: 6"]');
+    expect(transCell).toBeTruthy();
+    const style = transCell?.getAttribute('style');
+    expect(style).toContain('span 3');
   });
 
   it('does not crash when searchMatches is undefined', () => {

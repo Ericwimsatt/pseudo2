@@ -1,6 +1,23 @@
 import { describe, it, expect } from 'vitest';
 import { buildFileData } from '../../src/main/translationService/buildFileData';
 
+interface RenderNode {
+  spans: { text: string }[];
+  children: RenderNode[];
+}
+
+function collectTexts(nodes: RenderNode[]): string[] {
+  const out: string[] = [];
+  function walk(ns: RenderNode[]) {
+    for (const n of ns) {
+      out.push(n.spans.map(s => s.text).join(''));
+      walk(n.children);
+    }
+  }
+  walk(nodes);
+  return out;
+}
+
 describe('semantic graph - call argument labeling', () => {
   it('labels function arguments as callback with params and shows variable assignment', () => {
     const source = `const timeout = setTimeout(() => {
@@ -13,25 +30,15 @@ describe('semantic graph - call argument labeling', () => {
 `;
     const { viewModel } = buildFileData(source, 'test.ts');
 
-    const lines = viewModel.lines.filter((l: any) => l.nodes.length > 0);
+    const texts = collectTexts(viewModel.lines[0].nodes);
 
-    // Line 1: variable-assignment `timeout` =, call-function Call setTimeout,
-    // param_1 =, and Function (no parameters) all start on line 1
-    const line1Texts = lines[0].nodes.map((n: any) => n.spans.map((s: any) => s.text).join(''));
-    expect(line1Texts.some((t: string) => t.includes('`timeout` ='))).toBeTruthy();
-    expect(line1Texts.some((t: string) => t.includes('Call setTimeout'))).toBeTruthy();
-    expect(line1Texts.some((t: string) => t.includes('`param_1` ='))).toBeTruthy();
-    expect(line1Texts.some((t: string) => t.includes('Function (no parameters)'))).toBeTruthy();
-
-    // Line 2: toastTimepoints.delete call in the callback body
-    const line2Texts = lines[1].nodes.map((n: any) => n.spans.map((s: any) => s.text).join(''));
-    expect(line2Texts.some((t: string) => t.includes('Call toastTimeouts.delete'))).toBeTruthy();
-
-    // param_2 = TOAST_REMOVE_DELAY is on line 7
-    const line7 = lines[6];
-    const line7Texts = line7.nodes.map((n: any) => n.spans.map((s: any) => s.text).join(''));
-    expect(line7Texts.some((t: string) => t.includes('`param_2` ='))).toBeTruthy();
-    expect(line7Texts.some((t: string) => t.includes('TOAST_REMOVE_DELAY'))).toBeTruthy();
+    expect(texts.some(t => t.includes('`timeout` ='))).toBeTruthy();
+    expect(texts.some(t => t.includes('Call setTimeout'))).toBeTruthy();
+    expect(texts.some(t => t.includes('`param_1` ='))).toBeTruthy();
+    expect(texts.some(t => t.includes('Function (no parameters)'))).toBeTruthy();
+    expect(texts.some(t => t.includes('Call toastTimeouts.delete'))).toBeTruthy();
+    expect(texts.some(t => t.includes('`param_2` ='))).toBeTruthy();
+    expect(texts.some(t => t.includes('TOAST_REMOVE_DELAY'))).toBeTruthy();
   });
 
   it('labels inline function args and preserves argument order', () => {
@@ -39,19 +46,14 @@ describe('semantic graph - call argument labeling', () => {
 `;
     const { viewModel } = buildFileData(source, 'test.ts');
 
-    const lines = viewModel.lines.filter((l: any) => l.nodes.length > 0);
-    const line1Nodes = lines[0].nodes;
-    const nodeTexts = line1Nodes.map((n: any) => n.spans.map((s: any) => s.text).join(''));
+    const texts = collectTexts(viewModel.lines[0].nodes);
 
-    // Arguments as child variable-assignments in order: param_1, param_2, param_3
-    expect(nodeTexts.some((t: string) => t.includes('Call execute'))).toBeTruthy();
-    expect(nodeTexts.some((t: string) => t.includes('`param_1` = a'))).toBeTruthy();
-    expect(nodeTexts.some((t: string) => t.includes('`param_2` ='))).toBeTruthy();
-    expect(nodeTexts.some((t: string) => t.includes('`param_3` = c'))).toBeTruthy();
-
-    // param_2 has a function child
-    expect(nodeTexts.some((t: string) => t.includes('Function (no parameters)'))).toBeTruthy();
-    expect(nodeTexts.some((t: string) => t.includes('return'))).toBeTruthy();
+    expect(texts.some(t => t.includes('Call execute'))).toBeTruthy();
+    expect(texts.some(t => t.includes('`param_1` = a'))).toBeTruthy();
+    expect(texts.some(t => t.includes('`param_2` ='))).toBeTruthy();
+    expect(texts.some(t => t.includes('`param_3` = c'))).toBeTruthy();
+    expect(texts.some(t => t.includes('Function (no parameters)'))).toBeTruthy();
+    expect(texts.some(t => t.includes('return'))).toBeTruthy();
   });
 
   it('shows variable assignment marker when initializer has children', () => {
@@ -60,25 +62,22 @@ const y = 42;
 `;
     const { viewModel } = buildFileData(source, 'test.ts');
 
-    const lines = viewModel.lines.filter((l: any) => l.nodes.length > 0);
     // x has a call child → should show =
-    const line1Texts = lines[0].nodes.map((n: any) => n.spans.map((s: any) => s.text).join(''));
-    expect(line1Texts.some((t: string) => t.includes('`x` ='))).toBeTruthy();
+    const line1Texts = collectTexts(viewModel.lines[0].nodes);
+    expect(line1Texts.some(t => t.includes('`x` ='))).toBeTruthy();
 
     // y has a simple init value → should show = 42
-    const line2Texts = lines[1].nodes.map((n: any) => n.spans.map((s: any) => s.text).join(''));
-    expect(line2Texts.some((t: string) => t.includes('`y` = 42'))).toBeTruthy();
+    const line2Texts = collectTexts(viewModel.lines[1].nodes);
+    expect(line2Texts.some(t => t.includes('`y` = 42'))).toBeTruthy();
   });
 
   it('shows Function without trailing period when no params', () => {
     const source = `const f = () => 42;
 `;
     const { viewModel } = buildFileData(source, 'test.ts');
-    const lines = viewModel.lines.filter((l: any) => l.nodes.length > 0);
-    const line1Texts = lines[0].nodes.map((n: any) => n.spans.map((s: any) => s.text).join(''));
-    // variable-assignment with = since it has a child function-definition
-    expect(line1Texts.some((t: string) => t.includes('`f` ='))).toBeTruthy();
-    // function-definition with (no parameters) on same line
-    expect(line1Texts.some((t: string) => t.includes('Function (no parameters)'))).toBeTruthy();
+
+    const texts = collectTexts(viewModel.lines[0].nodes);
+    expect(texts.some(t => t.includes('`f` ='))).toBeTruthy();
+    expect(texts.some(t => t.includes('Function (no parameters)'))).toBeTruthy();
   });
 });

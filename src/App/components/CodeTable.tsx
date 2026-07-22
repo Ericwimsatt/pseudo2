@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import type { LineRenderable, ViewModel } from '../../main/translationService/renderable/types';
+import type { DisplayNodeData, LineRenderable, ViewModel } from '../../main/translationService/renderable/types';
 import { BUCKET_STYLES } from '../../main/translationService/renderable/bucket';
 import { HoverProvider } from './hover/HoverContext';
 import { LineRow } from './LineRow';
@@ -42,7 +42,7 @@ export function dedupMatches(lines: LineRenderable[], matches: SearchMatch[], lo
     if (parentIdx !== null) {
       const parentTransMatch = !lines[parentIdx].skipTranslation &&
         lines[parentIdx].nodes.some((n) =>
-          n.spans.some((s) => s.text.toLowerCase().includes(lowerTerm))
+          spansContainTerm(n, lowerTerm)
         );
       if (parentTransMatch) {
         const existing = merged.get(parentIdx);
@@ -66,12 +66,17 @@ export function dedupMatches(lines: LineRenderable[], matches: SearchMatch[], lo
   return [...merged.values()];
 }
 
+function spansContainTerm(node: DisplayNodeData, lowerTerm: string): boolean {
+  return node.spans.some((s) => s.text.toLowerCase().includes(lowerTerm)) ||
+    node.children.some((c) => spansContainTerm(c, lowerTerm));
+}
+
 export function computeMatches(lines: LineRenderable[], lowerTerm: string): SearchMatch[] {
   return lines
     .map((line, i) => {
       const inSource = line.sourceText.toLowerCase().includes(lowerTerm);
       const inTranslation = !line.skipTranslation && line.nodes.some((n) =>
-        n.spans.some((s) => s.text.toLowerCase().includes(lowerTerm))
+        spansContainTerm(n, lowerTerm)
       );
       return { lineIndex: i, inSource, inTranslation };
     })
@@ -201,7 +206,7 @@ function CodeTableInner({
     const line = viewModel.lines[match.lineIndex];
     if (!line) return;
     const row = containerRef.current?.querySelector(
-      `tr[data-line="${line.lineNumber}"]`
+      `[data-line="${line.lineNumber}"]`
     );
     row?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, [activeMatchIndex, searchMatches, viewModel]);
@@ -212,7 +217,7 @@ function CodeTableInner({
     if (targetLine) {
       setNavHighlightLine(targetLine);
       const row = containerRef.current?.querySelector(
-        `tr[data-line="${targetLine}"]`
+        `[data-line="${targetLine}"]`
       );
       row?.scrollIntoView({ behavior: 'instant', block: 'center' });
       const timer = setTimeout(() => setNavHighlightLine(null), 3000);
@@ -225,7 +230,7 @@ function CodeTableInner({
     const firstMatch = navVarMatches[0];
     const line = viewModel.lines[firstMatch.lineIndex];
     const row = containerRef.current?.querySelector(
-      `tr[data-line="${line.lineNumber}"]`
+      `[data-line="${line.lineNumber}"]`
     );
     row?.scrollIntoView({ behavior: 'instant', block: 'center' });
   }, [viewModel, targetVar, navVarMatches]);
@@ -294,41 +299,37 @@ function CodeTableInner({
           )}
         </div>
       </div>
-      <table
-        className="w-full font-mono text-sm border-collapse"
-        style={{ tableLayout: 'fixed' }}
+      <div
+        className="w-full font-mono text-sm"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: `6px 48px ${sourcePct}% 4px 20px 1fr`,
+          gridAutoRows: 'auto',
+          alignItems: 'start',
+        }}
       >
-        <colgroup>
-          <col style={{ width: 6 }} />
-          <col style={{ width: 48 }} />
-          <col style={{ width: `${sourcePct}%` }} />
-          <col style={{ width: 4 }} />
-          <col />
-        </colgroup>
-        <tbody>
-          {viewModel.lines.map((line, i) => (
-            <LineRow
-              key={line.lineNumber}
-              line={line}
-              lineIndex={i}
-              bucketStyle={BUCKET_STYLES[line.bucket]}
-              isInterface={line.bucket === 'jsx'}
-              onResizeStart={handleResizeStart}
-              sourcePct={sourcePct}
-              searchTerm={searchTerm}
-              searchMatches={searchMatches}
-              activeMatchIndex={activeMatchIndex}
-              navVar={targetVar ?? undefined}
-              parentRowIndex={parentMap[i]}
-              isNavHighlight={
-                navHighlightLine === line.lineNumber ||
-                (targetVar !== null && targetVar !== undefined && navVarMatches.length > 0 &&
-                  (navVarMatches[0].lineIndex === i || parentMap[i] === navVarMatches[0].lineIndex))
-              }
-            />
-          ))}
-        </tbody>
-      </table>
+        {viewModel.lines.map((line, i) => (
+          <LineRow
+            key={line.lineNumber}
+            rowNum={i + 1}
+            line={line}
+            lineIndex={i}
+            bucketStyle={BUCKET_STYLES[line.bucket]}
+            isInterface={line.bucket === 'jsx'}
+            onResizeStart={handleResizeStart}
+            searchTerm={searchTerm}
+            searchMatches={searchMatches}
+            activeMatchIndex={activeMatchIndex}
+            navVar={targetVar ?? undefined}
+            parentRowIndex={parentMap[i]}
+            isNavHighlight={
+              navHighlightLine === line.lineNumber ||
+              (targetVar !== null && targetVar !== undefined && navVarMatches.length > 0 &&
+                (navVarMatches[0].lineIndex === i || parentMap[i] === navVarMatches[0].lineIndex))
+            }
+          />
+        ))}
+      </div>
       <HoverPopover />
     </div>
   );
