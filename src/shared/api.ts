@@ -51,6 +51,18 @@ export interface ApiInvoke {
     arg: undefined;
     return: string | null;
   };
+  getLastProjectPath: {
+    arg: undefined;
+    return: string;
+  };
+  setLastProjectPath: {
+    arg: string;
+    return: void;
+  };
+  clearLastProjectPath: {
+    arg: undefined;
+    return: void;
+  };
 }
 
 export type ElectronAPI = {

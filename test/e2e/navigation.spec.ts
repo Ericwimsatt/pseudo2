@@ -19,7 +19,6 @@ async function loadApp(page: Page, extraHash?: string) {
   const viewModel = buildFileData(SOURCE, 'Demo.tsx').viewModel;
   const sourceLines = viewModel.lines.map((l) => ({ lineNumber: l.lineNumber, text: l.sourceText }));
   await page.addInitScript((data) => {
-    localStorage.setItem('repoPath', '/tmp/demo');
     const tree = [{ name: 'Demo.tsx', path: 'Demo.tsx', type: 'file' as const }];
     (window as any).electronAPI = {
       loadProject: async ({ path: _p }: { path: string }) => ({ tree, path: '/tmp/demo' }),
@@ -29,6 +28,9 @@ async function loadApp(page: Page, extraHash?: string) {
       browseDirectory: async ({ requestedPath: _p }: { requestedPath?: string }) => ({ currentPath: '/tmp', parentPath: null, directories: [] }),
       uploadFolder: async ({ files: _f }: { files: any[] }) => ({ tree, path: '/tmp/demo' }),
       openDirectorySelector: async () => null,
+      getLastProjectPath: async () => '/tmp/demo',
+      setLastProjectPath: async (_path: string) => {},
+      clearLastProjectPath: async () => {},
       onMenuLoadFolder: () => () => {},
     };
   }, { viewModel, sourceLines });
@@ -197,7 +199,6 @@ test.describe('rowSpan dedup', () => {
     const viewModel = buildFileData(MULTI_LINE_PARAMS, 'FilterBar.tsx').viewModel;
     const sourceLines = viewModel.lines.map((l) => ({ lineNumber: l.lineNumber, text: l.sourceText }));
     await page.addInitScript((data) => {
-      localStorage.setItem('repoPath', '/tmp/filter');
       const tree = [{ name: 'FilterBar.tsx', path: 'FilterBar.tsx', type: 'file' as const }];
       (window as any).electronAPI = {
         loadProject: async ({ path: _p }: { path: string }) => ({ tree, path: '/tmp/filter' }),
@@ -207,6 +208,9 @@ test.describe('rowSpan dedup', () => {
         browseDirectory: async ({ requestedPath: _p }: { requestedPath?: string }) => ({ currentPath: '/tmp', parentPath: null, directories: [] }),
         uploadFolder: async ({ files: _f }: { files: any[] }) => ({ tree, path: '/tmp/filter' }),
         openDirectorySelector: async () => null,
+        getLastProjectPath: async () => '/tmp/filter',
+        setLastProjectPath: async (_path: string) => {},
+        clearLastProjectPath: async () => {},
         onMenuLoadFolder: () => () => {},
       };
     }, { viewModel, sourceLines });

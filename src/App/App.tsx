@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { HashRouter, Routes, Route, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import type { ViewModel } from '../main/translationService/renderable/types';
 import type { ElectronAPI, FileNode } from '../shared/api';
@@ -91,13 +91,6 @@ function App() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const savedPath = localStorage.getItem('repoPath');
-    if (savedPath) {
-      loadRepo(savedPath);
-    }
-  }, []);
-
   const loadRepo = async (path: string) => {
     if (!path.trim()) {
       setLoadError('Please enter a valid path');
@@ -109,11 +102,11 @@ function App() {
       const data = await window.electronAPI.loadProject({ path });
       setTree(data.tree);
       setRepoPath(data.path);
-      localStorage.setItem('repoPath', data.path);
+      window.electronAPI.setLastProjectPath(data.path);
     } catch (err: any) {
       console.error('Failed to load repo:', err);
       setLoadError(err.message || 'Failed to load repository');
-      localStorage.removeItem('repoPath');
+      window.electronAPI.clearLastProjectPath();
     } finally {
       setLoading(false);
     }
@@ -121,6 +114,14 @@ function App() {
 
   const loadRepoRef = useRef(loadRepo);
   loadRepoRef.current = loadRepo;
+
+  useEffect(() => {
+    window.electronAPI.getLastProjectPath().then((savedPath) => {
+      if (savedPath) {
+        loadRepo(savedPath);
+      }
+    });
+  }, []);
 
   useEffect(() => {
     const cleanup = window.electronAPI.onMenuLoadFolder((path) => {

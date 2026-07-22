@@ -41,8 +41,6 @@ export async function injectFixture(
   const sourceLines = singleFile?.entry.sourceLines ?? [...fixture.files.values()][0]!.sourceLines;
 
   await page.addInitScript((data) => {
-    localStorage.setItem('repoPath', data.repoPath);
-
     const tree = data.fixtureTree;
     (window as any).electronAPI = {
       loadProject: async ({ path: _p }: { path: string }) => ({ tree, path: data.repoPath }),
@@ -57,6 +55,9 @@ export async function injectFixture(
       }),
       uploadFolder: async ({ files: _f }: { files: any[] }) => ({ tree, path: data.repoPath }),
       openDirectorySelector: async () => null,
+      getLastProjectPath: async () => data.repoPath,
+      setLastProjectPath: async (_path: string) => {},
+      clearLastProjectPath: async () => {},
       onMenuLoadFolder: () => () => {},
     };
   }, {

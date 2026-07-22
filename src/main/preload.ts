@@ -26,6 +26,15 @@ const api = {
   openDirectorySelector: () =>
     ipcRenderer.invoke('openDirectorySelector', undefined),
 
+  getLastProjectPath: () =>
+    ipcRenderer.invoke('get-last-project'),
+
+  setLastProjectPath: (path: string) =>
+    ipcRenderer.invoke('set-last-project', path),
+
+  clearLastProjectPath: () =>
+    ipcRenderer.invoke('clear-last-project'),
+
   onMenuLoadFolder: (callback: (path: string) => void) => {
     const handler = (_event: Electron.IpcRendererEvent, path: string) => callback(path);
     ipcRenderer.on('menu-load-folder', handler);

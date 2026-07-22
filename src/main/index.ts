@@ -5,6 +5,7 @@ import { registerSourceHandlers } from './sourceService/sourceController';
 import { registerTranslationHandlers } from './translationService/translationController';
 import { registerTooltipHandlers } from './tooltip/tooltipController';
 import { registerProjectSelectHandlers } from './project/projectSelectController';
+import { registerStoreHandlers } from './store/storeController';
 
 const isDev = !app.isPackaged;
 const DEV_PORT = process.env.DEV_PORT || '5173';
@@ -69,6 +70,7 @@ app.whenReady().then(() => {
   registerTranslationHandlers();
   registerTooltipHandlers();
   registerProjectSelectHandlers();
+  registerStoreHandlers();
   createWindow();
 
   app.on('activate', () => {

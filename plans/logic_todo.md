@@ -17,8 +17,6 @@ Viewer to show the hierarchy from selected node down. Fill with dummy data.
 
 ## Visual markers around hierarchies
 
-## Simpler Testing primitives
-
 # enrichment
 
 ## Imports should count as vars for purpose of hovers--Do this at same time we do the multi-file stuff

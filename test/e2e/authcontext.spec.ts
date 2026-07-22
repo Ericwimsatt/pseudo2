@@ -66,7 +66,6 @@ async function loadApp(page: Page) {
   }
   const sourceLines = viewModel.lines.map((l) => ({ lineNumber: l.lineNumber, text: l.sourceText }));
   await page.addInitScript((data) => {
-    localStorage.setItem('repoPath', '/tmp/auth');
     const tree = [{ name: 'AuthContext.tsx', path: 'AuthContext.tsx', type: 'file' as const }];
     (window as any).electronAPI = {
       loadProject: async ({ path: _p }: { path: string }) => ({ tree, path: '/tmp/auth' }),
@@ -76,6 +75,9 @@ async function loadApp(page: Page) {
       browseDirectory: async ({ requestedPath: _p }: { requestedPath?: string }) => ({ currentPath: '/tmp', parentPath: null, directories: [] }),
       uploadFolder: async ({ files: _f }: { files: any[] }) => ({ tree, path: '/tmp/auth' }),
       openDirectorySelector: async () => null,
+      getLastProjectPath: async () => '/tmp/auth',
+      setLastProjectPath: async (_path: string) => {},
+      clearLastProjectPath: async () => {},
       onMenuLoadFolder: () => () => {},
     };
   }, { viewModel, sourceLines });

@@ -23,7 +23,6 @@ async function loadAppWithFile(page: Page) {
   const { viewModel, path: filePath } = buildFileDataForTest();
   const sourceLines = viewModel.lines.map((l) => ({ lineNumber: l.lineNumber, text: l.sourceText }));
   await page.addInitScript((data) => {
-    localStorage.setItem('repoPath', '/tmp/annual');
     const tree = [{ name: 'AnnualSummary.tsx', path: 'AnnualSummary.tsx', type: 'file' as const }];
     (window as any).electronAPI = {
       loadProject: async ({ path: _p }: { path: string }) => ({ tree, path: '/tmp/annual' }),
@@ -33,6 +32,9 @@ async function loadAppWithFile(page: Page) {
       browseDirectory: async ({ requestedPath: _p }: { requestedPath?: string }) => ({ currentPath: '/tmp', parentPath: null, directories: [] }),
       uploadFolder: async ({ files: _f }: { files: any[] }) => ({ tree, path: '/tmp/annual' }),
       openDirectorySelector: async () => null,
+      getLastProjectPath: async () => '/tmp/annual',
+      setLastProjectPath: async (_path: string) => {},
+      clearLastProjectPath: async () => {},
       onMenuLoadFolder: () => () => {},
     };
   }, { viewModel, sourceLines, filePath });
@@ -139,7 +141,6 @@ test.describe('AnnualSummary translation @smoke @p0 @core:translation', () => {
     };
     const srcLines = fileData.viewModel.lines.map((l: any) => ({ lineNumber: l.lineNumber, text: l.sourceText }));
     await page.addInitScript((data) => {
-      localStorage.setItem('repoPath', '/tmp/annual');
       const tree = [{ name: 'App.tsx', path: 'App.tsx', type: 'file' as const }];
       (window as any).electronAPI = {
         loadProject: async ({ path: _p }: { path: string }) => ({ tree, path: '/tmp/annual' }),
@@ -149,6 +150,9 @@ test.describe('AnnualSummary translation @smoke @p0 @core:translation', () => {
         browseDirectory: async ({ requestedPath: _p }: { requestedPath?: string }) => ({ currentPath: '/tmp', parentPath: null, directories: [] }),
         uploadFolder: async ({ files: _f }: { files: any[] }) => ({ tree, path: '/tmp/annual' }),
         openDirectorySelector: async () => null,
+        getLastProjectPath: async () => '/tmp/annual',
+        setLastProjectPath: async (_path: string) => {},
+        clearLastProjectPath: async () => {},
         onMenuLoadFolder: () => () => {},
       };
     }, { viewModel: fileData.viewModel, sourceLines: srcLines });
@@ -179,7 +183,6 @@ interface Props {
     const vmProps = buildFileData(source, 'Props.tsx').viewModel;
     const srcLinesProps = vmProps.lines.map((l: any) => ({ lineNumber: l.lineNumber, text: l.sourceText }));
     await page.addInitScript((data) => {
-      localStorage.setItem('repoPath', '/tmp/annual');
       const tree = [{ name: 'Props.tsx', path: 'Props.tsx', type: 'file' as const }];
       (window as any).electronAPI = {
         loadProject: async ({ path: _p }: { path: string }) => ({ tree, path: '/tmp/annual' }),
@@ -189,6 +192,9 @@ interface Props {
         browseDirectory: async ({ requestedPath: _p }: { requestedPath?: string }) => ({ currentPath: '/tmp', parentPath: null, directories: [] }),
         uploadFolder: async ({ files: _f }: { files: any[] }) => ({ tree, path: '/tmp/annual' }),
         openDirectorySelector: async () => null,
+        getLastProjectPath: async () => '/tmp/annual',
+        setLastProjectPath: async (_path: string) => {},
+        clearLastProjectPath: async () => {},
         onMenuLoadFolder: () => () => {},
       };
     }, { viewModel: vmProps, sourceLines: srcLinesProps });
@@ -224,7 +230,6 @@ interface Props {
     const vmFilter = buildFileData(filterBarSrc, 'FilterBar.tsx').viewModel;
     const srcLinesFilter = vmFilter.lines.map((l: any) => ({ lineNumber: l.lineNumber, text: l.sourceText }));
     await page.addInitScript((data) => {
-      localStorage.setItem('repoPath', '/tmp/annual');
       const tree = [{ name: 'FilterBar.tsx', path: 'FilterBar.tsx', type: 'file' as const }];
       (window as any).electronAPI = {
         loadProject: async ({ path: _p }: { path: string }) => ({ tree, path: '/tmp/annual' }),
@@ -234,6 +239,9 @@ interface Props {
         browseDirectory: async ({ requestedPath: _p }: { requestedPath?: string }) => ({ currentPath: '/tmp', parentPath: null, directories: [] }),
         uploadFolder: async ({ files: _f }: { files: any[] }) => ({ tree, path: '/tmp/annual' }),
         openDirectorySelector: async () => null,
+        getLastProjectPath: async () => '/tmp/annual',
+        setLastProjectPath: async (_path: string) => {},
+        clearLastProjectPath: async () => {},
         onMenuLoadFolder: () => () => {},
       };
     }, { viewModel: vmFilter, sourceLines: srcLinesFilter });

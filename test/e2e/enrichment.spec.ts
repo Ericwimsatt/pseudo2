@@ -20,7 +20,6 @@ test.describe('enrichment hover @regression @p2 @ui:hover', () => {
     const serializable = { viewModel };
 
     await page.addInitScript((data: any) => {
-      localStorage.setItem('repoPath', '/tmp/enrich');
       const tree = [{ name: 'Demo.tsx', path: 'Demo.tsx', type: 'file' as const }];
       const sourceLines = data.viewModel.lines.map((l: any) => ({ lineNumber: l.lineNumber, text: l.sourceText }));
       (window as any).electronAPI = {
@@ -56,6 +55,9 @@ test.describe('enrichment hover @regression @p2 @ui:hover', () => {
         browseDirectory: async ({ requestedPath: _p }: { requestedPath?: string }) => ({ currentPath: '/tmp', parentPath: null, directories: [] }),
         uploadFolder: async ({ files: _f }: { files: any[] }) => ({ tree, path: '/tmp/enrich' }),
         openDirectorySelector: async () => null,
+        getLastProjectPath: async () => '/tmp/enrich',
+        setLastProjectPath: async (_path: string) => {},
+        clearLastProjectPath: async () => {},
         onMenuLoadFolder: () => () => {},
       };
     }, serializable);

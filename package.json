@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@floating-ui/react": "^0.27.20",
+    "electron-store": "^11.0.2",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-router-dom": "^7.18.1",
