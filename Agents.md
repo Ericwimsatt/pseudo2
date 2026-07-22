@@ -36,32 +36,11 @@ This project uses a layered test approach:
 - `@ui:{name}` - e.g. `@ui:search`, `@ui:hover`, `@ui:sidebar`
 - `@core:{name}` - e.g. `@core:translation`, `@core:rendering`
 
+### Task Definitions (sheepdog)
+
+In `sheepdog/<task>/task.yaml`, always use `npx vitest run` (not `npx vitest`) in `runAfter`/`runBeforeAll`/`runAfterAll` commands. Bare `vitest` defaults to **watch mode** and never exits, stalling the task indefinitely.
+
 ### Agent Instructions
-
-#### Evaluating a Change
-1. Always start with the fastest checks: `npm run test:typecheck && npm run test:lint`
-2. If changing translation logic: `npx vitest test/unit/core/`
-3. If changing a service: `npx vitest test/unit/services/<service-name>.vitest.ts`
-4. If changing a UI component: `npx playwright test --grep @ui:<component-name>`
-5. Before submitting: `npm run test:smoke` (or for small changes, just `npm run test:unit`)
-
-#### Creating Tests for New Code
-1. Translation logic -> `test/unit/core/<name>.vitest.ts` (tag: `@core:<name>`)
-2. Service wrapper -> `test/unit/services/<name>.vitest.ts` (tag: `@service:<name>`)
-3. Component behavior -> `test/integration/<Name>.integration.vitest.ts` (tag: `@integration`)
-4. Full-page flow -> `test/e2e/<name>.spec.ts` (tag: `@smoke`, `@critical`, or `@regression` depending on criticality)
-5. Visual appearance -> add `@visual` tag and `toHaveScreenshot()` assertion
-
-#### Adding to the Fixture Repo
-- New language constructs go in `test/fixtures/repos/language-features/<feature>.tsx`
-- Cross-file scenarios go in `test/fixtures/repos/cross-refs/`
-- Run `npm run test:unit` after adding fixture files to verify they parse correctly
-
-#### Debugging Test Failures
-- Unit test fails: `npx vitest test/unit/<path> --reporter verbose` for full output
-- Playwright fails: `npx playwright test --reporter list --debug` for interactive debugging
-- Visual regression: check `test-results/` for screenshot diffs
-- Flaky Playwright test: add `@quarantine` tag and file an issue
 
 ### Lint
 Always run a lint to check for syntax and type errors. Generally the solution to the type error is to fix the type or fix the call, not to bypass typechecking or make things options
@@ -69,3 +48,6 @@ npx tsc --noEmit
 
 ### Translation principle
 Keep it as simple as possible. Lua, the language, only has variables, tables, and functions. I want to represent typescript as close to this as possible
+
+### Sheepdog
+To create a sheepdog task, see the instructions in ../sheepdog folder

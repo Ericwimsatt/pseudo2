@@ -150,9 +150,9 @@ export function Counter() {
   it('renders a table with rows for each source line', () => {
     const { viewModel } = buildFileData(SOURCE, 'Counter.tsx');
     render(<CodeTable viewModel={viewModel} fileName="Counter.tsx" />);
-    const table = document.querySelector('table');
-    expect(table).toBeTruthy();
-    const rows = table?.querySelectorAll('tbody tr');
+    const grid = document.querySelector('[class*="w-full font-mono"]');
+    expect(grid).toBeTruthy();
+    const rows = grid?.querySelectorAll('[data-line]');
     expect(rows?.length).toBeGreaterThan(0);
   });
 
@@ -165,14 +165,14 @@ export function Counter() {
   it('renders line numbers for each row', () => {
     const { viewModel } = buildFileData(SOURCE, 'Counter.tsx');
     render(<CodeTable viewModel={viewModel} fileName="Counter.tsx" />);
-    const line1 = document.querySelector('tr[data-line="1"]');
+    const line1 = document.querySelector('[data-line="1"]');
     expect(line1).toBeTruthy();
   });
 
   it('applies bucket classes to rows', () => {
     const { viewModel } = buildFileData(SOURCE, 'Counter.tsx');
     render(<CodeTable viewModel={viewModel} fileName="Counter.tsx" />);
-    const rows = document.querySelectorAll('tr[data-bucket]');
+    const rows = document.querySelectorAll('[data-bucket]');
     expect(rows.length).toBeGreaterThan(0);
   });
 });

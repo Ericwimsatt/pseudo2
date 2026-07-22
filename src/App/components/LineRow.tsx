@@ -12,12 +12,12 @@ interface SearchMatch {
 }
 
 interface Props {
+  rowNum: number;
   line: LineRenderable;
   lineIndex: number;
   bucketStyle: string;
   isInterface: boolean;
   onResizeStart: (e: React.MouseEvent) => void;
-  sourcePct: number;
   searchTerm?: string;
   searchMatches?: SearchMatch[];
   activeMatchIndex?: number;
@@ -62,12 +62,12 @@ function highlightSourceText(text: string, term: string, isActive: boolean) {
 }
 
 export function LineRow({
+  rowNum,
   line,
   lineIndex,
   bucketStyle,
   isInterface,
   onResizeStart,
-  sourcePct,
   searchTerm,
   searchMatches,
   activeMatchIndex,
@@ -75,11 +75,11 @@ export function LineRow({
   isNavHighlight,
   parentRowIndex,
 }: Props) {
-  const rowRef = useRef<HTMLTableRowElement>(null);
+  const lineRef = useRef<HTMLDivElement>(null);
   const [flash, setFlash] = useState(false);
 
   useEffect(() => {
-    if (isNavHighlight && rowRef.current) {
+    if (isNavHighlight && lineRef.current) {
       setFlash(true);
       const timer = setTimeout(() => setFlash(false), 3000);
       return () => clearTimeout(timer);
@@ -129,29 +129,27 @@ export function LineRow({
   }, [effectiveSearchTerm, searchTerm, searchMatches, lineIndex, activeMatchIndex, parentRowIndex]);
 
   return (
-    <tr
-      ref={rowRef}
-      className={cx(
-        'hover:bg-gray-50/40 transition-colors',
-        bucketStyle,
-        flash && 'animate-pulse bg-yellow-50'
-      )}
-      data-bucket={BUCKET_LABELS[line.bucket]}
-      data-line={line.lineNumber}
-    >
-      <td
-        className={cx(
-          'p-0 align-top border-l-2',
-          isInterface ? 'border-blue-500' : 'border-transparent'
-        )}
-        style={{ width: 6 }}
+    <>
+      <div
+        className={cx('border-l-2', isInterface ? 'border-blue-500' : 'border-transparent')}
+        style={{ gridRow: rowNum, gridColumn: 1 }}
       />
-      <td className="text-right pr-3 py-1 text-gray-400 select-none border-r border-gray-200 bg-gray-50 align-top font-mono text-xs">
+      <div
+        className="text-right pr-3 py-1 text-gray-400 select-none border-r border-gray-200 bg-gray-50 align-top font-mono text-xs"
+        style={{ gridRow: rowNum, gridColumn: 2 }}
+      >
         {line.lineNumber}
-      </td>
-      <td
-        className="py-1 align-top border-r border-gray-200"
-        style={{ width: `${sourcePct}%` }}
+      </div>
+      <div
+        ref={lineRef}
+        className={cx(
+          'py-1 border-r border-gray-200 hover:bg-gray-50/40 transition-colors',
+          bucketStyle,
+          flash && 'animate-pulse bg-yellow-50'
+        )}
+        style={{ gridRow: rowNum, gridColumn: 3 }}
+        data-bucket={BUCKET_LABELS[line.bucket]}
+        data-line={line.lineNumber}
       >
         <div className="px-4 whitespace-pre-wrap break-words font-mono text-sm">
           {sourceHasTerm
@@ -162,22 +160,23 @@ export function LineRow({
               )
             : line.sourceText || '\u00A0'}
         </div>
-      </td>
-      <td
-        className="cursor-col-resize bg-gray-100 hover:bg-blue-300 active:bg-blue-400 p-0 align-top border-r border-gray-200"
-        style={{ width: 4 }}
+      </div>
+      <div
+        className="cursor-col-resize bg-gray-100 hover:bg-blue-300 active:bg-blue-400 p-0 border-r border-gray-200"
+        style={{ gridRow: rowNum, gridColumn: 4 }}
         onMouseDown={onResizeStart}
       />
+      <div style={{ gridRow: rowNum, gridColumn: 5 }} />
       {showTranslation && (
-        <td
+        <div
           className="px-4 py-1 align-top"
-          rowSpan={rowSpan && rowSpan > 1 ? rowSpan : undefined}
+          style={{ gridRow: `${rowNum} / span ${rowSpan || 1}`, gridColumn: 6 }}
         >
           <SearchContext.Provider value={searchCtxValue}>
             <NodeLayer nodes={line.nodes} />
           </SearchContext.Provider>
-        </td>
+        </div>
       )}
-    </tr>
+    </>
   );
 }

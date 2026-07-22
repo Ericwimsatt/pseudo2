@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nested Tree Boxes — Mockup</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f3f4f6;
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+
+  .mockup {
+    max-width: 1100px;
+    width: 100%;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+    overflow: hidden;
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 13px;
+    color: #374151;
+  }
+
+  .header h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2937;
+  }
+
+  .header .file-path {
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    color: #6b7280;
+    font-size: 12px;
+  }
+
+  /*
+    GRID LAYOUT
+    marker | linenum | source | resize | icon | translation
+    6px    | 48px    | 1fr    | 4px    | 20px | 1fr
+  */
+  .code-grid {
+    display: grid;
+    grid-template-columns: 6px 48px 1fr 4px 20px 1fr;
+    grid-auto-rows: auto;
+    align-items: start;
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', 'Menlo', monospace;
+    font-size: 13px;
+    line-height: 1.5rem;
+    color: #1f2937;
+    user-select: none;
+  }
+
+  /* --- Grid Cells --- */
+  .g-marker {
+    grid-column: 1;
+    border-left: 2px solid transparent;
+    align-self: stretch;
+    min-height: 1.5rem;
+  }
+  .g-marker.active { border-left-color: #3b82f6; }
+
+  .g-linenum {
+    grid-column: 2;
+    text-align: right;
+    padding-right: 12px;
+    padding-top: 0;
+    padding-bottom: 0;
+    color: #9ca3af;
+    font-size: 11px;
+    background: #f9fafb;
+    border-right: 1px solid #e5e7eb;
+    align-self: stretch;
+    min-height: 1.5rem;
+  }
+
+  .g-source {
+    grid-column: 3;
+    padding: 0 0 0 16px;
+    border-right: 1px solid #e5e7eb;
+    white-space: pre-wrap;
+    word-break: break-word;
+    min-height: 1.5rem;
+    align-self: stretch;
+    background: #fff;
+    transition: background 0.15s;
+  }
+  .code-grid > .g-source:hover { background: #f9fafb40; }
+
+  .g-resize {
+    grid-column: 4;
+    cursor: col-resize;
+    background: #f3f4f6;
+    align-self: stretch;
+    min-height: 1.5rem;
+    transition: background 0.15s;
+  }
+  .g-resize:hover { background: #93c5fd; }
+
+  .g-icon {
+    grid-column: 5;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 2px;
+    min-height: 1.5rem;
+    align-self: stretch;
+    color: #9ca3af;
+    font-size: 10px;
+  }
+  .g-icon .collapse-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background 0.15s;
+    font-size: 9px;
+    line-height: 1;
+  }
+  .g-icon .collapse-btn:hover { background: #e5e7eb; color: #4b5563; }
+
+  .g-trans {
+    grid-column: 6;
+    padding: 0 12px 0 8px;
+    min-height: 1.5rem;
+    align-self: stretch;
+  }
+  .g-trans:hover { background: #f9fafb40; }
+
+  /* --- Row highlight for hover --- */
+  .code-grid > .g-linenum { z-index: 1; }
+
+  /* Combined row hover */
+  .code-grid .row-hover:hover ~ .g-source,
+  .code-grid .row-hover:hover + .g-source,
+  .code-grid .g-source:hover { background: #f9fafb40; }
+
+  /* --- TREE BOXES ---- */
+  .tree-box {
+    margin: 2px 0;
+    border-radius: 5px;
+    position: relative;
+    background: #fff;
+  }
+
+  /* Root-level boxes have left/top/right borders only (open-bottom) */
+  .tree-box.root {
+    border: 2px solid #93c5fd;
+    border-bottom: none;
+    background: #f0f9ff08;
+  }
+  .tree-box.root:last-of-type { border-bottom: 2px solid #93c5fd; }
+
+  /* Depth 1: inside a function, e.g. if-blocks */
+  .tree-box.d1 {
+    border: 2px solid #86efac;
+    border-bottom: none;
+    margin-left: 16px;
+    background: #f0fdf408;
+  }
+  .tree-box.d1:last-of-type { border-bottom: 2px solid #86efac; }
+
+  /* Depth 2: inside an if block */
+  .tree-box.d2 {
+    border: 2px solid #fde68a;
+    border-bottom: none;
+    margin-left: 20px;
+    background: #fffbeb08;
+  }
+  .tree-box.d2:last-of-type { border-bottom: 2px solid #fde68a; }
+
+  /* Tree box header row */
+  .tree-box-header {
+    padding: 1px 8px;
+    line-height: 1.5rem;
+    min-height: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .tree-box-header .depth-badge {
+    font-size: 9px;
+    font-weight: 600;
+    padding: 0 5px;
+    border-radius: 3px;
+    line-height: 16px;
+    opacity: 0.7;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .depth-badge.d0 { background: #dbeafe; color: #1d4ed8; }
+  .depth-badge.d1 { background: #d1fae5; color: #047857; }
+  .depth-badge.d2 { background: #fef3c7; color: #b45309; }
+
+  .tree-box-children {
+    margin: 1px 0 2px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Collapsed state */
+  .tree-box.collapsed > .tree-box-children {
+    display: none;
+  }
+  .tree-box.collapsed {
+    border-bottom: 2px solid inherit;
+    border-style: dashed;
+    opacity: 0.75;
+  }
+
+  /* --- NODE TEXT STYLING --- */
+  .node-text { white-space: pre-wrap; word-break: break-word; }
+  .node-text .kw   { color: #7c3aed; }
+  .node-text .str  { color: #059669; }
+  .node-text .id   { color: #2563eb; }
+  .node-text .punct { color: #6b7280; }
+  .node-text .param { color: #d97706; }
+
+  /* --- LABELS & ANNOTATIONS --- */
+  .mockup-note {
+    padding: 16px 20px;
+    background: #fffbeb;
+    border-top: 1px solid #fde68a;
+    font-size: 13px;
+    color: #92400e;
+    line-height: 1.6;
+  }
+  .mockup-note strong { color: #78350f; }
+  .mockup-note code {
+    background: #fef3c7;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-family: 'SF Mono', monospace;
+    font-size: 12px;
+  }
+
+  .legend {
+    display: flex;
+    gap: 16px;
+    padding: 0 20px 14px;
+    font-size: 12px;
+    color: #6b7280;
+    border-bottom: 1px solid #e5e7eb;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .legend-swatch {
+    display: inline-block;
+    width: 18px;
+    height: 10px;
+    border-radius: 2px;
+    border-width: 2px;
+    border-style: solid;
+  }
+  .legend-swatch.d0 { border-color: #93c5fd; background: #f0f9ff; }
+  .legend-swatch.d1 { border-color: #86efac; background: #f0fdf4; }
+  .legend-swatch.d2 { border-color: #fde68a; background: #fffbeb; }
+
+  .issue-list {
+    padding: 0 20px 18px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .issue-card {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .issue-card h4 {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #1f2937;
+  }
+  .issue-card .badge-fixed {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: #d1fae5;
+    color: #065f46;
+    margin-left: 6px;
+  }
+</style>
+</head>
+<body>
+
+<div class="mockup">
+
+  <div class="header">
+    <div>
+      <h3>Nested Tree Boxes — CSS Grid Layout</h3>
+      <span class="file-path">src/components/UserProfile.tsx</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;font-size:12px;color:#6b7280;">
+      <span>⬤ ⬤ ⬤</span>
+      <span>|</span>
+      <span>Find in file...</span>
+      <span style="background:#e5e7eb;padding:2px 6px;border-radius:4px;">⌘F</span>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span style="font-weight:600;color:#374151;">Depth colors:</span>
+    <span class="legend-item"><span class="legend-swatch d0"></span> root (indent 0)</span>
+    <span class="legend-item"><span class="legend-swatch d1"></span> depth 1</span>
+    <span class="legend-item"><span class="legend-swatch d2"></span> depth 2</span>
+    <span style="margin-left:auto;color:#9ca3af;">▼ hover rows to see highlight</span>
+  </div>
+
+  <div class="code-grid">
+
+    <!-- ===== ROW 1: import ===== -->
+    <div class="g-marker"></div>
+    <div class="g-linenum">1</div>
+    <div class="g-source"><span style="color:#7c3aed;">import</span> { useState, useEffect } <span style="color:#7c3aed;">from</span> <span class="str">'react'</span>;</div>
+    <div class="g-resize"></div>
+    <div class="g-icon"></div>
+    <div class="g-trans"><span class="node-text"><span class="kw">import</span> { useState, useEffect } <span class="kw">from</span> <span class="str">'react'</span></span></div>
+
+    <!-- ===== ROW 2: blank ===== -->
+    <div class="g-marker"></div>
+    <div class="g-linenum">2</div>
+    <div class="g-source" style="color:#d1d5db;">&nbsp;</div>
+    <div class="g-resize"></div>
+    <div class="g-icon"></div>
+    <div class="g-trans" style="min-height:0.75rem;"></div>
+
+    <!-- ===== ROW 3-10: interface User (span 8) ===== -->
+    <div class="g-marker"></div>
+    <div class="g-linenum">3</div>
+    <div class="g-source"><span style="color:#7c3aed;">interface</span> <span style="color:#2563eb;">User</span> {</div>
+    <div class="g-resize"></div>
+    <div class="g-icon"><span class="collapse-btn">▼</span></div>
+    <div class="g-trans" style="grid-row:span 8;">
+      <div class="tree-box root" style="border-color:#a78bfa;background:#f5f3ff08;">
+        <div class="tree-box-header">
+          <span class="depth-badge d0" style="background:#ede9fe;color:#6d28d9;">D0</span>
+          <span class="node-text"><span class="kw">Interface</span> <span class="id">User</span></span>
+        </div>
+        <div class="tree-box-children">
+          <div class="tree-box d1" style="border-color:#c4b5fd;margin-left:16px;">
+            <div class="tree-box-header">
+              <span class="node-text"><span class="id">`name`</span> <span class="param">is string</span></span>
+            </div>
+          </div>
+          <div class="tree-box d1" style="border-color:#c4b5fd;margin-left:16px;">
+            <div class="tree-box-header">
+              <span class="node-text"><span class="id">`age`</span> <span class="param">is number</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 4: name property (source only, trans spanned) -->
+    <div class="g-marker"></div>
+    <div class="g-linenum">4</div>
+    <div class="g-source" style="padding-left:32px;"><span style="color:#2563eb;">name</span>: <span style="color:#059669;">string</span>;</div>
+    <div class="g-resize"></div>
+    <div class="g-icon"></div>
+
+    <!-- ROW 5: age property (source only, trans spanned) -->
+    <div class="g-marker"></div>
+    <div class="g-linenum">5</div>
+    <div class="g-source" style="padding-left:32px;"><span style="color:#2563eb;">age</span>: <span style="color:#059669;">number</span>;</div>
+    <div class="g-resize"></div>
+    <div class="g-icon"></div>
+
+    <!-- ROW 6: closing brace (source only, trans spanned) -->
+    <div class="g-marker"></div>
+    <div class="g-linenum">6</div>
+    <div class="g-source">}</div>
+    <div class="g-resize"></div>
+    <div class="g-icon"></div>
+
+    <!-- ROW 7-8: more interface (trans spanned) -->
+    <div class="g-marker"></div>
+    <div class="g-linenum">7</div>
+    <div class="g-source"><span style="color:#7c3aed;">export</span> <span style="color:#7c3aed;">type</span> <span style="color:#2563eb;">Status</span> = <span class="str">'active'</span> | <span class="str">'inactive'</span>;</div>
+    <div class="g-resize"></div>
+    <div class="g-icon"></div>
+
+    <!-- ROW 8: blank -->
+    <div class="g-marker"></div>
+    <div class="g-linenum">8</div>
+    <div class="g-source" style="color:#d1d5db;">&nbsp;</div>
+    <div class="g-resize"></div>
+    <div class="g-icon"></div>
+
+    <!-- ===== ROW 9-16: function formatUser (span 8) ===== -->
+    <div class="g-marker active"></div>
+    <div class="g-linenum">9</div>
+    <div class="g-source"><span style="color:#7c3aed;">function</span> <span style="color:#2563eb;">formatUser</span>(<span style="color:#d97706;">user</span>: <span style="color:#059669;">User</span>): <span style="color:#059669;">string</span> {</div>
+    <div class="g-resize"></div>
+    <div class="g-icon"><span class="collapse-btn">▼</span></div>
+    <div class="g-trans" style="grid-row:span 8;">
+      <div class="tree-box root">
+        <div class="tree-box-header">
+          <span class="depth-badge d0">D0</span>
+          <span class="node-text"><span class="kw">Function</span> <span class="id">formatUser</span> <span class="param">(Parameters: user)</span></span>
+        </div>
+        <div class="tree-box-children">
+
+          <!-- Variable assignment (not a box, just a row) -->
+          <div class="tree-box-header" style="margin-left:8px;border-left:2px solid #e5e7eb;padding-left:10px;">
+            <span class="node-text"><span class="kw">`prefix`</span> = <span class="kw">Ternary</span> <span class="param">user.age >= 18</span> → <span class="str">'Adult'</span> | <span class="str">'Minor'</span></span>
+          </div>
+
+          <!-- If block -->
+          <div class="tree-box d1">
+            <div class="tree-box-header">
+              <span class="depth-badge d1">D1</span>
+              <span class="node-text"><span class="kw">If</span> <span class="param">user.name.length > 0</span></span>
+            </div>
+            <div class="tree-box-children">
+              <div class="tree-box d2">
+                <div class="tree-box-header">
+                  <span class="depth-badge d2">D2</span>
+                  <span class="node-text"><span class="kw">return</span> <span class="str">`prefix`</span>: <span class="id">`user.name`</span></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bare return -->
+          <div class="tree-box-header" style="margin-left:8px;border-left:2px solid #e5e7eb;padding-left:10px;">
+            <span class="node-text"><span class="kw">return</span> <span class="str">'Anonymous'</span></span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 10: const prefix (source only, trans spanned) -->
+    <div class="g-marker"></div>
+    <div class="g-linenum">10</div>
+    <div class="g-source" style="padding-left:32px;"><span style="color:#7c3aed;">const</span> prefix = user.age >= <span style="color:#059669;">18</span> ? <span class="str">'Adult'</span> : <span class="str">'Minor'</span>;</div>
+    <div class="g-resize"></div>
+    <div class="g-icon"></div>
+
+    <!-- ROW 11: if (source only, trans spanned) -->
+    <div class="g-marker"></div>
+    <div class="g-linenum">11</div>
+    <div class="g-source" style="padding-left:32px;"><span style="color:#7c3aed;">if</span> (user.name.length > <span style="color:#059669;">0</span>) {</div>
+    <div class="g-resize"></div>
+    <div class="g-icon"></div>
+
+    <!-- ROW 12: return inside if (source only, trans spanned) -->
+    <div class="g-marker"></div>
+    <div class="g-linenum">12</div>
+    <div class="g-source" style="padding-left:48px;"><span style="color:#7c3aed;">return</span> <span class="str">`${prefix}: ${user.name}`</span>;</div>
+    <div class="g-resize"></div>
+    <div class="g-icon"></div>
+
+    <!-- ROW 13: close if  -->
+    <div class="g-marker"></div>
+    <div class="g-linenum">13</div>
+    <div class="g-source" style="padding-left:32px;">}</div>
+    <div class="g-resize"></div>
+    <div class="g-icon"></div>
+
+    <!-- ROW 14: return (source only, trans spanned) -->
+    <div class="g-marker"></div>
+    <div class="g-linenum">14</div>
+    <div class="g-source" style="padding-left:32px;"><span style="color:#7c3aed;">return</span> <span class="str">'Anonymous'</span>;</div>
+    <div class="g-resize"></div>
+    <div class="g-icon"></div>
+
+    <!-- ROW 15: close function -->
+    <div class="g-marker"></div>
+    <div class="g-linenum">15</div>
+    <div class="g-source">}</div>
+    <div class="g-resize"></div>
+    <div class="g-icon"></div>
+
+    <!-- ROW 16: blank -->
+    <div class="g-marker"></div>
+    <div class="g-linenum">16</div>
+    <div class="g-source" style="color:#d1d5db;">&nbsp;</div>
+    <div class="g-resize"></div>
+    <div class="g-icon"></div>
+
+    <!-- ===== ROW 17-22: function renderStatus (collapsed) ===== -->
+    <div class="g-marker"></div>
+    <div class="g-linenum">17</div>
+    <div class="g-source" style="color:#9ca3af;opacity:0.6;"><span style="color:#7c3aed;opacity:0.6;">function</span> <span style="color:#2563eb;opacity:0.6;">renderStatus</span>(<span style="color:#d97706;opacity:0.6;">status</span>: Status): JSX.Element {</div>
+    <div class="g-resize"></div>
+    <div class="g-icon"><span class="collapse-btn" style="color:#6b7280;">▶</span></div>
+    <div class="g-trans" style="color:#9ca3af;">
+      <div class="tree-box root collapsed" style="border-style:dashed;opacity:0.65;">
+        <div class="tree-box-header">
+          <span class="node-text"><span class="kw">Function</span> <span class="id">renderStatus</span> <span class="param">(Parameters: status)</span></span>
+          <span style="font-size:11px;color:#9ca3af;margin-left:8px;">6 lines</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 18-22: collapsed source lines -->
+    <div class="g-marker"></div>
+    <div class="g-linenum" style="color:#d1d5db;">18</div>
+    <div class="g-source" style="color:#d1d5db;opacity:0.4;">  switch (status) {</div>
+    <div class="g-resize" style="opacity:0.4;"></div>
+    <div class="g-icon"></div>
+
+    <div class="g-marker"></div>
+    <div class="g-linenum" style="color:#d1d5db;">19</div>
+    <div class="g-source" style="color:#d1d5db;opacity:0.4;">    case <span class="str">'active'</span>:</div>
+    <div class="g-resize" style="opacity:0.4;"></div>
+    <div class="g-icon"></div>
+
+    <div class="g-marker"></div>
+    <div class="g-linenum" style="color:#d1d5db;">20</div>
+    <div class="g-source" style="color:#d1d5db;opacity:0.4;">      <span style="color:#7c3aed;">return</span> <span class="str">&lt;Badge variant="success" /&gt;</span>;</div>
+    <div class="g-resize" style="opacity:0.4;"></div>
+    <div class="g-icon"></div>
+
+    <div class="g-marker"></div>
+    <div class="g-linenum" style="color:#d1d5db;">21</div>
+    <div class="g-source" style="color:#d1d5db;opacity:0.4;">    <span style="color:#7c3aed;">default</span>:</div>
+    <div class="g-resize" style="opacity:0.4;"></div>
+    <div class="g-icon"></div>
+
+    <div class="g-marker"></div>
+    <div class="g-linenum" style="color:#d1d5db;">22</div>
+    <div class="g-source" style="color:#d1d5db;opacity:0.4;">  }</div>
+    <div class="g-resize" style="opacity:0.4;"></div>
+    <div class="g-icon"></div>
+
+  </div>
+
+  <!-- ===== FOOTER ===== -->
+  <div class="mockup-note">
+    <strong>Nested Tree Boxes</strong> (replace <code>NodeLayer.tsx</code>)<br>
+    Each semantic node becomes a bordered box containing its children. Collapse toggles <code>display: none</code> on <code>.tree-box-children</code>.
+    Fixed 20px icon column keeps tree content aligned across all rows.
+  </div>
+
+  <div class="issue-list">
+    <div class="issue-card">
+      <h4>⛔ Broken vertical lines <span class="badge-fixed">FIXED</span></h4>
+      Boxes are single DOM elements — no line segments to break. A blank source line between blocks just means two adjacent boxes with no connection needed.
+    </div>
+    <div class="issue-card">
+      <h4>⛔ Wrapping not indented <span class="badge-fixed">FIXED</span></h4>
+      Text wraps inside <code>.tree-box-header</code>. The box borders naturally grow with content. No inline tree-line spans that can't expand.
+    </div>
+    <div class="issue-card">
+      <h4>⛔ Gaps between lines <span class="badge-fixed">FIXED</span></h4>
+      Children render as direct DOM children of the parent box. No spacing gaps between tree elements. Use <code>gap</code> explicitly if desired.
+    </div>
+    <div class="issue-card">
+      <h4>⛔ Icon shift alignment <span class="badge-fixed">FIXED</span></h4>
+      Icons live in a dedicated <strong>20px column</strong> (<code>grid-column: 5</code>). Every grid row has this column — even if empty. Tree content always starts at the same x position.
+    </div>
+  </div>
+
+  <div style="border-top:1px solid #e5e7eb;padding:14px 20px;font-size:12px;color:#9ca3af;display:flex;justify-content:space-between;">
+    <span>plans/mockups/nested-boxes.html</span>
+    <span>Grid: <code>6px | 48px | 1fr | 4px | 20px | 1fr</code> &nbsp;·&nbsp; Row span via <code>grid-row: span N</code></span>
+  </div>
+
+</div>
+
+</body>
+</html>

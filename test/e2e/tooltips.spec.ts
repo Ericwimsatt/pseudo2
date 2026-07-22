@@ -23,7 +23,7 @@ test.describe('cross-file tooltip @regression @p2 @ui:hover @ui:crossref', () =>
     await page.getByText('DataList.tsx', { exact: false }).first().click();
     await expect(page.locator('body')).toContainText('DataList', { timeout: 5000 });
 
-    const hoverable = page.locator('table tbody td:last-child span.cursor-help');
+    const hoverable = page.locator('[style*="grid-column: 6"] span.cursor-help');
     const calculateTotal = hoverable.filter({ hasText: /calculateTotal/ });
     if (await calculateTotal.count() > 0) {
       await calculateTotal.first().hover();
@@ -38,7 +38,7 @@ test.describe('cross-file tooltip @regression @p2 @ui:hover @ui:crossref', () =>
     await page.getByText('DataItem.tsx', { exact: false }).first().click();
     await expect(page.locator('body')).toContainText('DataItem', { timeout: 5000 });
 
-    const hoverable = page.locator('table tbody td:last-child span.cursor-help');
+    const hoverable = page.locator('[style*="grid-column: 6"] span.cursor-help');
     const dataItemType = hoverable.filter({ hasText: /DataItemType/ });
     if (await dataItemType.count() > 0) {
       await dataItemType.first().hover();
@@ -53,7 +53,7 @@ test.describe('cross-file tooltip @regression @p2 @ui:hover @ui:crossref', () =>
     await page.getByText('DataList.tsx', { exact: false }).first().click();
     await expect(page.locator('body')).toContainText('DataList', { timeout: 5000 });
 
-    const hoverable = page.locator('table tbody td:last-child span.cursor-help');
+    const hoverable = page.locator('[style*="grid-column: 6"] span.cursor-help');
     const useData = hoverable.filter({ hasText: /useData/ });
     if (await useData.count() > 0) {
       await useData.first().hover();

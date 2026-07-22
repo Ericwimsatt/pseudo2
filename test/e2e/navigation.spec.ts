@@ -126,21 +126,21 @@ test.describe('URL query param navigation', () => {
     // Navigate directly to Demo.tsx with sourceLine=8
     await loadApp(page, '#/file/Demo.tsx?sourceLine=8');
     // Line 8 is "return (" — wait for the row to be in view
-    const line8 = page.locator('tr[data-line="8"]');
+    const line8 = page.locator('[data-line="8"]');
     await expect(line8).toBeVisible();
   });
 
   test('sourceLine param shows brief highlight on the target row', async ({ page }) => {
     await loadApp(page, '#/file/Demo.tsx?sourceLine=3');
     // Line 3 is "export function Demo() {" — the row should have a flash highlight
-    const line3 = page.locator('tr[data-line="3"]');
+    const line3 = page.locator('[data-line="3"]');
     await expect(line3).toBeVisible();
   });
 
   test('transLine param scrolls to the translation for that source line', async ({ page }) => {
     await loadApp(page, '#/file/Demo.tsx?transLine=5');
     // Line 5 is "const [count, setCount] = useState(0);"
-    const line5 = page.locator('tr[data-line="5"]');
+    const line5 = page.locator('[data-line="5"]');
     await expect(line5).toBeVisible();
   });
 
@@ -238,7 +238,7 @@ test.describe('rowSpan dedup', () => {
     // "compareEnabled" on line 5 is within the rowSpan, its source should still be highlighted.
     await searchInput.fill('compareEnabled');
 
-    const line5 = page.locator('tr[data-line="5"]');
+    const line5 = page.locator('[data-line="5"]');
     const marksInLine5 = line5.locator('mark');
     await expect(marksInLine5.first()).toBeVisible();
   });

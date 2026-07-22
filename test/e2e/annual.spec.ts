@@ -44,18 +44,23 @@ async function loadAppWithFile(page: Page) {
 // Collect the rendered translation strings for a given source line number.
 async function translationTextsForLine(page: Page, lineNumber: number): Promise<string[]> {
   return page.evaluate((ln) => {
-    const rows = document.querySelectorAll('tr');
-    for (const row of rows) {
-      const cells = row.querySelectorAll('td');
-      // cell[0] is the row handle, cell[1] is the source line number
-      if (cells.length >= 2 && cells[1]?.textContent?.trim() === String(ln)) {
-        const last = cells[cells.length - 1];
-        const innerDivs = last.querySelector(':scope > div')?.querySelectorAll('div');
-        if (!innerDivs) return [];
-        return Array.from(innerDivs).map(d => d.textContent?.trim() ?? '').filter(Boolean);
+    const sourceCell = document.querySelector(`[data-line="${ln}"]`);
+    if (!sourceCell) return [];
+    const sourceStyle = sourceCell.getAttribute('style') || '';
+    const rowMatch = sourceStyle.match(/grid-area:\s*(\d+)/);
+    if (!rowMatch) return [];
+    const rowNum = rowMatch[1];
+    const allDivs = document.querySelectorAll<HTMLDivElement>('div');
+    let transCell: HTMLDivElement | null = null;
+    for (const div of allDivs) {
+      const s = div.getAttribute('style') || '';
+      if (s.startsWith(`grid-area: ${rowNum} / 6`)) {
+        transCell = div;
+        break;
       }
     }
-    return [];
+    if (!transCell) return [];
+    return transCell.innerText.split('\n').map(t => t.trim()).filter(Boolean);
   }, lineNumber);
 }
 
@@ -97,16 +102,25 @@ test.describe('AnnualSummary translation @smoke @p0 @core:translation', () => {
 
     // Indentation increases down the tree: line-2 "Function (no parameters)" is
     // more indented than the "years" variable.
-    const nodeDivs = page.locator('table tbody td:last-child > div > div');
-    const line2indent = await nodeDivs
-      .filter({ hasText: /Function \(no parameters\)/ })
-      .first()
-      .evaluate((el) => parseInt(getComputedStyle(el).paddingLeft || '0', 10));
-    const yearsIndent = await nodeDivs
-      .filter({ hasText: /`years`/ })
-      .first()
-      .evaluate((el) => parseInt(getComputedStyle(el).paddingLeft || '0', 10));
-    expect(line2indent).toBeGreaterThan(yearsIndent);
+    const line2depth = await page.evaluate(() => {
+      let maxDepth = -1;
+      for (const el of document.querySelectorAll('[style*="/ 6"] [data-tree-depth]')) {
+        if (el.textContent?.includes('Function (no parameters)')) {
+          maxDepth = Math.max(maxDepth, parseInt(el.getAttribute('data-tree-depth') || '0'));
+        }
+      }
+      return maxDepth;
+    });
+    const yearsDepth = await page.evaluate(() => {
+      let maxDepth = -1;
+      for (const el of document.querySelectorAll('[style*="/ 6"] [data-tree-depth]')) {
+        if (el.textContent?.includes('`years`')) {
+          maxDepth = Math.max(maxDepth, parseInt(el.getAttribute('data-tree-depth') || '0'));
+        }
+      }
+      return maxDepth;
+    });
+    expect(line2depth).toBeGreaterThan(yearsDepth);
 
     await page.screenshot({ path: 'test/screenshots/annual-summary.png', fullPage: true });
   });
@@ -119,7 +133,7 @@ test.describe('AnnualSummary translation @smoke @p0 @core:translation', () => {
     // No rendered translation node may contain a newline character — that is the
     // signature of the old pipeline dumping a multi-line source span verbatim.
     // (Single-line argument summaries are fine.)
-    const cellTexts = await page.locator('table tbody td:last-child div > div').allTextContents();
+    const cellTexts = await page.locator('[style*="/ 6"] div > div').allTextContents();
     expect(cellTexts.length).toBeGreaterThan(0);
     for (const t of cellTexts) {
       expect(t).not.toContain('\n');
@@ -203,7 +217,7 @@ interface Props {
 
     await expect(page.locator('body')).toContainText('Interface');
 
-    const allTexts = await page.locator('table tbody td:last-child div > div').allTextContents();
+    const allTexts = await page.locator('[style*="/ 6"] div > div').allTextContents();
     const joined = allTexts.join('\n');
 
     expect(joined).toContain('Interface Props');
@@ -251,7 +265,7 @@ interface Props {
     // The variable-assignment is present, with child function-definition.
     await expect(page.locator('body')).toContainText('`FilterBar`');
     const defTexts = await page
-      .locator('table tbody td:last-child div > div')
+      .locator('[style*="/ 6"] div > div')
       .allTextContents();
     const filtered = defTexts.map(t => t.trim()).filter(t => t.includes('Parameters:'));
     expect(filtered.length).toBeGreaterThan(0);
@@ -265,7 +279,7 @@ interface Props {
     await expect(page.locator('body')).toContainText('<SelectTrigger');
 
     // No rendered translation node contains a newline (no multi-line dumps).
-    const cellTexts = await page.locator('table tbody td:last-child div > div').allTextContents();
+    const cellTexts = await page.locator('[style*="grid-column: 6"] div > div').allTextContents();
     for (const t of cellTexts) {
       expect(t).not.toContain('\n');
     }

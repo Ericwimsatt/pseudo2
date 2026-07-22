@@ -1,0 +1,76 @@
+# Phase 4: Fix remaining type/lint/test failures
+
+## Context
+
+Phases 1-3 have been completed but there may be remaining issues:
+- TypeScript compilation errors we missed
+- Lint warnings/errors
+- Test failures in unit or integration tests
+
+This phase is a cleanup pass: run all the fast checks, fix everything that breaks, then hand off to Phase 5 for the slower E2E tests.
+
+## What to do
+
+### 1. Run all fast checks
+
+```bash
+npm run test:typecheck
+npm run test:lint
+npx vitest test/unit/core/ --reporter verbose
+npx vitest test/integration/ --reporter verbose
+```
+
+### 2. Fix TypeScript errors (`npm run test:typecheck`)
+
+Common issues to check for:
+- `LineRow` props — verify `sourcePct` was removed (it's no longer a prop) and `rowNum` was added. Check that `CodeTable.tsx` passes `rowNum={i + 1}` and doesn't pass `sourcePct`.
+- `LineRow` returns a fragment — ensure it's `<>...</>` not a `<tr>`
+- `rowRef` type — changed from `HTMLTableRowElement` to `HTMLDivElement` (since it's now on a div source cell)
+- `buildTree.ts` — verify imports work, the function is exported correctly
+- `TreeBox.tsx` — verify `TreeNode` type is imported from the correct path
+- Any missing Tailwind classes — all styles should use inline styles or existing Tailwind classes
+- `data-line` and `data-bucket` attribute placement — ensure they're on valid HTML elements
+
+### 3. Fix lint errors (`npm run test:lint`)
+
+- Remove unused imports (e.g., if `sourcePct` was removed from LineRow props, remove the import of `cx` if no longer used)
+- Fix any unused variables or parameters
+- Ensure consistent use of single/double quotes (follow existing code style)
+
+### 4. Fix test failures
+
+**Unit tests** (`npx vitest test/unit/core/`):
+These are pure function tests and should pass without changes. If they fail, the issue is likely in the source code (e.g., a changed function signature).
+
+**Integration tests** (`npx vitest test/integration/`):
+These test DOM rendering. Common failures:
+- `LineRow.integration.vitest.tsx` — the `renderRow` helper wraps `LineRow` in a mock grid. Verify it renders correctly without crashing.
+- `CodeTable.integration.vitest.tsx` — verify `[data-line]` and `[data-bucket]` selectors work
+- `tbody tr` selectors may still be used somewhere — check the full test output
+
+### 5. Run the full integration suite multiple times
+
+Some failures might be due to test order or async operations. Run:
+```bash
+npx vitest test/integration/ --reporter verbose --reporter=verbose
+```
+
+### 6. Known issues to watch for
+
+- **Fragment key warning:** Each child in a fragment needs a unique key. `LineRow` returns multiple `<div>` children — each needs a `key` prop.
+- **Grid column no match:** If a grid child's `gridColumn` doesn't match any column (1-6), it won't render. Verify all cells have `gridColumn` values 1-6.
+- **Translation cell not showing:** If `gridRow` is malformed (e.g., "span 3" vs "/ span 3"), the cell may not appear. Check the formatting of the `gridRow` string.
+- **Hover on trans cell:** If hover tooltips don't appear after the grid change, check that `StyledSpan` elements are inside the correct grid cell.
+
+## Acceptance Criteria
+
+1. `npm run test:typecheck` — zero errors
+2. `npm run test:lint` — zero warnings
+3. `npx vitest test/unit/core/` — all passing
+4. `npx vitest test/integration/` — all passing
+
+## Verification
+
+```bash
+npm run test:typecheck && npm run test:lint && npx vitest test/unit/core/ && npx vitest test/integration/
+```
