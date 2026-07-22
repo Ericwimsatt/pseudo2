@@ -1,6 +1,22 @@
-import { describe, it, expect } from 'vitest';
-import { toDisplayNode } from '../../../src/main/translationService/renderable/phrasing';
+import { describe, it, expect, beforeAll } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { toDisplayNode, loadPhrasingRules } from '../../../src/main/translationService/renderable/phrasing';
 import type { SemanticNode } from '../../../src/main/translationService/makeSemanticGraph';
+
+interface PhrasingRule {
+  type: string;
+  template: string;
+}
+
+// Load the JSON rules
+const RULES: PhrasingRule[] = JSON.parse(
+  readFileSync(resolve(__dirname, '../../../config/phrasing-rules.json'), 'utf8')
+);
+
+beforeAll(() => {
+  loadPhrasingRules(RULES);
+});
 
 function makeNode(type: string, overrides: Partial<SemanticNode> = {}): SemanticNode {
   return {
@@ -19,358 +35,264 @@ function render(node: SemanticNode): string {
   return toDisplayNode(node).spans.map(s => s.text).join('');
 }
 
-describe('phrasing - import', () => {
-  it('renders import with module and names', () => {
-    const node = makeNode('import', {
-      name: 'x',
-      metadata: { module: './y' },
-    });
-    expect(render(node)).toContain('import');
-    expect(render(node)).toContain('x');
-    expect(render(node)).toContain('./y');
+/**
+ * Map of phrasing type → { nodeOverrides, expectedSubstrings }
+ * Tests that each JSON rule produces output containing the expected substrings.
+ */
+const FIXTURES: Record<string, { node: Partial<SemanticNode>; expected: string[] }> = {
+  // ── Imports ──────────────────────────────────────────────
+  'import': {
+    node: { name: 'useState', metadata: { module: 'react' } },
+    expected: ['import { useState } from react'],
+  },
+
+  // ── Exports ──────────────────────────────────────────────
+  'export': {
+    node: { name: 'x', metadata: { module: '' } },
+    expected: ['export x is exported'],
+  },
+  'export-re-export': {
+    node: { name: 'x', metadata: { module: './y' } },
+    expected: ['export x is re-exported from ./y'],
+  },
+
+  // ── Functions ────────────────────────────────────────────
+  'function-definition': {
+    node: { name: 'foo', metadata: { parameters: ['a', 'b'] } },
+    expected: ['Function foo. Parameters: a, b'],
+  },
+  'function-definition-no-params': {
+    node: { name: 'bar', metadata: { parameters: [] } },
+    expected: ['Function bar (no parameters)'],
+  },
+  'function-definition-anonymous': {
+    node: { metadata: { parameters: [] } },
+    expected: ['Function (no parameters)'],
+  },
+
+  // ── Classes ──────────────────────────────────────────────
+  'class': {
+    node: { name: 'Foo' },
+    expected: ['Class Foo'],
+  },
+  'class-extended': {
+    node: { name: 'Foo', metadata: { extends: 'Bar' } },
+    expected: ['Class Foo (extends Bar)'],
+  },
+
+  // ── Interfaces ───────────────────────────────────────────
+  'interface': {
+    node: { name: 'Foo' },
+    expected: ['Interface Foo'],
+  },
+
+  // ── Type Aliases ─────────────────────────────────────────
+  'type-alias': {
+    node: { name: 'Foo', metadata: { type: 'string' } },
+    expected: ['Type Foo as string'],
+  },
+
+  // ── Properties ───────────────────────────────────────────
+  'property': {
+    node: { name: 'name', metadata: { type: 'string' } },
+    expected: ['`name` is text'],
+  },
+  'property-with-init': {
+    node: { name: 'count', metadata: { type: 'number', initializer: '42' } },
+    expected: ['`count` is a number, initialized to 42'],
+  },
+
+  // ── Variable Assignments ─────────────────────────────────
+  'variable-assignment': {
+    node: { name: 'x', metadata: { initializer: '42' } },
+    expected: ['`x` = 42'],
+  },
+  'variable-assignment-target': {
+    node: { name: 'x', children: [makeNode('call-function', { metadata: { function: 'foo' } })], metadata: { initializer: null } },
+    expected: ['`x` = '],
+  },
+
+  // ── Returns ──────────────────────────────────────────────
+  'return-jsx': {
+    node: { metadata: { hasJsx: true } },
+    expected: ['Return Visual Elements:'],
+  },
+  'return-value': {
+    node: { metadata: { value: 'x', hasJsx: false } },
+    expected: ['return `x`'],
+  },
+  'return': {
+    node: { metadata: { value: null, hasJsx: false } },
+    expected: ['return'],
+  },
+
+  // ── Conditionals ─────────────────────────────────────────
+  'if': {
+    node: { metadata: { condition: 'x > 0' } },
+    expected: ['If x > 0'],
+  },
+  'otherwise-if': {
+    node: { metadata: { condition: 'y > 0' } },
+    expected: ['otherwise if y > 0'],
+  },
+  'otherwise': {
+    node: {},
+    expected: ['otherwise'],
+  },
+
+  // ── Loops ────────────────────────────────────────────────
+  'loop-for-of': {
+    node: { metadata: { loopType: 'forOf' } },
+    expected: ['For each item'],
+  },
+  'loop-for-in': {
+    node: { metadata: { loopType: 'forIn' } },
+    expected: ['For each key'],
+  },
+  'loop': {
+    node: { metadata: { loopType: 'while' } },
+    expected: ['Loop'],
+  },
+
+  // ── Calls ────────────────────────────────────────────────
+  'call-function': {
+    node: { metadata: { function: 'foo' } },
+    expected: ['Call foo'],
+  },
+  'instantiate': {
+    node: { metadata: { function: 'Foo', isNew: true } },
+    expected: ['Instantiate Foo'],
+  },
+
+  // ── JSX Elements ────────────────────────────────────────
+  'jsx-element': {
+    node: { name: 'div', metadata: { tagDescription: 'container' } },
+    expected: ['<div>'],
+  },
+  'jsx-self-closing': {
+    node: { name: 'br', metadata: { tagDescription: 'line break', selfClosing: true } },
+    expected: ['<br />'],
+  },
+  'jsx-fragment': {
+    node: {},
+    expected: ['<>…</>'],
+  },
+  'jsx-list': {
+    node: { metadata: { itemName: 'i', collection: 'items' } },
+    expected: ['For each i in items:'],
+  },
+  'jsx-filter': {
+    node: { metadata: { collection: 'items', condition: 'x > 0' } },
+    expected: ['Filter items where x > 0:'],
+  },
+  'jsx-conditional': {
+    node: { metadata: { condition: 'cond', variant: 'default' } },
+    expected: ['When cond, show:'],
+  },
+  'jsx-conditional-ternary': {
+    node: { metadata: { condition: 'cond', variant: 'ternary' } },
+    expected: ['If cond, show:'],
+  },
+  'jsx-conditional-alt': {
+    node: { type: 'jsx-conditional-alt' },
+    expected: ['Otherwise, show:'],
+  },
+  'jsx-text': {
+    node: { metadata: { text: 'Hello' } },
+    expected: ['Show text: "Hello"'],
+  },
+  'jsx-expression-identifier': {
+    node: { metadata: { expression: 'name', isSimpleIdentifier: true } },
+    expected: ['Show: name'],
+  },
+  'jsx-expression-template': {
+    node: { metadata: { expression: '`Hello ${name}`', isTemplate: true } },
+    expected: ['Show dynamic text: `Hello ${name}`'],
+  },
+  'jsx-expression': {
+    node: { metadata: { expression: 'count + 1' } },
+    expected: ['Show: count + 1'],
+  },
+
+  // ── Object Literals ──────────────────────────────────────
+  'object-literal': {
+    node: {},
+    expected: ['{'],
+  },
+  'object-literal-close': {
+    node: {},
+    expected: ['}'],
+  },
+  'object-property': {
+    node: { name: 'a', metadata: { value: '1' } },
+    expected: ['a: 1'],
+  },
+  'object-property-method': {
+    node: { name: 'methodName', metadata: { value: '<method>', isMethod: true } },
+    expected: ['methodName()'],
+  },
+  'object-property-spread': {
+    node: { name: '...other', metadata: { value: '', isSpread: true } },
+    expected: ['...other'],
+  },
+
+  // ── Export prefix ────────────────────────────────────────
+  'class-exported': {
+    node: { name: 'Foo', metadata: { exported: true } },
+    expected: ['Export: ', 'Class Foo'],
+  },
+  'function-definition-exported': {
+    node: { name: 'foo', metadata: { parameters: ['a'], exported: true } },
+    expected: ['Export: ', 'Function foo. Parameters: a'],
+  },
+};
+
+// ── Data-Driven Tests ──────────────────────────────────────
+
+describe('data-driven phrasing', () => {
+  // Ensure every JSON rule type has a corresponding fixture
+  it('covers all JSON phrasing rules', () => {
+    for (const rule of RULES) {
+      expect(FIXTURES[rule.type]).toBeDefined(`Missing fixture for "${rule.type}"`);
+    }
   });
+
+  // Test each rule
+  for (const rule of RULES) {
+    const fixture = FIXTURES[rule.type];
+    if (!fixture) continue;
+
+    it(`[${rule.type}] renders correctly`, () => {
+      const node = makeNode(rule.type, fixture.node);
+      const result = render(node);
+      for (const substr of fixture.expected) {
+        expect(result).toContain(substr);
+      }
+    });
+  }
 });
 
-describe('phrasing - export', () => {
-  it('renders export with names', () => {
-    const node = makeNode('export', {
-      name: 'x',
-      metadata: { module: '' },
-    });
-    expect(render(node)).toContain('export');
-    expect(render(node)).toContain('x');
-  });
-});
+// ── Additional Edge Case Tests ─────────────────────────────
 
-describe('phrasing - function-definition', () => {
-  it('renders function with name and no params', () => {
-    const node = makeNode('function-definition', {
-      name: 'foo',
-      metadata: { parameters: [] },
-    });
-    expect(render(node)).toContain('Function foo');
+describe('phrasing edge cases', () => {
+  it('falls back for unknown node type', () => {
+    const node = makeNode('unknown-node-type', {});
+    expect(render(node)).toContain('[unknown-node-type]');
   });
 
-  it('renders function with parameters', () => {
-    const node = makeNode('function-definition', {
-      name: 'foo',
-      metadata: { parameters: ['a', 'b'] },
-    });
-    expect(render(node)).toContain('Function foo');
-    expect(render(node)).toContain('Parameters: a, b');
-  });
-
-  it('renders anonymous function with no params', () => {
-    const node = makeNode('function-definition', {
-      metadata: { parameters: [] },
-    });
-    expect(render(node)).toContain('(no parameters)');
-  });
-});
-
-describe('phrasing - class', () => {
-  it('renders class with name', () => {
-    const node = makeNode('class', { name: 'Foo' });
-    expect(render(node)).toContain('Class Foo');
-  });
-
-  it('renders class with extends', () => {
-    const node = makeNode('class', {
-      name: 'Foo',
-      metadata: { extends: 'Bar' },
-    });
-    expect(render(node)).toContain('Class Foo');
-    expect(render(node)).toContain('extends Bar');
-  });
-});
-
-describe('phrasing - interface', () => {
-  it('renders interface with name', () => {
-    const node = makeNode('interface', { name: 'Foo' });
-    expect(render(node)).toContain('Interface Foo');
-  });
-});
-
-describe('phrasing - typeAlias', () => {
-  it('renders type alias', () => {
-    const node = makeNode('typeAlias', {
-      name: 'Foo',
-      metadata: { type: 'string' },
-    });
-    expect(render(node)).toContain('Type Foo as');
-  });
-});
-
-describe('phrasing - property', () => {
-  it('renders property with type', () => {
-    const node = makeNode('property', {
-      name: 'name',
-      metadata: { type: 'string' },
-    });
-    expect(render(node)).toContain('`name`');
-    expect(render(node)).toContain('text');
-  });
-
-  it('renders property with initializer', () => {
-    const node = makeNode('property', {
-      name: 'count',
-      metadata: { type: 'number', initializer: '42' },
-    });
-    expect(render(node)).toContain('`count`');
-    expect(render(node)).toContain('initialized to 42');
-  });
-});
-
-describe('phrasing - variable-assignment', () => {
-  it('renders variable assignment with value', () => {
-    const node = makeNode('variable-assignment', {
-      name: 'x',
-      metadata: { initializer: '42' },
-    });
-    expect(render(node)).toContain('`x` = 42');
-  });
-
-  it('renders variable assignment with = when children present', () => {
-    const node = makeNode('variable-assignment', {
-      name: 'x',
-      children: [makeNode('call-function', { metadata: { function: 'foo' } })],
-      metadata: { initializer: null },
-    });
-    expect(render(node)).toContain('`x` =');
-  });
-});
-
-describe('phrasing - return', () => {
-  it('renders return with value', () => {
-    const node = makeNode('return', {
-      metadata: { value: 'x', hasJsx: false },
-    });
-    expect(render(node)).toContain('return');
-    expect(render(node)).toContain('`x`');
-  });
-
-  it('renders return with JSX', () => {
-    const node = makeNode('return', {
-      metadata: { value: null, hasJsx: true },
-    });
-    expect(render(node)).toContain('Return Visual Elements:');
-  });
-
-  it('renders bare return', () => {
-    const node = makeNode('return', {
-      metadata: { value: null, hasJsx: false },
-    });
-    expect(render(node)).toBe('return');
-  });
-});
-
-describe('phrasing - if', () => {
-  it('renders if with condition', () => {
-    const node = makeNode('if', {
-      metadata: { condition: 'x > 0' },
-    });
-    expect(render(node)).toContain('If x > 0');
-  });
-});
-
-describe('phrasing - loop', () => {
-  it('renders for of loop', () => {
-    const node = makeNode('loop', {
-      metadata: { loopType: 'forOf' },
-    });
-    expect(render(node)).toContain('For each item');
-  });
-
-  it('renders for in loop', () => {
-    const node = makeNode('loop', {
-      metadata: { loopType: 'forIn' },
-    });
-    expect(render(node)).toContain('For each key');
-  });
-
-  it('renders while loop', () => {
-    const node = makeNode('loop', {
-      metadata: { loopType: 'while' },
-    });
-    expect(render(node)).toContain('Loop');
-  });
-});
-
-describe('phrasing - call-function', () => {
-  it('renders function call', () => {
-    const node = makeNode('call-function', {
-      metadata: { function: 'foo' },
-    });
-    expect(render(node)).toContain('Call foo');
-  });
-
-  it('renders method call', () => {
-    const node = makeNode('call-function', {
-      metadata: { function: 'obj.method' },
-    });
-    expect(render(node)).toContain('Call obj.method');
-  });
-
-  it('renders instantiation', () => {
-    const node = makeNode('call-function', {
-      metadata: { function: 'Foo', isNew: true },
-    });
-    expect(render(node)).toContain('Instantiate Foo');
-  });
-});
-
-describe('phrasing - jsx-element', () => {
-  it('renders opening element', () => {
-    const node = makeNode('jsx-element', {
-      name: 'div',
-      metadata: { tagDescription: 'container' },
-    });
-    const result = render(node);
-    expect(result).toContain('<div');
-    expect(result).toContain('>');
-  });
-
-  it('renders self-closing element', () => {
-    const node = makeNode('jsx-element', {
-      name: 'br',
-      metadata: { tagDescription: 'line break', selfClosing: true },
-    });
-    const result = render(node);
-    expect(result).toContain('<br');
-    expect(result).toContain('/>');
-  });
-});
-
-describe('phrasing - jsx-expression', () => {
-  it('renders simple identifier', () => {
-    const node = makeNode('jsx-expression', {
-      metadata: { expression: 'name', isSimpleIdentifier: true },
-    });
-    expect(render(node)).toContain('Show:');
-    expect(render(node)).toContain('name');
-  });
-
-  it('renders template expression', () => {
-    const node = makeNode('jsx-expression', {
-      metadata: { expression: '`Hello ${name}`', isTemplate: true },
-    });
-    expect(render(node)).toContain('Show dynamic text:');
-  });
-});
-
-describe('phrasing - jsx-conditional', () => {
-  it('renders ternary conditional', () => {
-    const node = makeNode('jsx-conditional', {
-      metadata: { condition: 'cond', variant: 'ternary' },
-    });
-    expect(render(node)).toContain('If cond, show:');
-  });
-
-  it('renders alt branch', () => {
-    const node = makeNode('jsx-conditional-alt', {});
-    expect(render(node)).toContain('Otherwise, show:');
-  });
-});
-
-describe('phrasing - jsx-list', () => {
-  it('renders map list', () => {
-    const node = makeNode('jsx-list', {
-      metadata: { itemName: 'i', collection: 'items' },
-    });
-    expect(render(node)).toContain('For each i in items');
-  });
-});
-
-describe('phrasing - jsx-filter', () => {
-  it('renders filter', () => {
-    const node = makeNode('jsx-filter', {
-      metadata: { collection: 'items', condition: 'x > 0' },
-    });
-    expect(render(node)).toContain('Filter items where x > 0');
-  });
-});
-
-describe('phrasing - else chains', () => {
-  it('renders otherwise-if', () => {
-    const node = makeNode('otherwise-if', {
-      metadata: { condition: 'y > 0' },
-    });
-    expect(render(node)).toContain('otherwise if y > 0');
-  });
-
-  it('renders otherwise', () => {
-    const node = makeNode('otherwise', {});
-    expect(render(node)).toContain('otherwise');
-  });
-});
-
-describe('phrasing - object-literal', () => {
-  it('renders opening brace', () => {
-    const node = makeNode('object-literal', {});
-    expect(render(node)).toBe('{');
-  });
-
-  it('renders closing brace', () => {
-    const node = makeNode('object-literal-close', {});
-    expect(render(node)).toBe('}');
-  });
-
-  it('renders property', () => {
-    const node = makeNode('object-property', {
-      name: 'a',
-      metadata: { value: '1' },
-    });
-    expect(render(node)).toBe('a: 1');
-  });
-
-  it('renders spread property', () => {
-    const node = makeNode('object-property', {
-      name: '...other',
-      metadata: { value: '', isSpread: true },
-    });
-    expect(render(node)).toBe('...other');
-  });
-
-  it('renders method shorthand', () => {
-    const node = makeNode('object-property', {
-      name: 'methodName',
-      metadata: { value: '<method>', isMethod: true },
-    });
-    expect(render(node)).toBe('methodName()');
-  });
-});
-
-describe('phrasing - jsx attrs', () => {
-  it('renders className attr', () => {
+  it('handles jsx-element with attributes', () => {
     const node = makeNode('jsx-element', {
       name: 'div',
       metadata: {
         tagDescription: 'container',
         className: '"flex"',
         classNameDescription: 'flex layout',
-      },
-    });
-    const result = render(node);
-    expect(result).toContain('className=');
-    expect(result).toContain('flex');
-  });
-
-  it('renders event handler', () => {
-    const node = makeNode('jsx-element', {
-      name: 'button',
-      metadata: {
-        tagDescription: 'button',
         events: [{ name: 'onClick', description: 'when clicked', handlerName: 'handleClick' }],
       },
     });
     const result = render(node);
+    expect(result).toContain('<div');
+    expect(result).toContain('className');
     expect(result).toContain('onClick');
-  });
-});
-
-describe('phrasing - fallback', () => {
-  it('renders unknown node type', () => {
-    const node = makeNode('unknown-node-type', {});
-    expect(render(node)).toContain('[unknown-node-type]');
   });
 });

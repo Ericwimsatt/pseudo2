@@ -3,6 +3,27 @@ import type { DisplayNodeData, DisplaySpan, HoverContent } from './types';
 import { bucketForNode } from './bucket';
 import { buildHover, getKeywordTooltip, getReactHookTooltip } from './hover';
 import { translateType } from './translateType';
+import phrasingRules from '../../../../config/phrasing-rules.json';
+
+interface PhrasingRule {
+  type: string;
+  template: string;
+}
+
+let RULES: PhrasingRule[] = phrasingRules;
+
+export function loadPhrasingRules(rules: PhrasingRule[]) {
+  RULES = rules;
+}
+
+function t(type: string, vars: Record<string, string | undefined>): string {
+  const rule = RULES.find(r => r.type === type);
+  if (!rule) return `[${type}]`;
+  return rule.template.replace(/\{(\w+)\}/g, (_, key) => {
+    if (key in vars) return String(vars[key]);
+    return `{${key}}`;
+  });
+}
 
 type Phraser = (node: SemanticNode) => DisplaySpan[];
 
@@ -25,127 +46,107 @@ function exportedPrefix(node: SemanticNode): DisplaySpan[] {
 function phraseImport(node: SemanticNode): DisplaySpan[] {
   const names = String(node.name ?? '');
   const module = String(node.metadata.module ?? '');
-  return [
-    span('import { '),
-    span(names, undefined, node.refPos),
-    span(` } from `),
-    span(module, buildHover('Module', module)),
-  ];
+  const text = t('import', { names, module });
+  return [span(text)];
 }
 
 function phraseExport(node: SemanticNode): DisplaySpan[] {
   const names = String(node.name ?? '');
   const module = String(node.metadata.module ?? '');
   const verb = names.includes(',') ? 'are' : 'is';
-  const exportTooltip = getKeywordTooltip('export');
-  const spans = [span('export ', exportTooltip ?? undefined), span(names, undefined, node.refPos)];
   if (module) {
-    spans.push(span(` ${verb} re-exported from `), span(module, buildHover('Module', module)));
-  } else {
-    spans.push(span(` ${verb} exported`));
+    return [span(t('export-re-export', { names, verb, module }))];
   }
-  return spans;
+  return [span(t('export', { names, verb }))];
 }
 
 function phraseFunctionDefinition(node: SemanticNode): DisplaySpan[] {
   const params = (node.metadata.parameters as string[]) ?? [];
-  const paramText = params.length > 0 ? `Parameters: ${params.join(', ')}` : '';
-  const suffix = paramText ? `. ${paramText}` : '';
-  const nameDisplay = node.name ?? (params.length === 0 ? '(no parameters)' : 'anonymous');
-  return [
-    ...exportedPrefix(node),
-    span(`Function `),
-    span(nameDisplay, undefined, node.refPos),
-    span(suffix),
-  ];
+  if (params.length > 0) {
+    const text = t('function-definition', {
+      name: node.name ?? 'anonymous',
+      params: params.join(', '),
+    });
+    return [...exportedPrefix(node), span(text, undefined, node.refPos)];
+  }
+  if (node.name) {
+    const text = t('function-definition-no-params', { name: node.name });
+    return [...exportedPrefix(node), span(text, undefined, node.refPos)];
+  }
+  return [...exportedPrefix(node), span(t('function-definition-anonymous', {}))];
 }
 
 function phraseClass(node: SemanticNode): DisplaySpan[] {
-  const spans = [...exportedPrefix(node), span('Class '), span(node.name ?? 'anonymous', undefined, node.refPos)];
+  const name = node.name ?? 'anonymous';
   if (node.metadata.extends) {
-    spans.push(span(` (extends ${node.metadata.extends})`));
+    return [...exportedPrefix(node), span(t('class-extended', { name, extends: String(node.metadata.extends) }), undefined, node.refPos)];
   }
-  return spans;
+  return [...exportedPrefix(node), span(t('class', { name }), undefined, node.refPos)];
 }
 
 function phraseInterface(node: SemanticNode): DisplaySpan[] {
-  return [...exportedPrefix(node), span('Interface '), span(node.name ?? 'anonymous', undefined, node.refPos)];
+  return [...exportedPrefix(node), span(t('interface', { name: node.name ?? 'anonymous' }), undefined, node.refPos)];
 }
 
 function phraseTypeAlias(node: SemanticNode): DisplaySpan[] {
-  return [
-    ...exportedPrefix(node),
-    span('Type '),
-    span(node.name ?? 'anonymous', undefined, node.refPos),
-    span(' as '),
-    span(String(node.metadata.type ?? '')),
-  ];
+  return [...exportedPrefix(node), span(t('type-alias', { name: node.name ?? 'anonymous', type: String(node.metadata.type ?? '') }), undefined, node.refPos)];
 }
 
 function phraseProperty(node: SemanticNode): DisplaySpan[] {
+  const name = node.name ?? 'anonymous';
   const type = String(node.metadata.type ?? 'any');
   const init = node.metadata.initializer as string | null;
-  const spans: DisplaySpan[] = [];
-  spans.push(
-    span('`'),
-    span(node.name ?? 'anonymous', undefined, node.refPos),
-    span('` is '),
-    span(translateType(type)),
-  );
-  if (init) spans.push(span(`, initialized to ${init}`));
-  return spans;
+  if (init) {
+    return [span(t('property-with-init', { name, type: translateType(type), initializer: init }), undefined, node.refPos)];
+  }
+  return [span(t('property', { name, type: translateType(type) }), undefined, node.refPos)];
 }
 
 function phraseVariableAssignment(node: SemanticNode): DisplaySpan[] {
+  const name = node.name ?? 'anonymous';
   const init = node.metadata.initializer as string | null;
-  const spans = [
-    ...exportedPrefix(node),
-    span('`'),
-    span(node.name ?? 'anonymous', undefined, node.refPos),
-    span('`'),
-  ];
   if (init) {
-    spans.push(span(' = '), span(init));
-  } else if (node.children && node.children.length > 0) {
-    spans.push(span(' = '));
+    return [...exportedPrefix(node), span(t('variable-assignment', { name, initializer: init }), undefined, node.refPos)];
   }
-  return spans;
+  if (node.children && node.children.length > 0) {
+    return [...exportedPrefix(node), span(t('variable-assignment-target', { name }), undefined, node.refPos)];
+  }
+  return [...exportedPrefix(node), span(`\`${name}\``, undefined, node.refPos)];
 }
 
 function phraseReturn(node: SemanticNode): DisplaySpan[] {
-  if (node.metadata.hasJsx) return [span('Return Visual Elements:')];
+  if (node.metadata.hasJsx) return [span(t('return-jsx', {}))];
   const value = node.metadata.value as string | null;
-  if (value) {
-    return [span('return '), span('`'), span(value), span('`')];
-  }
-  return [span('return')];
+  if (value) return [span(t('return-value', { value }))];
+  return [span(t('return', {}))];
 }
 
 function phraseIf(node: SemanticNode): DisplaySpan[] {
-  return [span(`If ${node.metadata.condition}`)];
+  return [span(t('if', { condition: String(node.metadata.condition) }))];
 }
 
 function phraseOtherwiseIf(node: SemanticNode): DisplaySpan[] {
-  return [span(`otherwise if ${node.metadata.condition}`)];
+  return [span(t('otherwise-if', { condition: String(node.metadata.condition) }))];
 }
 
 function phraseOtherwise(): DisplaySpan[] {
-  return [span('otherwise')];
+  return [span(t('otherwise', {}))];
 }
 
 function phraseLoop(node: SemanticNode): DisplaySpan[] {
-  const t = node.metadata.loopType as string;
-  const text = t === 'forOf' ? 'For each item' : t === 'forIn' ? 'For each key' : 'Loop';
-  return [span(text)];
+  const loopType = node.metadata.loopType as string;
+  if (loopType === 'forOf') return [span(t('loop-for-of', {}))];
+  if (loopType === 'forIn') return [span(t('loop-for-in', { collection: String(node.metadata.collection ?? '') }))];
+  return [span(t('loop', {}))];
 }
 
 function phraseCallFunction(node: SemanticNode): DisplaySpan[] {
   const fn = String(node.metadata.function ?? '');
-  const verb = node.metadata.isNew ? 'Instantiate' : 'Call';
-  return [
-    span(`${verb} `),
-    span(fn, getReactHookTooltip(fn) ?? undefined, node.refPos),
-  ];
+  const tooltip = getReactHookTooltip(fn) ?? undefined;
+  if (node.metadata.isNew) {
+    return [span(t('instantiate', { function: fn }), tooltip, node.refPos)];
+  }
+  return [span(t('call-function', { function: fn }), tooltip, node.refPos)];
 }
 
 interface EventItem {
@@ -235,66 +236,51 @@ function phraseJsxElement(node: SemanticNode): DisplaySpan[] {
 }
 
 function phraseJsxFragment(): DisplaySpan[] {
-  return [span('<>'), span('…'), span('</>')];
+  return [span(t('jsx-fragment', {}))];
 }
 
 function phraseJsxList(node: SemanticNode): DisplaySpan[] {
-  return [span(`For each ${node.metadata.itemName} in ${node.metadata.collection}:`)];
+  return [span(t('jsx-list', { itemName: String(node.metadata.itemName), collection: String(node.metadata.collection) }))];
 }
 
 function phraseJsxFilter(node: SemanticNode): DisplaySpan[] {
-  return [span(`Filter ${node.metadata.collection} where ${node.metadata.condition}:`)];
+  return [span(t('jsx-filter', { collection: String(node.metadata.collection), condition: String(node.metadata.condition) }))];
 }
 
 function phraseJsxConditional(node: SemanticNode): DisplaySpan[] {
-  if (node.type === 'jsx-conditional-alt') return [span('Otherwise, show:')];
-  const text =
-    node.metadata.variant === 'ternary'
-      ? `If ${node.metadata.condition}, show:`
-      : `When ${node.metadata.condition}, show:`;
-  return [span(text)];
+  if (node.type === 'jsx-conditional-alt') return [span(t('jsx-conditional-alt', {}))];
+  if (node.metadata.variant === 'ternary') return [span(t('jsx-conditional-ternary', { condition: String(node.metadata.condition) }))];
+  return [span(t('jsx-conditional', { condition: String(node.metadata.condition) }))];
 }
 
 function phraseJsxText(node: SemanticNode): DisplaySpan[] {
-  const text = String(node.metadata.text);
-  const display = text;
-  return [span(`Show text: "${display}"`)];
+  return [span(t('jsx-text', { text: String(node.metadata.text) }))];
 }
 
 function phraseJsxExpression(node: SemanticNode): DisplaySpan[] {
-  if (node.metadata.isTemplate) {
-    return [span(`Show dynamic text: ${node.metadata.expression}`)];
-  }
+  const expr = String(node.metadata.expression);
+  if (node.metadata.isTemplate) return [span(t('jsx-expression-template', { expression: expr }))];
   if (node.metadata.isSimpleIdentifier && node.refPos !== undefined) {
-    return [
-      span(`Show: `),
-      span(String(node.metadata.expression), undefined, node.refPos),
-    ];
+    return [span(t('jsx-expression-identifier', { expression: expr }), undefined, node.refPos)];
   }
-  return [span(`Show: ${node.metadata.expression}`)];
+  return [span(t('jsx-expression', { expression: expr }))];
 }
 
 function phraseObjectLiteral(): DisplaySpan[] {
-  return [span('{')];
+  return [span(t('object-literal', {}))];
 }
 
 function phraseObjectProperty(node: SemanticNode): DisplaySpan[] {
   const name = node.name ?? '';
+  if (node.metadata.isSpread) return [span(t('object-property-spread', { name }))];
+  if (node.metadata.isMethod) return [span(t('object-property-method', { name }))];
   const value = node.metadata.value as string;
-  if (node.metadata.isSpread) {
-    return [span(name)];
-  }
-  if (node.metadata.isMethod) {
-    return [span(`${name}()`)];
-  }
-  if (value) {
-    return [span(`${name}: ${value}`)];
-  }
-  return [span(name)];
+  if (value) return [span(t('object-property', { name, value }))];
+  return [span(t('object-property', { name, value: '' }))];
 }
 
 function phraseObjectLiteralClose(): DisplaySpan[] {
-  return [span('}')];
+  return [span(t('object-literal-close', {}))];
 }
 
 function phraseFallback(node: SemanticNode): DisplaySpan[] {
@@ -304,28 +290,46 @@ function phraseFallback(node: SemanticNode): DisplaySpan[] {
 const PHRASERS: Record<string, Phraser> = {
   import: phraseImport,
   export: phraseExport,
+  'export-re-export': phraseExport,
   'function-definition': phraseFunctionDefinition,
+  'function-definition-no-params': phraseFunctionDefinition,
+  'function-definition-anonymous': phraseFunctionDefinition,
   class: phraseClass,
+  'class-extended': phraseClass,
   interface: phraseInterface,
   typeAlias: phraseTypeAlias,
+  'type-alias': phraseTypeAlias,
   property: phraseProperty,
+  'property-with-init': phraseProperty,
   'variable-assignment': phraseVariableAssignment,
+  'variable-assignment-target': phraseVariableAssignment,
   return: phraseReturn,
+  'return-jsx': phraseReturn,
+  'return-value': phraseReturn,
   if: phraseIf,
   loop: phraseLoop,
+  'loop-for-of': phraseLoop,
+  'loop-for-in': phraseLoop,
   'call-function': phraseCallFunction,
+  instantiate: phraseCallFunction,
   'jsx-element': phraseJsxElement,
+  'jsx-self-closing': phraseJsxElement,
   'jsx-fragment': phraseJsxFragment,
   'jsx-list': phraseJsxList,
   'jsx-filter': phraseJsxFilter,
   'jsx-conditional': phraseJsxConditional,
   'jsx-conditional-alt': phraseJsxConditional,
+  'jsx-conditional-ternary': phraseJsxConditional,
   'jsx-text': phraseJsxText,
   'jsx-expression': phraseJsxExpression,
+  'jsx-expression-identifier': phraseJsxExpression,
+  'jsx-expression-template': phraseJsxExpression,
   'otherwise-if': phraseOtherwiseIf,
   otherwise: phraseOtherwise,
   'object-literal': phraseObjectLiteral,
   'object-property': phraseObjectProperty,
+  'object-property-method': phraseObjectProperty,
+  'object-property-spread': phraseObjectProperty,
   'object-literal-close': phraseObjectLiteralClose,
 };
 

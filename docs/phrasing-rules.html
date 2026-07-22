@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pseudo Phrasing Rules</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; background: #fafafa; }
+  h1 { color: #333; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+  .info { color: #666; font-size: 0.9em; margin-bottom: 20px; }
+  table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  th { background: #1e293b; color: white; padding: 12px 16px; text-align: left; font-weight: 600; }
+  td { padding: 10px 16px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+  tr:hover td { background: #f1f5f9; }
+  code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; color: #334155; }
+  td code { background: #f8fafc; }
+  th:first-child { width: 180px; }
+  th:nth-child(2) { width: 250px; }
+  th:nth-child(3) { width: 350px; }
+</style>
+</head>
+<body>
+<h1>Pseudo Phrasing Rules</h1>
+<p class="info">Source: <code>config/phrasing-rules.json</code> &mdash; Last generated: 2026-07-22T17:54:35.683Z</p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Example</th>
+      <th>Rule (Template)</th>
+      <th>Example Translation</th>
+    </tr>
+  </thead>
+  <tbody>
+
+      <tr>
+        <td><code>import</code></td>
+        <td><code>import { useState } from 'react'</code></td>
+        <td><code>import { {names} } from {module}</code></td>
+        <td>import { useState } from react</td>
+      </tr>
+
+      <tr>
+        <td><code>export</code></td>
+        <td><code>export { x }</code></td>
+        <td><code>export {names} {verb} exported</code></td>
+        <td>export x is exported</td>
+      </tr>
+
+      <tr>
+        <td><code>export-re-export</code></td>
+        <td><code>export { x } from './y'</code></td>
+        <td><code>export {names} {verb} re-exported from {module}</code></td>
+        <td>export x is re-exported from ./y</td>
+      </tr>
+
+      <tr>
+        <td><code>function-definition</code></td>
+        <td><code>function greet(name: string)</code></td>
+        <td><code>Function {name}. Parameters: {params}</code></td>
+        <td>Function greet. Parameters: name</td>
+      </tr>
+
+      <tr>
+        <td><code>function-definition-no-params</code></td>
+        <td><code>function bar()</code></td>
+        <td><code>Function {name} (no parameters)</code></td>
+        <td>Function bar (no parameters)</td>
+      </tr>
+
+      <tr>
+        <td><code>function-definition-anonymous</code></td>
+        <td><code>function() {}</code></td>
+        <td><code>Function (no parameters)</code></td>
+        <td>Function (no parameters)</td>
+      </tr>
+
+      <tr>
+        <td><code>class</code></td>
+        <td><code>class Foo</code></td>
+        <td><code>Class {name}</code></td>
+        <td>Class Foo</td>
+      </tr>
+
+      <tr>
+        <td><code>class-extended</code></td>
+        <td><code>class Foo extends Bar</code></td>
+        <td><code>Class {name} (extends {extends})</code></td>
+        <td>Class Foo (extends Bar)</td>
+      </tr>
+
+      <tr>
+        <td><code>interface</code></td>
+        <td><code>interface Foo</code></td>
+        <td><code>Interface {name}</code></td>
+        <td>Interface Foo</td>
+      </tr>
+
+      <tr>
+        <td><code>type-alias</code></td>
+        <td><code>type Foo = string</code></td>
+        <td><code>Type {name} as {type}</code></td>
+        <td>Type Foo as string</td>
+      </tr>
+
+      <tr>
+        <td><code>property</code></td>
+        <td><code>name: string</code></td>
+        <td><code>`{name}` is {type}</code></td>
+        <td>`name` is text</td>
+      </tr>
+
+      <tr>
+        <td><code>property-with-init</code></td>
+        <td><code>count: number = 42</code></td>
+        <td><code>`{name}` is {type}, initialized to {initializer}</code></td>
+        <td>`count` is a number, initialized to 42</td>
+      </tr>
+
+      <tr>
+        <td><code>variable-assignment</code></td>
+        <td><code>const x = 42</code></td>
+        <td><code>`{name}` = {initializer}</code></td>
+        <td>`x` = 42</td>
+      </tr>
+
+      <tr>
+        <td><code>variable-assignment-target</code></td>
+        <td><code>let x; x =</code></td>
+        <td><code>`{name}` = </code></td>
+        <td>`x` = </td>
+      </tr>
+
+      <tr>
+        <td><code>return-jsx</code></td>
+        <td><code>return (&lt;div/&gt;)</code></td>
+        <td><code>Return Visual Elements:</code></td>
+        <td>Return Visual Elements:</td>
+      </tr>
+
+      <tr>
+        <td><code>return-value</code></td>
+        <td><code>return x</code></td>
+        <td><code>return `{value}`</code></td>
+        <td>return `x`</td>
+      </tr>
+
+      <tr>
+        <td><code>return</code></td>
+        <td><code>return;</code></td>
+        <td><code>return</code></td>
+        <td>return</td>
+      </tr>
+
+      <tr>
+        <td><code>if</code></td>
+        <td><code>if (x &gt; 0)</code></td>
+        <td><code>If {condition}</code></td>
+        <td>If x &gt; 0</td>
+      </tr>
+
+      <tr>
+        <td><code>otherwise-if</code></td>
+        <td><code>else if (y &gt; 0)</code></td>
+        <td><code>otherwise if {condition}</code></td>
+        <td>otherwise if y &gt; 0</td>
+      </tr>
+
+      <tr>
+        <td><code>otherwise</code></td>
+        <td><code>else</code></td>
+        <td><code>otherwise</code></td>
+        <td>otherwise</td>
+      </tr>
+
+      <tr>
+        <td><code>loop-for-of</code></td>
+        <td><code>for (const x of items)</code></td>
+        <td><code>For each item</code></td>
+        <td>For each item</td>
+      </tr>
+
+      <tr>
+        <td><code>loop-for-in</code></td>
+        <td><code>for (const k in obj)</code></td>
+        <td><code>For each key</code></td>
+        <td>For each key</td>
+      </tr>
+
+      <tr>
+        <td><code>loop</code></td>
+        <td><code>while (true)</code></td>
+        <td><code>Loop</code></td>
+        <td>Loop</td>
+      </tr>
+
+      <tr>
+        <td><code>call-function</code></td>
+        <td><code>foo()</code></td>
+        <td><code>Call {function}</code></td>
+        <td>Call foo</td>
+      </tr>
+
+      <tr>
+        <td><code>instantiate</code></td>
+        <td><code>new Foo()</code></td>
+        <td><code>Instantiate {function}</code></td>
+        <td>Instantiate Foo</td>
+      </tr>
+
+      <tr>
+        <td><code>jsx-element</code></td>
+        <td><code>&lt;div&gt;...&lt;/div&gt;</code></td>
+        <td><code>&lt;{name}&gt;</code></td>
+        <td>&lt;div&gt;</td>
+      </tr>
+
+      <tr>
+        <td><code>jsx-self-closing</code></td>
+        <td><code>&lt;br /&gt;</code></td>
+        <td><code>&lt;{name} /&gt;</code></td>
+        <td>&lt;br /&gt;</td>
+      </tr>
+
+      <tr>
+        <td><code>jsx-fragment</code></td>
+        <td><code>&lt;&gt;...&lt;/&gt;</code></td>
+        <td><code>&lt;&gt;…&lt;/&gt;</code></td>
+        <td>&lt;&gt;…&lt;/&gt;</td>
+      </tr>
+
+      <tr>
+        <td><code>jsx-list</code></td>
+        <td><code>{items.map(i =&gt; &lt;li/&gt;)}</code></td>
+        <td><code>For each {itemName} in {collection}:</code></td>
+        <td>For each i in items:</td>
+      </tr>
+
+      <tr>
+        <td><code>jsx-filter</code></td>
+        <td><code>{items.filter(x =&gt; x &gt; 0)}</code></td>
+        <td><code>Filter {collection} where {condition}:</code></td>
+        <td>Filter items where x &gt; 0:</td>
+      </tr>
+
+      <tr>
+        <td><code>jsx-conditional</code></td>
+        <td><code>{cond &amp;&amp; &lt;div/&gt;}</code></td>
+        <td><code>When {condition}, show:</code></td>
+        <td>When cond, show:</td>
+      </tr>
+
+      <tr>
+        <td><code>jsx-conditional-ternary</code></td>
+        <td><code>{cond ? &lt;A/&gt; : &lt;B/&gt;}</code></td>
+        <td><code>If {condition}, show:</code></td>
+        <td>If cond, show:</td>
+      </tr>
+
+      <tr>
+        <td><code>jsx-conditional-alt</code></td>
+        <td><code>{elseBranch}</code></td>
+        <td><code>Otherwise, show:</code></td>
+        <td>Otherwise, show:</td>
+      </tr>
+
+      <tr>
+        <td><code>jsx-text</code></td>
+        <td><code>&lt;div&gt;Hello&lt;/div&gt;</code></td>
+        <td><code>Show text: "{text}"</code></td>
+        <td>Show text: "Hello"</td>
+      </tr>
+
+      <tr>
+        <td><code>jsx-expression-identifier</code></td>
+        <td><code>{name}</code></td>
+        <td><code>Show: {expression}</code></td>
+        <td>Show: name</td>
+      </tr>
+
+      <tr>
+        <td><code>jsx-expression-template</code></td>
+        <td><code>{`Hello ${n}`}</code></td>
+        <td><code>Show dynamic text: {expression}</code></td>
+        <td>Show dynamic text: `Hello ${n}`</td>
+      </tr>
+
+      <tr>
+        <td><code>jsx-expression</code></td>
+        <td><code>{count + 1}</code></td>
+        <td><code>Show: {expression}</code></td>
+        <td>Show: count + 1</td>
+      </tr>
+
+      <tr>
+        <td><code>object-literal</code></td>
+        <td><code>const obj = {</code></td>
+        <td><code>{</code></td>
+        <td>{</td>
+      </tr>
+
+      <tr>
+        <td><code>object-literal-close</code></td>
+        <td><code>}</code></td>
+        <td><code>}</code></td>
+        <td>}</td>
+      </tr>
+
+      <tr>
+        <td><code>object-property</code></td>
+        <td><code>a: 1</code></td>
+        <td><code>{name}: {value}</code></td>
+        <td>a: 1</td>
+      </tr>
+
+      <tr>
+        <td><code>object-property-method</code></td>
+        <td><code>foo() { ... }</code></td>
+        <td><code>{name}()</code></td>
+        <td>foo()</td>
+      </tr>
+
+      <tr>
+        <td><code>object-property-spread</code></td>
+        <td><code>...other</code></td>
+        <td><code>{name}</code></td>
+        <td>...other</td>
+      </tr>
+  </tbody>
+</table>
+</body>
+</html>
