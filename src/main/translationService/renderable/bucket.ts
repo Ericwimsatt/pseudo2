@@ -27,6 +27,9 @@ export const TYPE_TO_BUCKET: Record<string, NodeBucket> = {
   'object-literal': 'standard',
   'object-property': 'standard',
   'object-literal-close': 'standard',
+  'ternary-condition': 'standard',
+  'ternary-otherwise': 'standard',
+  'ternary-value': 'standard',
 };
 
 export const BUCKET_PRIORITY: NodeBucket[] = [

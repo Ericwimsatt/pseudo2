@@ -1,6 +1,7 @@
 import type { SemanticNode } from '../makeSemanticGraph';
 import type {
   DisplayNodeData,
+  DisplaySpan,
   LineRenderable,
   ViewModel,
   NodeBucket,
@@ -52,9 +53,26 @@ function distributeNode(
   const endIdx = node.sourceEndLine - 1;
 
   if (!shouldBox(node)) {
-    const idx = startIdx;
-    if (idx >= 0 && idx < fragments.length && !fragments[idx].contentNode) {
-      fragments[idx].contentNode = node;
+    if (startIdx === endIdx) {
+      const idx = startIdx;
+      if (idx >= 0 && idx < fragments.length && !fragments[idx].contentNode) {
+        fragments[idx].contentNode = node;
+      }
+    } else {
+      for (let i = startIdx; i <= endIdx; i++) {
+        if (i < 0 || i >= fragments.length) continue;
+        const isStart = i === startIdx;
+        const isEnd = i === endIdx;
+        const role: 'start' | 'continue' | 'end' | 'single' =
+          isStart && isEnd ? 'single'
+          : isStart ? 'start'
+          : isEnd ? 'end'
+          : 'continue';
+        fragments[i].layers.push({ depth, bucket: node.bucket, borderRole: role });
+      }
+      if (startIdx >= 0 && startIdx < fragments.length && !fragments[startIdx].contentNode) {
+        fragments[startIdx].contentNode = node;
+      }
     }
     return;
   }
@@ -84,8 +102,28 @@ function distributeNode(
     const lineNum = i + 1;
     const childrenOnLine = childrenByLine.get(lineNum) || [];
 
-    if (childrenOnLine.length > 0) {
-      fragments[i].contentNode = childrenOnLine[0];
+    if (childrenOnLine.length > 0 && endIdx > startIdx) {
+      if (i === startIdx) {
+        const mergedSpans: DisplaySpan[] = [...node.spans, { text: ' ' }, ...childrenOnLine[0].spans];
+        fragments[i].contentNode = {
+          ...node,
+          spans: mergedSpans,
+          children: [],
+        };
+      } else {
+        fragments[i].contentNode = childrenOnLine[0];
+      }
+    } else if (childrenOnLine.length > 0 && endIdx === startIdx) {
+      const mergedSpans: DisplaySpan[] = [...node.spans];
+      for (const child of childrenOnLine) {
+        mergedSpans.push({ text: '\n' });
+        mergedSpans.push(...child.spans);
+      }
+      fragments[i].contentNode = {
+        ...node,
+        spans: mergedSpans,
+        children: [],
+      };
     } else if (i === startIdx && !fragments[i].contentNode) {
       fragments[i].contentNode = node;
     }

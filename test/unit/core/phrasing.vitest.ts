@@ -125,6 +125,10 @@ const FIXTURES: Record<string, { node: Partial<SemanticNode>; expected: string[]
     node: { metadata: { value: null, hasJsx: false } },
     expected: ['return'],
   },
+  'return-target': {
+    node: { metadata: { value: null, hasJsx: false }, children: [makeNode('call-function', { metadata: { function: 'foo' } })] },
+    expected: ['return:'],
+  },
 
   // ── Conditionals ─────────────────────────────────────────
   'if': {
@@ -138,6 +142,20 @@ const FIXTURES: Record<string, { node: Partial<SemanticNode>; expected: string[]
   'otherwise': {
     node: {},
     expected: ['otherwise,'],
+  },
+
+  // ── Ternary ─────────────────────────────────────────────
+  'ternary-condition': {
+    node: { metadata: { condition: 'reverse' } },
+    expected: ['If reverse:'],
+  },
+  'ternary-otherwise': {
+    node: {},
+    expected: ['otherwise:'],
+  },
+  'ternary-value': {
+    node: { metadata: { value: 'current <= target' } },
+    expected: ['current <= target'],
   },
 
   // ── Loops ────────────────────────────────────────────────

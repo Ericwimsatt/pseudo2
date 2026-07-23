@@ -5,6 +5,7 @@ import type {
   CallExpression,
   CaseClause,
   ClassDeclaration,
+  ConditionalExpression,
   DefaultClause,
   DoStatement,
   ExportDeclaration,
@@ -333,7 +334,15 @@ function processVariableDeclaration(
 ): SemanticNode[] {
   const name = decl.getName();
   const initializer = decl.getInitializer();
-  const children = initializer ? processExpression(initializer, indent + 1) : [];
+  const children: SemanticNode[] = [];
+  if (initializer) {
+    const unwrapped = unwrapExpression(initializer);
+    if (Node.isArrowFunction(unwrapped)) {
+      children.push(processFunctionDefinition(unwrapped, indent + 1, name));
+    } else {
+      children.push(...processExpression(initializer, indent + 1));
+    }
+  }
   const initText = children.length > 0 ? null : (initializer ? truncate(initializer.getText()) : null);
   return [makeNodeFromAst('variable-assignment', name, decl, indent, {
     type: (decl.getTypeNode()?.getText() ?? decl.getType().getText()) || 'any',
@@ -529,6 +538,27 @@ function processExpressionStatement(node: ExpressionStatement, indent: number): 
   return processExpression(expr, indent);
 }
 
+function processTernaryExpression(expr: ConditionalExpression, indent: number): SemanticNode[] {
+  const condition = truncate(expr.getCondition().getText());
+  const trueExpr = expr.getWhenTrue();
+  const falseExpr = expr.getWhenFalse();
+
+  const trueNode = makeNodeFromAst('ternary-value', undefined, trueExpr, indent + 1, {
+    value: truncate(trueExpr.getText()),
+  });
+  const falseNode = makeNodeFromAst('ternary-value', undefined, falseExpr, indent + 1, {
+    value: truncate(falseExpr.getText()),
+  });
+
+  const conditionNode = makeNodeFromAst('ternary-condition', undefined, expr, indent, {
+    condition,
+  }, [trueNode]);
+
+  const otherwiseNode = makeNodeFromAst('ternary-otherwise', undefined, expr, indent, {}, [falseNode]);
+
+  return [conditionNode, otherwiseNode];
+}
+
 function processExpression(expr: Node, indent: number): SemanticNode[] {
   const unwrapped = unwrapExpression(expr);
   if (isJsxNode(unwrapped)) {
@@ -545,6 +575,26 @@ function processExpression(expr: Node, indent: number): SemanticNode[] {
   if (Node.isObjectLiteralExpression(unwrapped)) {
     const { open, properties, close } = processObjectLiteral(unwrapped, indent);
     return [open, ...properties, close];
+  }
+  if (Node.isConditionalExpression(unwrapped)) {
+    return processTernaryExpression(unwrapped, indent);
+  }
+  if (Node.isBinaryExpression(unwrapped)) {
+    const op = unwrapped.getOperatorToken().getText();
+    if (op === '=') {
+      const left = unwrapped.getLeft();
+      const right = unwrapped.getRight();
+      if (Node.isIdentifier(left)) {
+        const name = left.getText();
+        const children = processExpression(right, indent + 1);
+        const initText = children.length > 0 ? null : truncate(right.getText());
+        return [makeNodeFromAst('variable-assignment', name, unwrapped, indent, {
+          type: 'any',
+          initializer: initText,
+        }, children, left.getStart())];
+      }
+    }
+    return [];
   }
   return [];
 }

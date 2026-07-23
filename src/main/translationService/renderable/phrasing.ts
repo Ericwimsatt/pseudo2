@@ -151,6 +151,7 @@ function phraseReturn(node: SemanticNode): DisplaySpan[] {
   if (node.metadata.hasJsx) return [span(t('return-jsx', {}))];
   const value = node.metadata.value as string | null;
   if (value) return [span(t('return-value', { value }))];
+  if (node.children.length > 0) return [span(t('return-target', {}))];
   return [span(t('return', {}))];
 }
 
@@ -300,6 +301,18 @@ function phraseJsxExpression(node: SemanticNode): DisplaySpan[] {
   return [span(t('jsx-expression', { expression: expr }))];
 }
 
+function phraseTernaryCondition(node: SemanticNode): DisplaySpan[] {
+  return [span(t('ternary-condition', { condition: String(node.metadata.condition) }))];
+}
+
+function phraseTernaryOtherwise(): DisplaySpan[] {
+  return [span(t('ternary-otherwise', {}))];
+}
+
+function phraseTernaryValue(node: SemanticNode): DisplaySpan[] {
+  return [span(t('ternary-value', { value: String(node.metadata.value) }))];
+}
+
 function phraseObjectLiteral(): DisplaySpan[] {
   return [span(t('object-literal', {}))];
 }
@@ -340,6 +353,7 @@ const PHRASERS: Record<string, Phraser> = {
   return: phraseReturn,
   'return-jsx': phraseReturn,
   'return-value': phraseReturn,
+  'return-target': phraseReturn,
   if: phraseIf,
   loop: phraseLoop,
   'loop-for-of': phraseLoop,
@@ -351,6 +365,9 @@ const PHRASERS: Record<string, Phraser> = {
   'jsx-fragment': phraseJsxFragment,
   'jsx-list': phraseJsxList,
   'jsx-filter': phraseJsxFilter,
+  'ternary-condition': phraseTernaryCondition,
+  'ternary-otherwise': phraseTernaryOtherwise,
+  'ternary-value': phraseTernaryValue,
   'jsx-conditional': phraseJsxConditional,
   'jsx-conditional-alt': phraseJsxConditional,
   'jsx-conditional-ternary': phraseJsxConditional,
