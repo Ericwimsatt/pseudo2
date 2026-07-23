@@ -599,6 +599,41 @@ function processExpression(expr: Node, indent: number): SemanticNode[] {
   return [];
 }
 
+function resolveCallParameterNames(
+  callee: Node,
+  argCount: number,
+): (string | null)[] {
+  try {
+    const symbol = callee.getSymbol?.();
+    if (!symbol) return [];
+    const declarations = symbol.getDeclarations();
+    if (declarations.length === 0) return [];
+
+    for (const decl of declarations) {
+      let params: ParameterDeclaration[] | undefined;
+
+      if (Node.isFunctionDeclaration(decl) || Node.isMethodDeclaration(decl) ||
+          Node.isFunctionExpression(decl) || Node.isArrowFunction(decl)) {
+        params = decl.getParameters();
+      } else if (Node.isVariableDeclaration(decl)) {
+        const init = decl.getInitializer();
+        if (init && (Node.isFunctionExpression(init) || Node.isArrowFunction(init))) {
+          params = init.getParameters();
+        }
+      }
+
+      if (params) {
+        return Array.from({ length: argCount }, (_, i) =>
+          i < params.length ? summarizeParamName(params[i]) : null,
+        );
+      }
+    }
+  } catch {
+    // fallback
+  }
+  return [];
+}
+
 function processCallFunction(
   node: CallExpression | NewExpression,
   indent: number,
@@ -607,10 +642,11 @@ function processCallFunction(
   const callee = node.getExpression();
   const args = node.getArguments() ?? [];
   const children: SemanticNode[] = [];
+  const paramNames = resolveCallParameterNames(callee, args.length);
 
   args.forEach((arg, i) => {
     const unwrapped = unwrapExpression(arg);
-    const paramName = `param_${i + 1}`;
+    const paramName = paramNames[i] ?? `param_${i + 1}`;
     if (Node.isIdentifier(unwrapped) || Node.isLiteralExpression(unwrapped)) {
       children.push(makeNodeFromAst('variable-assignment', paramName, arg, indent + 1, {
         initializer: truncate(arg.getText()),

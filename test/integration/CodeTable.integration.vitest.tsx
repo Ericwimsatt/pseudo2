@@ -116,4 +116,35 @@ export function Counter() {
     const rows = document.querySelectorAll('[data-bucket]');
     expect(rows.length).toBeGreaterThan(0);
   });
+
+  it('uses real parameter names from same-file function definition', () => {
+    const source = `function add(a: number, b: number) {
+  return a + b;
+}
+const result = add(3, 4);
+`;
+    const { viewModel } = buildFileData(source, 'test.ts');
+    render(<CodeTable viewModel={viewModel} fileName="test.ts" />);
+    const body = document.body.textContent!;
+    expect(body).toContain('`a` = 3');
+    expect(body).toContain('`b` = 4');
+  });
+
+  it('uses real parameter names for built-in functions', () => {
+    const source = `const id = setTimeout(handler, 100);\n`;
+    const { viewModel } = buildFileData(source, 'test.ts');
+    render(<CodeTable viewModel={viewModel} fileName="test.ts" />);
+    const body = document.body.textContent!;
+    expect(body).toContain('`handler` =');
+    expect(body).toContain('`timeout` = 100');
+  });
+
+  it('falls back to param_X for unresolvable function calls', () => {
+    const source = `foo(a, b);\n`;
+    const { viewModel } = buildFileData(source, 'test.ts');
+    render(<CodeTable viewModel={viewModel} fileName="test.ts" />);
+    const body = document.body.textContent!;
+    expect(body).toContain('`param_1` = a');
+    expect(body).toContain('`param_2` = b');
+  });
 });
