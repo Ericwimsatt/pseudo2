@@ -1,5 +1,6 @@
 import type { EnrichQuery, QueryAnswer, SnippetLine, TooltipSection } from '../translationService/renderable/types';
 import { getCache } from '../translationService/cache/projectCache';
+import { getReactHookTooltip, getKeywordTooltip } from '../translationService/renderable/hover';
 
 function extractSnippet(lines: { lineNumber: number; sourceText: string; nodes: import('../translationService/renderable/types').DisplayNodeData[] }[], anchorLine: number): SnippetLine[] {
   const snippet: SnippetLine[] = [];
@@ -18,6 +19,20 @@ function extractSnippet(lines: { lineNumber: number; sourceText: string; nodes: 
 }
 
 export function getNodeDetail(arg: { filePath: string; query: EnrichQuery }): QueryAnswer {
+  const { identifier } = arg.query;
+
+  // Static fallback: React hooks, keywords
+  if (identifier) {
+    const hook = getReactHookTooltip(identifier);
+    if (hook) {
+      return { title: hook.title, body: hook.body, sections: [] };
+    }
+    const keyword = getKeywordTooltip(identifier);
+    if (keyword) {
+      return { title: keyword.title, body: keyword.body, sections: [] };
+    }
+  }
+
   const cache = getCache(arg.filePath);
   if (!cache) {
     return { sections: [] };

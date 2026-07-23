@@ -36,7 +36,7 @@ export interface ApiInvoke {
     return: { path: string; viewModel: ViewModel };
   };
   getNodeDetail: {
-    arg: { filePath: string; query: EnrichQuery };
+    arg: { filePath: string; query: EnrichQuery & { identifier?: string } };
     return: QueryAnswer;
   };
   browseDirectory: {

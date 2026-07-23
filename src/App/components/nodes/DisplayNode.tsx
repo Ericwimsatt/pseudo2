@@ -5,7 +5,7 @@ export function DisplayNode({ node }: { node: DisplayNodeData }) {
   return (
     <>
       {node.spans.map((s, i) => (
-        <StyledSpan key={i} text={s.text} hover={s.hover} refPos={s.refPos} />
+        <StyledSpan key={i} text={s.text} refPos={s.refPos} />
       ))}
     </>
   );
