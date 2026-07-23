@@ -1,9 +1,9 @@
 import type { LineRenderable } from '../../main/translationService/renderable/types';
 import { BUCKET_LABELS } from '../../main/translationService/renderable/bucket';
 import { cx } from './nodes/styleHelpers';
-import { NodeLayer } from './nodes/NodeLayer';
+import { BoxFragment } from './nodes/BoxFragment';
 import { SearchContext } from '../lib/searchContext';
-import { useRef, useEffect, useState, useMemo } from 'react';
+import { useRef, useMemo } from 'react';
 
 interface SearchMatch {
   lineIndex: number;
@@ -15,15 +15,12 @@ interface Props {
   rowNum: number;
   line: LineRenderable;
   lineIndex: number;
-  bucketStyle: string;
   isInterface: boolean;
   onResizeStart: (e: React.MouseEvent) => void;
   searchTerm?: string;
   searchMatches?: SearchMatch[];
   activeMatchIndex?: number;
   navVar?: string;
-  isNavHighlight?: boolean;
-  parentRowIndex?: number | null;
 }
 
 function highlightSourceText(text: string, term: string, isActive: boolean) {
@@ -65,29 +62,16 @@ export function LineRow({
   rowNum,
   line,
   lineIndex,
-  bucketStyle,
   isInterface,
   onResizeStart,
   searchTerm,
   searchMatches,
   activeMatchIndex,
   navVar,
-  isNavHighlight,
-  parentRowIndex,
 }: Props) {
   const lineRef = useRef<HTMLDivElement>(null);
-  const [flash, setFlash] = useState(false);
 
-  useEffect(() => {
-    if (isNavHighlight && lineRef.current) {
-      setFlash(true);
-      const timer = setTimeout(() => setFlash(false), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [isNavHighlight]);
-
-  const showTranslation = !line.skipTranslation && line.nodes.length > 0;
-  const rowSpan = line.translationRowSpan;
+  const showTranslation = line.boxFragment !== null;
 
   const effectiveSearchTerm = searchTerm || navVar || '';
 
@@ -100,17 +84,10 @@ export function LineRow({
     ) ?? -1;
   }
 
-  function parentTransMatchActive(): boolean {
-    if (parentRowIndex == null || parentRowIndex < 0) return false;
-    const idx = matchIndexForLine(parentRowIndex, true);
-    return idx >= 0 && idx === activeMatchIndex;
-  }
-
   const isActiveSource = (() => {
     if (!searchTerm) return false;
     const idx = matchIndexForLine(lineIndex, false);
-    if (idx >= 0) return idx === activeMatchIndex;
-    return parentTransMatchActive();
+    return idx >= 0 && idx === activeMatchIndex;
   })();
 
   const searchCtxValue = useMemo(() => {
@@ -120,13 +97,9 @@ export function LineRow({
     if (searchTerm) {
       const myIdx = searchMatches?.findIndex((m) => m.lineIndex === lineIndex && m.inTranslation) ?? -1;
       isActive = myIdx === activeMatchIndex;
-      if (!isActive && parentRowIndex != null && parentRowIndex >= 0) {
-        const parentIdx = searchMatches?.findIndex((m) => m.lineIndex === parentRowIndex && m.inTranslation) ?? -1;
-        isActive = parentIdx === activeMatchIndex;
-      }
     }
     return { term, isActiveMatch: isActive };
-  }, [effectiveSearchTerm, searchTerm, searchMatches, lineIndex, activeMatchIndex, parentRowIndex]);
+  }, [effectiveSearchTerm, searchTerm, searchMatches, lineIndex, activeMatchIndex]);
 
   return (
     <>
@@ -142,11 +115,7 @@ export function LineRow({
       </div>
       <div
         ref={lineRef}
-        className={cx(
-          'py-1 border-r border-gray-200 hover:bg-gray-50/40 transition-colors',
-          bucketStyle,
-          flash && 'animate-pulse bg-yellow-50'
-        )}
+        className="py-1 border-r border-gray-200 hover:bg-gray-50/40 transition-colors"
         style={{ gridRow: rowNum, gridColumn: 3 }}
         data-bucket={BUCKET_LABELS[line.bucket]}
         data-line={line.lineNumber}
@@ -168,12 +137,9 @@ export function LineRow({
       />
       <div style={{ gridRow: rowNum, gridColumn: 5 }} />
       {showTranslation && (
-        <div
-          className="px-4 py-1 align-top"
-          style={{ gridRow: `${rowNum} / span ${rowSpan || 1}`, gridColumn: 6 }}
-        >
+        <div style={{ gridRow: rowNum, gridColumn: 6 }}>
           <SearchContext.Provider value={searchCtxValue}>
-            <NodeLayer nodes={line.nodes} />
+            <BoxFragment fragment={line.boxFragment!} />
           </SearchContext.Provider>
         </div>
       )}

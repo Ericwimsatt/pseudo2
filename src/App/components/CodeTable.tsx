@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import type { DisplayNodeData, LineRenderable, ViewModel } from '../../main/translationService/renderable/types';
-import { BUCKET_STYLES } from '../../main/translationService/renderable/bucket';
+
 import { HoverProvider } from './hover/HoverContext';
 import { LineRow } from './LineRow';
 import { HoverPopover } from './hover/HoverPopover';
@@ -20,64 +20,17 @@ export interface SearchMatch {
   inTranslation: boolean;
 }
 
-export function parentIndices(lines: LineRenderable[]): (number | null)[] {
-  const result: (number | null)[] = new Array(lines.length).fill(null);
-  for (let i = 0; i < lines.length; i++) {
-    const rs = lines[i].translationRowSpan;
-    if (rs) {
-      for (let k = i + 1; k < i + rs && k < lines.length; k++) {
-        result[k] = i;
-      }
-    }
-  }
-  return result;
-}
-
-export function dedupMatches(lines: LineRenderable[], matches: SearchMatch[], lowerTerm: string): SearchMatch[] {
-  const parentMap = parentIndices(lines);
-  const merged = new Map<number, SearchMatch>();
-
-  for (const m of matches) {
-    const parentIdx = parentMap[m.lineIndex];
-    if (parentIdx !== null) {
-      const parentTransMatch = !lines[parentIdx].skipTranslation &&
-        lines[parentIdx].nodes.some((n) =>
-          spansContainTerm(n, lowerTerm)
-        );
-      if (parentTransMatch) {
-        const existing = merged.get(parentIdx);
-        if (existing) {
-          if (m.inSource) existing.inSource = true;
-        } else {
-          merged.set(parentIdx, { lineIndex: parentIdx, inSource: m.inSource, inTranslation: true });
-        }
-        continue;
-      }
-    }
-    const existing = merged.get(m.lineIndex);
-    if (existing) {
-      if (m.inSource) existing.inSource = true;
-      if (m.inTranslation) existing.inTranslation = true;
-    } else {
-      merged.set(m.lineIndex, { ...m });
-    }
-  }
-
-  return [...merged.values()];
-}
-
 function spansContainTerm(node: DisplayNodeData, lowerTerm: string): boolean {
-  return node.spans.some((s) => s.text.toLowerCase().includes(lowerTerm)) ||
-    node.children.some((c) => spansContainTerm(c, lowerTerm));
+  return node.spans.some((s) => s.text.toLowerCase().includes(lowerTerm));
 }
 
 export function computeMatches(lines: LineRenderable[], lowerTerm: string): SearchMatch[] {
   return lines
     .map((line, i) => {
       const inSource = line.sourceText.toLowerCase().includes(lowerTerm);
-      const inTranslation = !line.skipTranslation && line.nodes.some((n) =>
-        spansContainTerm(n, lowerTerm)
-      );
+      const inTranslation = line.boxFragment?.contentNode
+        ? spansContainTerm(line.boxFragment.contentNode, lowerTerm)
+        : false;
       return { lineIndex: i, inSource, inTranslation };
     })
     .filter((m) => m.inSource || m.inTranslation);
@@ -97,30 +50,17 @@ function CodeTableInner({
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeMatchIndex, setActiveMatchIndex] = useState(0);
-  const [navHighlightLine, setNavHighlightLine] = useState<number | null>(null);
-
   const lines = viewModel.lines;
-  const parentMap = useMemo(() => parentIndices(lines), [lines]);
 
-  const rawSearchMatches: SearchMatch[] = useMemo(() => {
+  const searchMatches: SearchMatch[] = useMemo(() => {
     if (!searchTerm) return [];
     return computeMatches(lines, searchTerm.toLowerCase());
   }, [lines, searchTerm]);
 
-  const searchMatches: SearchMatch[] = useMemo(() => {
-    if (!searchTerm) return [];
-    return dedupMatches(lines, rawSearchMatches, searchTerm.toLowerCase());
-  }, [lines, rawSearchMatches, searchTerm]);
-
-  const rawNavVarMatches: SearchMatch[] = useMemo(() => {
+  const navVarMatches: SearchMatch[] = useMemo(() => {
     if (!targetVar) return [];
     return computeMatches(lines, targetVar.toLowerCase());
   }, [lines, targetVar]);
-
-  const navVarMatches: SearchMatch[] = useMemo(() => {
-    if (!targetVar) return [];
-    return dedupMatches(lines, rawNavVarMatches, targetVar.toLowerCase());
-  }, [lines, rawNavVarMatches, targetVar]);
 
   const handleResizeStart = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -215,13 +155,10 @@ function CodeTableInner({
     if (!viewModel) return;
     const targetLine = targetSourceLine ?? targetTransLine;
     if (targetLine) {
-      setNavHighlightLine(targetLine);
       const row = containerRef.current?.querySelector(
         `[data-line="${targetLine}"]`
       );
       row?.scrollIntoView({ behavior: 'instant', block: 'center' });
-      const timer = setTimeout(() => setNavHighlightLine(null), 3000);
-      return () => clearTimeout(timer);
     }
   }, [viewModel, targetSourceLine, targetTransLine]);
 
@@ -304,8 +241,6 @@ function CodeTableInner({
         style={{
           display: 'grid',
           gridTemplateColumns: `6px 48px ${sourcePct}% 4px 20px 1fr`,
-          gridAutoRows: 'auto',
-          alignItems: 'start',
         }}
       >
         {viewModel.lines.map((line, i) => (
@@ -314,19 +249,12 @@ function CodeTableInner({
             rowNum={i + 1}
             line={line}
             lineIndex={i}
-            bucketStyle={BUCKET_STYLES[line.bucket]}
             isInterface={line.bucket === 'jsx'}
             onResizeStart={handleResizeStart}
             searchTerm={searchTerm}
             searchMatches={searchMatches}
             activeMatchIndex={activeMatchIndex}
             navVar={targetVar ?? undefined}
-            parentRowIndex={parentMap[i]}
-            isNavHighlight={
-              navHighlightLine === line.lineNumber ||
-              (targetVar !== null && targetVar !== undefined && navVarMatches.length > 0 &&
-                (navVarMatches[0].lineIndex === i || parentMap[i] === navVarMatches[0].lineIndex))
-            }
           />
         ))}
       </div>

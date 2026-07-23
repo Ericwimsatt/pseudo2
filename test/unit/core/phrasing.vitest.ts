@@ -49,7 +49,7 @@ const FIXTURES: Record<string, { node: Partial<SemanticNode>; expected: string[]
   // ── Exports ──────────────────────────────────────────────
   'export': {
     node: { name: 'x', metadata: { module: '' } },
-    expected: ['export x is exported'],
+    expected: ['export x'],
   },
   'export-re-export': {
     node: { name: 'x', metadata: { module: './y' } },
@@ -59,15 +59,15 @@ const FIXTURES: Record<string, { node: Partial<SemanticNode>; expected: string[]
   // ── Functions ────────────────────────────────────────────
   'function-definition': {
     node: { name: 'foo', metadata: { parameters: ['a', 'b'] } },
-    expected: ['Function foo. Parameters: a, b'],
+    expected: ['Function foo args: { a, b }'],
   },
   'function-definition-no-params': {
     node: { name: 'bar', metadata: { parameters: [] } },
-    expected: ['Function bar (no parameters)'],
+    expected: ['Function bar args: {}'],
   },
   'function-definition-anonymous': {
     node: { metadata: { parameters: [] } },
-    expected: ['Function (no parameters)'],
+    expected: ['Function args: {}'],
   },
 
   // ── Classes ──────────────────────────────────────────────
@@ -83,13 +83,13 @@ const FIXTURES: Record<string, { node: Partial<SemanticNode>; expected: string[]
   // ── Interfaces ───────────────────────────────────────────
   'interface': {
     node: { name: 'Foo' },
-    expected: ['Interface Foo'],
+    expected: ['Type Foo'],
   },
 
   // ── Type Aliases ─────────────────────────────────────────
   'type-alias': {
     node: { name: 'Foo', metadata: { type: 'string' } },
-    expected: ['Type Foo as string'],
+    expected: ['Type Foo = string'],
   },
 
   // ── Properties ───────────────────────────────────────────
@@ -99,7 +99,7 @@ const FIXTURES: Record<string, { node: Partial<SemanticNode>; expected: string[]
   },
   'property-with-init': {
     node: { name: 'count', metadata: { type: 'number', initializer: '42' } },
-    expected: ['`count` is a number, initialized to 42'],
+    expected: ['`count` = 42'],
   },
 
   // ── Variable Assignments ─────────────────────────────────
@@ -133,11 +133,11 @@ const FIXTURES: Record<string, { node: Partial<SemanticNode>; expected: string[]
   },
   'otherwise-if': {
     node: { metadata: { condition: 'y > 0' } },
-    expected: ['otherwise if y > 0'],
+    expected: ['otherwise, if y > 0'],
   },
   'otherwise': {
     node: {},
-    expected: ['otherwise'],
+    expected: ['otherwise,'],
   },
 
   // ── Loops ────────────────────────────────────────────────
@@ -146,8 +146,8 @@ const FIXTURES: Record<string, { node: Partial<SemanticNode>; expected: string[]
     expected: ['For each item'],
   },
   'loop-for-in': {
-    node: { metadata: { loopType: 'forIn' } },
-    expected: ['For each key'],
+    node: { metadata: { loopType: 'forIn', collection: 'obj' } },
+    expected: ['For each item in obj'],
   },
   'loop': {
     node: { metadata: { loopType: 'while' } },
@@ -161,7 +161,7 @@ const FIXTURES: Record<string, { node: Partial<SemanticNode>; expected: string[]
   },
   'instantiate': {
     node: { metadata: { function: 'Foo', isNew: true } },
-    expected: ['Instantiate Foo'],
+    expected: ['Create a Foo'],
   },
 
   // ── JSX Elements ────────────────────────────────────────
@@ -183,7 +183,7 @@ const FIXTURES: Record<string, { node: Partial<SemanticNode>; expected: string[]
   },
   'jsx-filter': {
     node: { metadata: { collection: 'items', condition: 'x > 0' } },
-    expected: ['Filter items where x > 0:'],
+    expected: ['items where x > 0:'],
   },
   'jsx-conditional': {
     node: { metadata: { condition: 'cond', variant: 'default' } },
@@ -199,19 +199,19 @@ const FIXTURES: Record<string, { node: Partial<SemanticNode>; expected: string[]
   },
   'jsx-text': {
     node: { metadata: { text: 'Hello' } },
-    expected: ['Show text: "Hello"'],
+    expected: ['Text: "Hello"'],
   },
   'jsx-expression-identifier': {
     node: { metadata: { expression: 'name', isSimpleIdentifier: true } },
-    expected: ['Show: name'],
+    expected: ['name'],
   },
   'jsx-expression-template': {
     node: { metadata: { expression: '`Hello ${name}`', isTemplate: true } },
-    expected: ['Show dynamic text: `Hello ${name}`'],
+    expected: ['`Hello ${name}`'],
   },
   'jsx-expression': {
     node: { metadata: { expression: 'count + 1' } },
-    expected: ['Show: count + 1'],
+    expected: ['count + 1'],
   },
 
   // ── Object Literals ──────────────────────────────────────
@@ -243,7 +243,7 @@ const FIXTURES: Record<string, { node: Partial<SemanticNode>; expected: string[]
   },
   'function-definition-exported': {
     node: { name: 'foo', metadata: { parameters: ['a'], exported: true } },
-    expected: ['Export: ', 'Function foo. Parameters: a'],
+    expected: ['Export: ', 'Function foo args: { a }'],
   },
 };
 

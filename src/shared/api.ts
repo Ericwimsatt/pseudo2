@@ -63,6 +63,18 @@ export interface ApiInvoke {
     arg: undefined;
     return: void;
   };
+  getLastFilePath: {
+    arg: undefined;
+    return: string;
+  };
+  setLastFilePath: {
+    arg: string;
+    return: void;
+  };
+  clearLastFilePath: {
+    arg: undefined;
+    return: void;
+  };
 }
 
 export type ElectronAPI = {

@@ -35,6 +35,15 @@ const api = {
   clearLastProjectPath: () =>
     ipcRenderer.invoke('clear-last-project'),
 
+  getLastFilePath: () =>
+    ipcRenderer.invoke('get-last-file'),
+
+  setLastFilePath: (path: string) =>
+    ipcRenderer.invoke('set-last-file', path),
+
+  clearLastFilePath: () =>
+    ipcRenderer.invoke('clear-last-file'),
+
   onMenuLoadFolder: (callback: (path: string) => void) => {
     const handler = (_event: Electron.IpcRendererEvent, path: string) => callback(path);
     ipcRenderer.on('menu-load-folder', handler);

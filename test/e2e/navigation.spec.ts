@@ -31,6 +31,9 @@ async function loadApp(page: Page, extraHash?: string) {
       getLastProjectPath: async () => '/tmp/demo',
       setLastProjectPath: async (_path: string) => {},
       clearLastProjectPath: async () => {},
+      getLastFilePath: async () => '',
+      setLastFilePath: async (_path: string) => {},
+      clearLastFilePath: async () => {},
       onMenuLoadFolder: () => () => {},
     };
   }, { viewModel, sourceLines });
@@ -211,6 +214,9 @@ test.describe('rowSpan dedup', () => {
         getLastProjectPath: async () => '/tmp/filter',
         setLastProjectPath: async (_path: string) => {},
         clearLastProjectPath: async () => {},
+        getLastFilePath: async () => '',
+        setLastFilePath: async (_path: string) => {},
+        clearLastFilePath: async () => {},
         onMenuLoadFolder: () => () => {},
       };
     }, { viewModel, sourceLines });

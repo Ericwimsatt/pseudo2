@@ -2,8 +2,6 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { LineRow } from '../../src/App/components/LineRow';
 import type { LineRenderable } from '../../src/main/translationService/renderable/types';
-import { BUCKET_STYLES } from '../../src/main/translationService/renderable/bucket';
-
 function makeLine(overrides: Partial<LineRenderable>): LineRenderable {
   return {
     lineNumber: 1,
@@ -11,6 +9,7 @@ function makeLine(overrides: Partial<LineRenderable>): LineRenderable {
     bucket: 'standard',
     nodes: [],
     spanningBuckets: [],
+    boxFragment: null,
     ...overrides,
   };
 }
@@ -22,7 +21,6 @@ function renderRow(line: LineRenderable, overrides: Record<string, any> = {}) {
         line={line}
         lineIndex={0}
         rowNum={1}
-        bucketStyle={BUCKET_STYLES[line.bucket]}
         isInterface={false}
         onResizeStart={vi.fn()}
         {...overrides}
@@ -44,16 +42,19 @@ describe('LineRow', () => {
     expect(screen.getByText('7')).toBeTruthy();
   });
 
-  it('applies bucket class to the row', () => {
+  it('sets data-bucket attribute on the row', () => {
     const line = makeLine({ bucket: 'import' });
     renderRow(line);
     const sourceCell = document.querySelector('[data-bucket]');
-    expect(sourceCell?.className).toContain('bg-amber-50/60');
+    expect(sourceCell?.getAttribute('data-bucket')).toBe('import');
   });
 
-  it('shows translation nodes when present', () => {
+  it('shows translation content when boxFragment is present', () => {
     const line = makeLine({
-      nodes: [{ indent: 0, spans: [{ text: 'import something' }] }],
+      boxFragment: {
+        layers: [],
+        contentNode: { indent: 0, spans: [{ text: 'import something' }], children: [], sourceStartLine: 1, sourceEndLine: 1, bucket: 'import' },
+      },
     });
     renderRow(line);
     expect(screen.getByText('import something')).toBeTruthy();
@@ -95,17 +96,31 @@ describe('LineRow', () => {
     expect(mark?.className).toContain('bg-yellow-100');
   });
 
-  it('applies rowSpan attribute to translation cell when defined', () => {
+  it('renders boxFragment content when present', () => {
     const line = makeLine({
-      sourceText: 'function foo({',
-      nodes: [{ indent: 0, spans: [{ text: 'function params' }] }],
-      translationRowSpan: 3,
+      sourceText: 'function foo()',
+      boxFragment: {
+        layers: [{ depth: 0, bucket: 'function', borderRole: 'single' }],
+        contentNode: { indent: 0, spans: [{ text: 'Function foo' }], children: [], sourceStartLine: 1, sourceEndLine: 1, bucket: 'function' },
+      },
     });
     renderRow(line);
-    const transCell = document.querySelector('[style*="grid-column: 6"]');
-    expect(transCell).toBeTruthy();
-    const style = transCell?.getAttribute('style');
-    expect(style).toContain('span 3');
+    expect(screen.getByText('Function foo')).toBeTruthy();
+  });
+
+  it('renders layered box borders for multiline nodes', () => {
+    const line = makeLine({
+      sourceText: 'function bar()',
+      boxFragment: {
+        layers: [
+          { depth: 0, bucket: 'function', borderRole: 'start' },
+          { depth: 1, bucket: 'control', borderRole: 'continue' },
+        ],
+        contentNode: { indent: 0, spans: [{ text: 'Function bar' }], children: [], sourceStartLine: 1, sourceEndLine: 5, bucket: 'function' },
+      },
+    });
+    renderRow(line);
+    expect(screen.getByText('Function bar')).toBeTruthy();
   });
 
   it('does not crash when searchMatches is undefined', () => {

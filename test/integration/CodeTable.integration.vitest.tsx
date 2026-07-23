@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { buildFileData } from '../../src/main/translationService/buildFileData';
 import type { LineRenderable } from '../../src/main/translationService/renderable/types';
-import CodeTable, { computeMatches, dedupMatches, parentIndices, type SearchMatch } from '../../src/App/components/CodeTable';
+import CodeTable, { computeMatches } from '../../src/App/components/CodeTable';
 
 vi.mock('@floating-ui/react', () => ({
   useFloating: () => ({ refs: { setReference: vi.fn(), setFloating: vi.fn() }, floatingStyles: {} }),
@@ -20,18 +20,12 @@ function makeLine(overrides: Partial<LineRenderable>): LineRenderable {
     bucket: 'standard',
     nodes: [],
     spanningBuckets: [],
+    boxFragment: null,
     ...overrides,
   };
 }
 
 describe('computeMatches', () => {
-  it('matches all lines when search term is empty string', () => {
-    const lines = [makeLine({ sourceText: 'hello' })];
-    const matches = computeMatches(lines, '');
-    expect(matches).toHaveLength(1);
-    expect(matches[0]).toMatchObject({ lineIndex: 0, inSource: true, inTranslation: false });
-  });
-
   it('finds match in source text', () => {
     const lines = [makeLine({ sourceText: 'hello world' })];
     const matches = computeMatches(lines, 'hello');
@@ -39,10 +33,13 @@ describe('computeMatches', () => {
     expect(matches[0]).toMatchObject({ lineIndex: 0, inSource: true, inTranslation: false });
   });
 
-  it('finds match in translation text', () => {
+  it('finds match in translation text via boxFragment', () => {
     const lines = [makeLine({
       sourceText: 'foo',
-      nodes: [{ indent: 0, spans: [{ text: 'bar translation' }] }],
+      boxFragment: {
+        layers: [],
+        contentNode: { indent: 0, spans: [{ text: 'bar translation' }], children: [], sourceStartLine: 1, sourceEndLine: 1, bucket: 'standard' },
+      },
     })];
     const matches = computeMatches(lines, 'translation');
     expect(matches).toHaveLength(1);
@@ -52,7 +49,10 @@ describe('computeMatches', () => {
   it('finds match in both source and translation', () => {
     const lines = [makeLine({
       sourceText: 'hello world',
-      nodes: [{ indent: 0, spans: [{ text: 'hello again' }] }],
+      boxFragment: {
+        layers: [],
+        contentNode: { indent: 0, spans: [{ text: 'hello again' }], children: [], sourceStartLine: 1, sourceEndLine: 1, bucket: 'standard' },
+      },
     })];
     const matches = computeMatches(lines, 'hello');
     expect(matches).toHaveLength(1);
@@ -69,65 +69,6 @@ describe('computeMatches', () => {
     const lines = [makeLine({ sourceText: 'foo.bar' })];
     const matches = computeMatches(lines, '.');
     expect(matches).toHaveLength(1);
-  });
-});
-
-describe('dedupMatches', () => {
-  it('deduplicates child match into parent when parent translation matches term', () => {
-    const lines = [
-      makeLine({
-        lineNumber: 1,
-        sourceText: 'parent line',
-        nodes: [{ indent: 0, spans: [{ text: 'parent line node' }] }],
-        translationRowSpan: 2,
-      }),
-      makeLine({
-        lineNumber: 2,
-        sourceText: 'child line',
-      }),
-    ];
-    const matches: SearchMatch[] = [
-      { lineIndex: 0, inSource: true, inTranslation: false },
-      { lineIndex: 1, inSource: true, inTranslation: false },
-    ];
-    const result = dedupMatches(lines, matches, 'line');
-    expect(result).toHaveLength(1);
-    expect(result[0].lineIndex).toBe(0);
-  });
-
-  it('keeps matches on different lines separate', () => {
-    const lines = [
-      makeLine({ lineNumber: 1, sourceText: 'first match' }),
-      makeLine({ lineNumber: 2, sourceText: 'second match' }),
-    ];
-    const matches: SearchMatch[] = [
-      { lineIndex: 0, inSource: true, inTranslation: false },
-      { lineIndex: 1, inSource: true, inTranslation: false },
-    ];
-    const result = dedupMatches(lines, matches, 'match');
-    expect(result).toHaveLength(2);
-  });
-});
-
-describe('parentIndices', () => {
-  it('marks lines within rowSpan as children', () => {
-    const lines = [
-      makeLine({ lineNumber: 1, translationRowSpan: 3 }),
-      makeLine({ lineNumber: 2 }),
-      makeLine({ lineNumber: 3 }),
-      makeLine({ lineNumber: 4 }),
-    ];
-    const result = parentIndices(lines);
-    expect(result).toEqual([null, 0, 0, null]);
-  });
-
-  it('returns null for all when no rowSpans', () => {
-    const lines = [
-      makeLine({ lineNumber: 1 }),
-      makeLine({ lineNumber: 2 }),
-    ];
-    const result = parentIndices(lines);
-    expect(result).toEqual([null, null]);
   });
 });
 

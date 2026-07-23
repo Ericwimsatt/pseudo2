@@ -1,5 +1,12 @@
 import type { SemanticNode } from '../makeSemanticGraph';
-import type { DisplayNodeData, LineRenderable, ViewModel, NodeBucket } from './types';
+import type {
+  DisplayNodeData,
+  LineRenderable,
+  ViewModel,
+  NodeBucket,
+  BoxLayer,
+  LineBoxFragment,
+} from './types';
 import { pickLineBucket } from './bucket';
 import { toDisplayNode } from './phrasing';
 
@@ -30,27 +37,85 @@ function collectActiveBuckets(nodes: DisplayNodeData[], lineNumber: number): Set
   return buckets;
 }
 
-function applyRowSpans(lines: LineRenderable[], startingByLine: DisplayNodeData[][]): void {
-  const totalLines = lines.length;
-  for (let i = 0; i < totalLines; i++) {
-    const starting = startingByLine[i];
-    if (starting.length === 0) continue;
-    const lineNumber = i + 1;
-    const maxEnd = Math.min(
-      Math.max(...starting.map((n) => n.sourceEndLine)),
-      totalLines,
-    );
-    let j = i + 1;
-    while (j < totalLines && startingByLine[j].length === 0) j++;
-    const nextStartLine = j < totalLines ? j + 1 : totalLines + 1;
-    const span = Math.min(nextStartLine - lineNumber, maxEnd - lineNumber + 1);
-    if (span > 1) {
-      lines[i].translationRowSpan = span;
-      for (let k = i + 1; k < i + span; k++) {
-        lines[k].skipTranslation = true;
-      }
+type MutableFragment = { layers: BoxLayer[]; contentNode: DisplayNodeData | null };
+
+function shouldBox(node: DisplayNodeData): boolean {
+  return node.children.length > 0 || node.spans.some(s => s.text.includes('\n'));
+}
+
+function distributeNode(
+  node: DisplayNodeData,
+  fragments: MutableFragment[],
+  depth: number,
+): void {
+  const startIdx = node.sourceStartLine - 1;
+  const endIdx = node.sourceEndLine - 1;
+
+  if (!shouldBox(node)) {
+    const idx = startIdx;
+    if (idx >= 0 && idx < fragments.length && !fragments[idx].contentNode) {
+      fragments[idx].contentNode = node;
+    }
+    return;
+  }
+
+  for (let i = startIdx; i <= endIdx; i++) {
+    if (i < 0 || i >= fragments.length) continue;
+    const isStart = i === startIdx;
+    const isEnd = i === endIdx;
+    const role: 'start' | 'continue' | 'end' | 'single' =
+      isStart && isEnd ? 'single'
+      : isStart ? 'start'
+      : isEnd ? 'end'
+      : 'continue';
+
+    fragments[i].layers.push({ depth, bucket: node.bucket, borderRole: role });
+  }
+
+  const childrenByLine = new Map<number, DisplayNodeData[]>();
+  for (const child of node.children) {
+    const line = child.sourceStartLine;
+    if (!childrenByLine.has(line)) childrenByLine.set(line, []);
+    childrenByLine.get(line)!.push(child);
+  }
+
+  for (let i = startIdx; i <= endIdx; i++) {
+    if (i < 0 || i >= fragments.length) continue;
+    const lineNum = i + 1;
+    const childrenOnLine = childrenByLine.get(lineNum) || [];
+
+    if (childrenOnLine.length > 0) {
+      fragments[i].contentNode = childrenOnLine[0];
+    } else if (i === startIdx && !fragments[i].contentNode) {
+      fragments[i].contentNode = node;
     }
   }
+
+  for (const child of node.children) {
+    distributeNode(child, fragments, depth + 1);
+  }
+}
+
+function buildBoxFragments(
+  totalLines: number,
+  rootNodes: DisplayNodeData[],
+): (LineBoxFragment | null)[] {
+  const fragments: MutableFragment[] = Array.from(
+    { length: totalLines },
+    () => ({ layers: [], contentNode: null }),
+  );
+
+  for (const root of rootNodes) {
+    const idx = root.sourceStartLine - 1;
+    if (idx < 0 || idx >= totalLines) continue;
+    distributeNode(root, fragments, 0);
+  }
+
+  return fragments.map(f =>
+    f.layers.length > 0 || f.contentNode
+      ? { layers: f.layers, contentNode: f.contentNode }
+      : null,
+  );
 }
 
 function buildLineRenderable(
@@ -58,6 +123,7 @@ function buildLineRenderable(
   sourceText: string,
   rootNodes: DisplayNodeData[],
   spanning: Set<NodeBucket>,
+  boxFragment: LineBoxFragment | null,
 ): LineRenderable {
   return {
     lineNumber,
@@ -67,6 +133,7 @@ function buildLineRenderable(
       : pickLineBucket([...spanning]),
     nodes: rootNodes,
     spanningBuckets: [...spanning],
+    boxFragment,
   };
 }
 
@@ -76,14 +143,16 @@ export function buildViewModel(
 ): ViewModel {
   const rootNodes = nodes.filter((n) => n.sourceStartLine > 0).map(toDisplayNode);
   const sourceLines = sourceCode.split('\n');
-  const startingByLine: DisplayNodeData[][] = [];
+  const totalLines = sourceLines.length;
+
+  const boxFragments = buildBoxFragments(totalLines, rootNodes);
+
   const lines = sourceLines.map((text, i) => {
     const lineNumber = i + 1;
     const starting = rootNodes.filter((r) => r.sourceStartLine === lineNumber);
-    startingByLine.push(starting);
     const spanning = collectActiveBuckets(rootNodes, lineNumber);
-    return buildLineRenderable(lineNumber, text, starting, spanning);
+    return buildLineRenderable(lineNumber, text, starting, spanning, boxFragments[i]);
   });
-  applyRowSpans(lines, startingByLine);
+
   return { lines };
 }

@@ -58,6 +58,9 @@ export async function injectFixture(
       getLastProjectPath: async () => data.repoPath,
       setLastProjectPath: async (_path: string) => {},
       clearLastProjectPath: async () => {},
+      getLastFilePath: async () => '',
+      setLastFilePath: async (_path: string) => {},
+      clearLastFilePath: async () => {},
       onMenuLoadFolder: () => () => {},
     };
   }, {

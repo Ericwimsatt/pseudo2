@@ -39,11 +39,11 @@ export const BUCKET_PRIORITY: NodeBucket[] = [
 ];
 
 export const BUCKET_STYLES: Record<NodeBucket, string> = {
-  import: 'bg-amber-50/60',
-  interface: 'bg-violet-50/60',
-  function: 'bg-emerald-50/60',
-  jsx: 'bg-sky-50/70',
-  control: 'bg-rose-50/50',
+  import: '',
+  interface: '',
+  function: '',
+  jsx: '',
+  control: '',
   standard: '',
 };
 

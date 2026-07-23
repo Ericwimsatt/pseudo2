@@ -103,6 +103,10 @@ function App() {
       setTree(data.tree);
       setRepoPath(data.path);
       window.electronAPI.setLastProjectPath(data.path);
+      const savedFilePath = await window.electronAPI.getLastFilePath();
+      if (savedFilePath) {
+        navigate(`/file/${savedFilePath}`);
+      }
     } catch (err: any) {
       console.error('Failed to load repo:', err);
       setLoadError(err.message || 'Failed to load repository');
@@ -132,6 +136,7 @@ function App() {
 
   const handleFileSelect = (path: string) => {
     navigate(`/file/${path}`);
+    window.electronAPI.setLastFilePath(path);
   };
 
   if (!repoPath) {

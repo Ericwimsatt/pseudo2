@@ -42,14 +42,15 @@ export interface DisplayNodeData {
   bucket: NodeBucket;
 }
 
-export interface LineRenderable {
-  lineNumber: number;
-  sourceText: string;
+export interface BoxLayer {
+  depth: number;
   bucket: NodeBucket;
-  nodes: DisplayNodeData[];
-  spanningBuckets: NodeBucket[];
-  translationRowSpan?: number;
-  skipTranslation?: boolean;
+  borderRole: 'start' | 'continue' | 'end' | 'single';
+}
+
+export interface LineBoxFragment {
+  layers: BoxLayer[];
+  contentNode: DisplayNodeData | null;
 }
 
 export interface ViewModel {
