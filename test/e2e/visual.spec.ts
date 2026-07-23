@@ -36,7 +36,7 @@ test.describe('visual regression @visual @regression', () => {
 
   test('Interfaces.ts @visual @critical', async ({ page }) => {
     await loadFile(page, 'Interfaces.ts');
-    await expect(page.locator('body')).toContainText('Interface');
+    await expect(page.locator('body')).toContainText('Type');
     await expect(page).toHaveScreenshot('interfaces.png', {
       fullPage: true,
       animations: 'disabled',

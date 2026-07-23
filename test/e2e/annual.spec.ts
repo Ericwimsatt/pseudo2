@@ -76,21 +76,21 @@ test.describe('AnnualSummary translation @smoke @p0 @core:translation', () => {
     // Line 2 should hold the years/useMemo/anonymous-function nodes (nested, no duplication).
     const line2 = await translationTextsForLine(page, 2);
     expect(line2.some((t) => t.includes('years'))).toBeTruthy();
-    expect(line2.some((t) => t.includes('Call') && t.includes('useMemo'))).toBeTruthy();
-    expect(line2.some((t) => t.includes('Function (no parameters)'))).toBeTruthy();
+    expect(line2.some((t) => t.includes('call') && t.includes('useMemo'))).toBeTruthy();
+    expect(line2.some((t) => t.includes('Function'))).toBeTruthy();
     // No exact duplicate strings on line 2.
     const dupes = line2.filter((t, i) => line2.indexOf(t) !== i);
     expect(dupes).toEqual([]);
 
-    // The arrow body now shows up nested on lines 3-6.
+    // Line 3 has the arrow function inside .map().
     const line3 = await translationTextsForLine(page, 3);
-    expect(line3.some((t) => t.includes('`s`'))).toBeTruthy();
-    expect(line3.some((t) => t.includes('Instantiate') && t.includes('Set'))).toBeTruthy();
+    expect(line3.some((t) => t.includes('Function anonymous'))).toBeTruthy();
+    expect(line3.some((t) => t.includes('return'))).toBeTruthy();
 
     const line5 = await translationTextsForLine(page, 5);
     expect(line5.some((t) => t.includes('If') && t.includes('arr.length'))).toBeTruthy();
     // The previously-dropped if-body call is now captured.
-    expect(line5.some((t) => t.includes('Call') && t.includes('arr.push'))).toBeTruthy();
+    expect(line5.some((t) => t.includes('call') && t.includes('arr.push'))).toBeTruthy();
 
     const line6 = await translationTextsForLine(page, 6);
     expect(line6.some((t) => t.includes('return') && t.includes('arr'))).toBeTruthy();
@@ -100,27 +100,9 @@ test.describe('AnnualSummary translation @smoke @p0 @core:translation', () => {
     const returnYears = line8.filter((t) => t.includes('return') && t.includes('years'));
     expect(returnYears.length).toBe(1);
 
-    // Indentation increases down the tree: line-2 "Function (no parameters)" is
-    // more indented than the "years" variable.
-    const line2depth = await page.evaluate(() => {
-      let maxDepth = -1;
-      for (const el of document.querySelectorAll('[style*="/ 6"] [data-tree-depth]')) {
-        if (el.textContent?.includes('Function (no parameters)')) {
-          maxDepth = Math.max(maxDepth, parseInt(el.getAttribute('data-tree-depth') || '0'));
-        }
-      }
-      return maxDepth;
-    });
-    const yearsDepth = await page.evaluate(() => {
-      let maxDepth = -1;
-      for (const el of document.querySelectorAll('[style*="/ 6"] [data-tree-depth]')) {
-        if (el.textContent?.includes('`years`')) {
-          maxDepth = Math.max(maxDepth, parseInt(el.getAttribute('data-tree-depth') || '0'));
-        }
-      }
-      return maxDepth;
-    });
-    expect(line2depth).toBeGreaterThan(yearsDepth);
+    // All nested content on line 2 is flattened into a single cell.
+    await expect(page.locator('body')).toContainText('call useMemo');
+    await expect(page.locator('body')).toContainText('Function args: {}');
 
     await page.screenshot({ path: 'test/screenshots/annual-summary.png', fullPage: true });
   });
@@ -128,7 +110,7 @@ test.describe('AnnualSummary translation @smoke @p0 @core:translation', () => {
   test('does not dump multi-line source into a single translation cell', async ({ page }) => {
     await loadAppWithFile(page);
     await page.getByText('AnnualSummary.tsx', { exact: false }).first().click();
-    await expect(page.locator('body')).toContainText('Instantiate Set');
+    await expect(page.locator('body')).toContainText('Function anonymous');
 
     // No rendered translation node may contain a newline character — that is the
     // signature of the old pipeline dumping a multi-line source span verbatim.
@@ -215,12 +197,12 @@ interface Props {
     await page.goto('http://localhost:5174/');
     await page.getByText('Props.tsx', { exact: false }).first().click();
 
-    await expect(page.locator('body')).toContainText('Interface');
+    await expect(page.locator('body')).toContainText('Type');
 
     const allTexts = await page.locator('[style*="/ 6"] div > div').allTextContents();
     const joined = allTexts.join('\n');
 
-    expect(joined).toContain('Interface Props');
+    expect(joined).toContain('Type Props');
     expect(joined).toContain('list of');
     expect(joined).toContain('a function that expects');
     expect(joined).toContain('returns nothing');
@@ -267,7 +249,7 @@ interface Props {
     const defTexts = await page
       .locator('[style*="/ 6"] div > div')
       .allTextContents();
-    const filtered = defTexts.map(t => t.trim()).filter(t => t.includes('Parameters:'));
+    const filtered = defTexts.map(t => t.trim()).filter(t => t.includes('args:'));
     expect(filtered.length).toBeGreaterThan(0);
     const defText = filtered[0];
     expect(defText).not.toContain('\n');

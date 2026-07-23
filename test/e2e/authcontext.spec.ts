@@ -79,6 +79,9 @@ async function loadApp(page: Page) {
       setLastProjectPath: async (_path: string) => {},
       clearLastProjectPath: async () => {},
       onMenuLoadFolder: () => () => {},
+      getLastFilePath: async () => '',
+      setLastFilePath: async (_path: string) => {},
+      clearLastFilePath: async () => {},
     };
   }, { viewModel, sourceLines });
   await page.goto('http://localhost:5174/');
@@ -93,10 +96,10 @@ test.describe('AuthContext.tsx renders without crashing @smoke @p0 @core:renderi
     await page.getByText('AuthContext.tsx', { exact: false }).first().click();
 
     // Representative translations across the constructs in this file.
-    await expect(page.locator('body')).toContainText('Interface AuthContextType');
+    await expect(page.locator('body')).toContainText('Type AuthContextType');
     await expect(page.locator('body')).toContainText('Function AuthProvider');
-    await expect(page.locator('body')).toContainText('Call createContext');
-    await expect(page.locator('body')).toContainText('Call useState');
+    await expect(page.locator('body')).toContainText('call createContext');
+    await expect(page.locator('body')).toContainText('call useState');
     await expect(page.locator('body')).toContainText('Return Visual Elements:');
 
     // No uncaught render errors (the reported TypeError would surface here).

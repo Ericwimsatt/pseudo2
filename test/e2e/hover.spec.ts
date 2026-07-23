@@ -13,7 +13,7 @@ async function loadApp(page: Page) {
   await injectFixture(page, fixture, 'Hooks.tsx');
   await page.goto('/');
   await page.getByText('Hooks.tsx', { exact: false }).first().click();
-  await expect(page.locator('body')).toContainText('Call useState', { timeout: 5000 });
+  await expect(page.locator('body')).toContainText('call useState', { timeout: 5000 });
 }
 
 // The hoverable spans are the ones StyledSpan marks with cursor-help.

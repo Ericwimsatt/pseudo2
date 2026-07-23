@@ -119,7 +119,7 @@ const FIXTURES: Record<string, { node: Partial<SemanticNode>; expected: string[]
   },
   'return-value': {
     node: { metadata: { value: 'x', hasJsx: false } },
-    expected: ['return `x`'],
+    expected: ['return: `x`'],
   },
   'return': {
     node: { metadata: { value: null, hasJsx: false } },
@@ -133,11 +133,11 @@ const FIXTURES: Record<string, { node: Partial<SemanticNode>; expected: string[]
   // ── Conditionals ─────────────────────────────────────────
   'if': {
     node: { metadata: { condition: 'x > 0' } },
-    expected: ['If x > 0'],
+    expected: ['If x > 0:'],
   },
   'otherwise-if': {
     node: { metadata: { condition: 'y > 0' } },
-    expected: ['otherwise, if y > 0'],
+    expected: ['otherwise, If y > 0:'],
   },
   'otherwise': {
     node: {},
@@ -161,25 +161,25 @@ const FIXTURES: Record<string, { node: Partial<SemanticNode>; expected: string[]
   // ── Loops ────────────────────────────────────────────────
   'loop-for-of': {
     node: { metadata: { loopType: 'forOf' } },
-    expected: ['For each item'],
+    expected: ['For each item:'],
   },
   'loop-for-in': {
     node: { metadata: { loopType: 'forIn', collection: 'obj' } },
-    expected: ['For each item in obj'],
+    expected: ['For each item in obj:'],
   },
   'loop': {
     node: { metadata: { loopType: 'while' } },
-    expected: ['Loop'],
+    expected: ['Loop:'],
   },
 
   // ── Calls ────────────────────────────────────────────────
   'call-function': {
     node: { metadata: { function: 'foo' } },
-    expected: ['Call foo'],
+    expected: ['call foo'],
   },
   'instantiate': {
     node: { metadata: { function: 'Foo', isNew: true } },
-    expected: ['Create a Foo'],
+    expected: ['create a Foo'],
   },
 
   // ── JSX Elements ────────────────────────────────────────
@@ -205,15 +205,15 @@ const FIXTURES: Record<string, { node: Partial<SemanticNode>; expected: string[]
   },
   'jsx-conditional': {
     node: { metadata: { condition: 'cond', variant: 'default' } },
-    expected: ['When cond, show:'],
+    expected: ['When cond:'],
   },
   'jsx-conditional-ternary': {
     node: { metadata: { condition: 'cond', variant: 'ternary' } },
-    expected: ['If cond, show:'],
+    expected: ['If cond:'],
   },
   'jsx-conditional-alt': {
     node: { type: 'jsx-conditional-alt' },
-    expected: ['Otherwise, show:'],
+    expected: ['Otherwise:'],
   },
   'jsx-text': {
     node: { metadata: { text: 'Hello' } },

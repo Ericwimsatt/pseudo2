@@ -104,26 +104,46 @@ function distributeNode(
 
     if (childrenOnLine.length > 0 && endIdx > startIdx) {
       if (i === startIdx) {
-        const mergedSpans: DisplaySpan[] = [...node.spans, { text: ' ' }, ...childrenOnLine[0].spans];
-        fragments[i].contentNode = {
-          ...node,
-          spans: mergedSpans,
-          children: [],
-        };
-      } else {
-        fragments[i].contentNode = childrenOnLine[0];
+        if (!fragments[i].contentNode) {
+          // Recursively collect spans from this node and all descendants
+          // that start on the same line, flattening them into one line.
+          function collectSpans(n: DisplayNodeData): DisplaySpan[] {
+            const result: DisplaySpan[] = [...n.spans];
+            for (const child of n.children) {
+              if (child.sourceStartLine === lineNum) {
+                result.push({ text: ' ' });
+                result.push(...collectSpans(child));
+              }
+            }
+            return result;
+          }
+          fragments[i].contentNode = {
+            ...node,
+            spans: collectSpans(node),
+            children: [],
+          };
+        }
       }
     } else if (childrenOnLine.length > 0 && endIdx === startIdx) {
-      const mergedSpans: DisplaySpan[] = [...node.spans];
-      for (const child of childrenOnLine) {
-        mergedSpans.push({ text: '\n' });
-        mergedSpans.push(...child.spans);
+      if (!fragments[i].contentNode) {
+        // Recursively collect spans from this node and all descendants
+        // that start on the same line, flattening them together.
+        function collectSingleSpans(n: DisplayNodeData): DisplaySpan[] {
+          const result: DisplaySpan[] = [...n.spans];
+          for (const child of n.children) {
+            if (child.sourceStartLine === lineNum) {
+              result.push({ text: ' ' });
+              result.push(...collectSingleSpans(child));
+            }
+          }
+          return result;
+        }
+        fragments[i].contentNode = {
+          ...node,
+          spans: collectSingleSpans(node),
+          children: [],
+        };
       }
-      fragments[i].contentNode = {
-        ...node,
-        spans: mergedSpans,
-        children: [],
-      };
     } else if (i === startIdx && !fragments[i].contentNode) {
       fragments[i].contentNode = node;
     }

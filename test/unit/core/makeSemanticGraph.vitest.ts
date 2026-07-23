@@ -205,7 +205,7 @@ describe('makeSemanticGraph - optional chaining and nullish coalescing', () => {
     const source = `const x = a?.b?.();`;
     const { viewModel } = buildFileData(source, 'test.ts');
     const lines = render(viewModel);
-    expect(lines.some(l => l.some(t => t.includes('Call')))).toBeTruthy();
+    expect(lines.some(l => l.some(t => t.includes('call')))).toBeTruthy();
   });
 
   it('handles nullish coalescing', () => {

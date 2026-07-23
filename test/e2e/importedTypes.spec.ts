@@ -9,7 +9,7 @@ test.describe('type alias display @critical @p1 @core:translation', () => {
     const { viewModel } = buildFileData(source, '/Users/ericwimsatt/git/pseudo2/src/hooks/AnalyticsPeriod.ts');
     const allText = viewModel.lines.map(l => l.nodes.map(n => n.spans.map(s => s.text).join('')).join('')).join('\n');
 
-    expect(allText).toContain('Type AnalyticsPeriod as');
+    expect(allText).toContain('Type AnalyticsPeriod =');
     expect(allText).toContain('this_week');
     expect(allText).not.toMatch(/import\(["']\/.*["']\)/);
   });
@@ -19,7 +19,7 @@ test.describe('type alias display @critical @p1 @core:translation', () => {
     const { viewModel } = buildFileData(source, 'types.ts');
     const allText = viewModel.lines.map(l => l.nodes.map(n => n.spans.map(s => s.text).join('')).join('')).join('\n');
 
-    expect(allText).toContain('Type Period as');
+    expect(allText).toContain('Type Period =');
     expect(allText).toContain('daily');
     expect(allText).not.toMatch(/import\(/);
   });

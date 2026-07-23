@@ -3,7 +3,7 @@ import type { DisplayNodeData, DisplaySpan, HoverContent } from './types';
 import { bucketForNode } from './bucket';
 import { buildHover, getKeywordTooltip, getReactHookTooltip } from './hover';
 import { translateType } from './translateType';
-import phrasingRules from '../../../../config/phrasing-rules.json';
+import phrasingRules from '../../../../config/phrasing-rules.json' with { type: 'json' };
 
 interface PhrasingRule {
   type: string;

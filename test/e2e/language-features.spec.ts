@@ -20,7 +20,7 @@ test.describe('language feature rendering @regression @p2 @ui:rendering', () => 
   test('Functions.tsx shows Function and Parameters text', async ({ page }) => {
     await loadFile(page, 'Functions.tsx');
     await expect(page.locator('body')).toContainText('Function');
-    await expect(page.locator('body')).toContainText('Parameters');
+    await expect(page.locator('body')).toContainText('args:');
   });
 
   test('JSXElements.tsx shows JSX element translations', async ({ page }) => {

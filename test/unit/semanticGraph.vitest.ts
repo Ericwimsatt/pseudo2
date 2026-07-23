@@ -33,10 +33,10 @@ describe('semantic graph - call argument labeling', () => {
     const texts = collectTexts(viewModel.lines[0].nodes);
 
     expect(texts.some(t => t.includes('`timeout` ='))).toBeTruthy();
-    expect(texts.some(t => t.includes('Call setTimeout'))).toBeTruthy();
+    expect(texts.some(t => t.includes('call setTimeout'))).toBeTruthy();
     expect(texts.some(t => t.includes('`param_1` ='))).toBeTruthy();
-    expect(texts.some(t => t.includes('Function (no parameters)'))).toBeTruthy();
-    expect(texts.some(t => t.includes('Call toastTimeouts.delete'))).toBeTruthy();
+    expect(texts.some(t => t.includes('Function args: {}'))).toBeTruthy();
+    expect(texts.some(t => t.includes('call toastTimeouts.delete'))).toBeTruthy();
     expect(texts.some(t => t.includes('`param_2` ='))).toBeTruthy();
     expect(texts.some(t => t.includes('TOAST_REMOVE_DELAY'))).toBeTruthy();
   });
@@ -48,11 +48,11 @@ describe('semantic graph - call argument labeling', () => {
 
     const texts = collectTexts(viewModel.lines[0].nodes);
 
-    expect(texts.some(t => t.includes('Call execute'))).toBeTruthy();
+    expect(texts.some(t => t.includes('call execute'))).toBeTruthy();
     expect(texts.some(t => t.includes('`param_1` = a'))).toBeTruthy();
     expect(texts.some(t => t.includes('`param_2` ='))).toBeTruthy();
     expect(texts.some(t => t.includes('`param_3` = c'))).toBeTruthy();
-    expect(texts.some(t => t.includes('Function (no parameters)'))).toBeTruthy();
+    expect(texts.some(t => t.includes('Function args: {}'))).toBeTruthy();
     expect(texts.some(t => t.includes('return'))).toBeTruthy();
   });
 
@@ -78,6 +78,6 @@ const y = 42;
 
     const texts = collectTexts(viewModel.lines[0].nodes);
     expect(texts.some(t => t.includes('`f` ='))).toBeTruthy();
-    expect(texts.some(t => t.includes('Function (no parameters)'))).toBeTruthy();
+    expect(texts.some(t => t.includes('Function f args: {}'))).toBeTruthy();
   });
 });
