@@ -4,6 +4,7 @@ import { cx } from './nodes/styleHelpers';
 import { BoxFragment } from './nodes/BoxFragment';
 import { SearchContext } from '../lib/searchContext';
 import { useRef, useMemo } from 'react';
+import type { SelectionMode } from './CodeTable';
 
 interface SearchMatch {
   lineIndex: number;
@@ -21,6 +22,7 @@ interface Props {
   searchMatches?: SearchMatch[];
   activeMatchIndex?: number;
   navVar?: string;
+  selectionMode?: SelectionMode;
 }
 
 function highlightSourceText(text: string, term: string, isActive: boolean) {
@@ -68,6 +70,7 @@ export function LineRow({
   searchMatches,
   activeMatchIndex,
   navVar,
+  selectionMode = 'both',
 }: Props) {
   const lineRef = useRef<HTMLDivElement>(null);
 
@@ -115,7 +118,10 @@ export function LineRow({
       </div>
       <div
         ref={lineRef}
-        className="py-1 border-r border-gray-200 hover:bg-gray-50/40 transition-colors"
+        className={cx(
+          'py-1 border-r border-gray-200 hover:bg-gray-50/40 transition-colors',
+          selectionMode === 'translation' && 'select-none'
+        )}
         style={{ gridRow: rowNum, gridColumn: 3 }}
         data-bucket={BUCKET_LABELS[line.bucket]}
         data-line={line.lineNumber}
@@ -137,7 +143,10 @@ export function LineRow({
       />
       <div style={{ gridRow: rowNum, gridColumn: 5 }} />
       {showTranslation && (
-        <div style={{ gridRow: rowNum, gridColumn: 6 }}>
+        <div
+          className={cx(selectionMode === 'source' && 'select-none')}
+          style={{ gridRow: rowNum, gridColumn: 6 }}
+        >
           <SearchContext.Provider value={searchCtxValue}>
             <BoxFragment fragment={line.boxFragment!} />
           </SearchContext.Provider>

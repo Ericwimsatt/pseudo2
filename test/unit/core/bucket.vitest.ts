@@ -13,7 +13,6 @@ function makeNode(type: string, extra: Partial<SemanticNode> = {}): SemanticNode
     type,
     children: [],
     metadata: {},
-    indent: 0,
     sourceStartLine: 1,
     sourceEndLine: 1,
     ...extra,
@@ -81,12 +80,12 @@ describe('bucketForType', () => {
 });
 
 describe('bucketForNode', () => {
-  it('returns jsx for return with hasJsx', () => {
-    const node = makeNode('return', { metadata: { hasJsx: true } });
+  it('returns jsx for return-jsx', () => {
+    const node = makeNode('return-jsx', { metadata: { hasJsx: true } });
     expect(bucketForNode(node)).toBe('jsx');
   });
 
-  it('returns control for return without hasJsx', () => {
+  it('returns control for return', () => {
     const node = makeNode('return', { metadata: { hasJsx: false } });
     expect(bucketForNode(node)).toBe('control');
   });

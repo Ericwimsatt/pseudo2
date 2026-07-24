@@ -1,21 +1,22 @@
 import { useContext, useEffect, useRef, useState } from 'react';
-import type { HoverContent, TooltipSection } from '../../../main/translationService/renderable/types';
+import type { TooltipSection } from '../../../main/translationService/renderable/types';
 import { FilePathContext } from '../../lib/filePathContext';
 import { TooltipContent } from './TooltipContent';
-import { formatMetadata } from '../../../main/translationService/renderable/hover';
 
 interface Props {
-  hover: HoverContent;
   refPos?: number;
   filePath?: string;
+  fallbackTitle?: string;
+  fallbackBody?: string;
 }
 
-export function ToolTip({ hover, refPos, filePath }: Props) {
+export function ToolTip({ refPos, filePath, fallbackTitle, fallbackBody }: Props) {
   const ctxFilePath = useContext(FilePathContext);
   const fp = filePath ?? ctxFilePath;
   const [sections, setSections] = useState<TooltipSection[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [title, setTitle] = useState<string | undefined>(fallbackTitle);
   const askedRef = useRef(false);
 
   useEffect(() => {
@@ -24,6 +25,7 @@ export function ToolTip({ hover, refPos, filePath }: Props) {
     setLoading(true);
     window.electronAPI.getNodeDetail({ filePath: fp, query: { refPos } })
       .then((answer) => {
+        if (answer.title) setTitle(answer.title);
         setSections(answer.sections);
         setLoading(false);
       })
@@ -32,8 +34,6 @@ export function ToolTip({ hover, refPos, filePath }: Props) {
         setLoading(false);
       });
   }, [refPos, fp]);
-
-  const title = hover.title;
 
   if (error) {
     return <div data-testid="tooltip-error">Error: {error}</div>;
@@ -71,18 +71,16 @@ export function ToolTip({ hover, refPos, filePath }: Props) {
     );
   }
 
-  const metaText = formatMetadata(hover.metadata);
-  return (
-    <div data-testid="tooltip-static">
-      {title && <div className="font-semibold text-gray-800 mb-1">{title}</div>}
-      <div className="max-h-80 overflow-y-auto">
-        {hover.body && <div className="text-gray-600 mb-1 whitespace-pre-wrap">{hover.body}</div>}
-        {metaText && (
-          <pre className="text-xs text-gray-500 whitespace-pre-wrap font-mono mt-1 pt-1 border-t border-gray-100">
-            {metaText}
-          </pre>
-        )}
+  if (fallbackTitle) {
+    return (
+      <div data-testid="tooltip-static">
+        <div className="font-semibold text-gray-800 mb-1">{fallbackTitle}</div>
+        <div className="max-h-80 overflow-y-auto">
+          {fallbackBody && <div className="text-gray-600 whitespace-pre-wrap">{fallbackBody}</div>}
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  return null;
 }

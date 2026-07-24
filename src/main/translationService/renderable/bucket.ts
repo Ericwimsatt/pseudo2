@@ -16,12 +16,16 @@ export const TYPE_TO_BUCKET: Record<string, NodeBucket> = {
   'jsx-conditional-alt': 'jsx',
   'jsx-text': 'jsx',
   'jsx-expression': 'jsx',
-  return: 'control',
+  'return': 'control',
+  'return-jsx': 'jsx',
+  'return-value': 'control',
+  'return-target': 'control',
   if: 'control',
   'otherwise-if': 'control',
   otherwise: 'control',
   loop: 'control',
   'variable-assignment': 'standard',
+  'variable-assignment-target': 'standard',
   property: 'standard',
   'call-function': 'standard',
   'object-literal': 'standard',
@@ -64,9 +68,6 @@ export function bucketForType(type: string): NodeBucket {
 }
 
 export function bucketForNode(node: SemanticNode): NodeBucket {
-  if (node.type === 'return' && node.metadata.hasJsx) {
-    return 'jsx';
-  }
   return bucketForType(node.type);
 }
 

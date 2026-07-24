@@ -53,7 +53,7 @@ describe('LineRow', () => {
     const line = makeLine({
       boxFragment: {
         layers: [],
-        contentNode: { indent: 0, spans: [{ text: 'import something' }], children: [], sourceStartLine: 1, sourceEndLine: 1, bucket: 'import' },
+        contentNode: { indent: 0, spans: [{ text: 'import something' }], children: [], sourceStartLine: 1, sourceEndLine: 1, bucket: 'import', nested: false },
       },
     });
     renderRow(line);
@@ -101,7 +101,7 @@ describe('LineRow', () => {
       sourceText: 'function foo()',
       boxFragment: {
         layers: [{ depth: 0, bucket: 'function', borderRole: 'single' }],
-        contentNode: { indent: 0, spans: [{ text: 'Function foo' }], children: [], sourceStartLine: 1, sourceEndLine: 1, bucket: 'function' },
+        contentNode: { indent: 0, spans: [{ text: 'Function foo' }], children: [], sourceStartLine: 1, sourceEndLine: 1, bucket: 'function', nested: true },
       },
     });
     renderRow(line);
@@ -116,7 +116,7 @@ describe('LineRow', () => {
           { depth: 0, bucket: 'function', borderRole: 'start' },
           { depth: 1, bucket: 'control', borderRole: 'continue' },
         ],
-        contentNode: { indent: 0, spans: [{ text: 'Function bar' }], children: [], sourceStartLine: 1, sourceEndLine: 5, bucket: 'function' },
+        contentNode: { indent: 0, spans: [{ text: 'Function bar' }], children: [], sourceStartLine: 1, sourceEndLine: 5, bucket: 'function', nested: true },
       },
     });
     renderRow(line);

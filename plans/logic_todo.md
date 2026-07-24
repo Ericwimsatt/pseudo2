@@ -12,6 +12,12 @@ Viewer to show the hierarchy from selected node down. Fill with dummy data.
 
 ## Collapsible elements
 
+# Translation
+## More things should have named params
+especially common imports-can hardcode these, or have them installable as plugins??
+
+## Concept of children- for punctuation
+
 # enrichment
 
 ## Imports should count as vars for purpose of hovers--Do this at same time we do the multi-file stuff

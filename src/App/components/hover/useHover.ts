@@ -1,11 +1,11 @@
 import { createContext, useContext } from 'react';
-import type { HoverContent } from '../../../main/translationService/renderable/types';
 
 export interface HoverState {
-  hover: HoverContent | null;
   trigger: HTMLElement | null;
   refPos?: number;
   filePath?: string;
+  fallbackTitle?: string;
+  fallbackBody?: string;
 }
 
 export interface HoverContextValue {
@@ -17,7 +17,6 @@ export interface HoverContextValue {
 }
 
 export const EMPTY_HOVER: HoverState = {
-  hover: null,
   trigger: null,
 };
 

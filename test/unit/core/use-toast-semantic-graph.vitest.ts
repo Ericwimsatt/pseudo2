@@ -77,7 +77,7 @@ describe('use-toast.ts - semantic graph', () => {
     const all = lines.flat();
 
     // function declarations get their name
-    const functionTexts = all.filter(t => t.startsWith('Function'));
+    const functionTexts = all.filter(t => t.startsWith('Function') || t.startsWith('Export:'));
     expect(functionTexts.some(t => t.includes('genId'))).toBeTruthy();
     expect(functionTexts.some(t => t.includes('dispatch'))).toBeTruthy();
     expect(functionTexts.some(t => t.includes('toast'))).toBeTruthy();
@@ -95,7 +95,7 @@ describe('use-toast.ts - semantic graph', () => {
     const all = lines.flat();
 
     expect(all.some(t => t.includes('Export:'))).toBeTruthy();
-    expect(all.some(t => t.includes('`reducer`'))).toBeTruthy();
+    expect(all.some(t => t.includes('Function reducer'))).toBeTruthy();
   });
 
   it('includes call expressions for key function invocations', () => {
@@ -129,18 +129,18 @@ describe('use-toast.ts - semantic graph', () => {
     const lines = render(viewModel);
     const all = lines.flat();
 
-    expect(all.some(t => t.includes('return:'))).toBeTruthy();
+    expect(all.some(t => t.includes('return {'))).toBeTruthy();
     expect(all.some(t => t.includes('state.toasts.map'))).toBeTruthy();
     expect(all.some(t => t.includes('state.toasts.filter'))).toBeTruthy();
     expect(all.some(t => t.includes('addToRemoveQueue'))).toBeTruthy();
   });
 
-  it('shows return: for valuable returns and return null only for void returns', () => {
+  it('shows return { for valuable returns and return null only for void returns', () => {
     const { viewModel } = buildFileData(source, 'use-toast.ts');
     const lines = render(viewModel);
     const all = lines.flat();
-    // Valuable returns (with expressions) show "return:"
-    expect(all.some(t => t.includes('return:'))).toBeTruthy();
+    // Valuable returns (with expressions) show "return {"
+    expect(all.some(t => t.includes('return {'))).toBeTruthy();
     // There is one void return (return; with no expression) at line 58 → shows "return null"
     const returnNulls = all.filter(t => t.trim() === 'return null');
     expect(returnNulls.length).toBe(1);
@@ -177,7 +177,7 @@ describe('use-toast.ts - semantic graph', () => {
     const lines = render(viewModel);
     const all = lines.flat();
 
-    expect(all.some(t => t.includes('return:'))).toBeTruthy();
+    expect(all.some(t => t.includes('return {'))).toBeTruthy();
     expect(all.some(t => t.includes('dismiss'))).toBeTruthy();
     expect(all.some(t => t.includes('toast'))).toBeTruthy();
   });

@@ -1,7 +1,7 @@
+import type { DisplaySpan } from './types';
 import type { SemanticNode } from '../makeSemanticGraph';
 import type {
   DisplayNodeData,
-  DisplaySpan,
   LineRenderable,
   ViewModel,
   NodeBucket,
@@ -40,8 +40,26 @@ function collectActiveBuckets(nodes: DisplayNodeData[], lineNumber: number): Set
 
 type MutableFragment = { layers: BoxLayer[]; contentNode: DisplayNodeData | null };
 
-function shouldBox(node: DisplayNodeData): boolean {
-  return node.children.length > 0 || node.spans.some(s => s.text.includes('\n'));
+const INDENT_UNIT = '  ';
+
+function collectStartLineSpans(node: DisplayNodeData, lineNum: number): DisplaySpan[] {
+  const spans: DisplaySpan[] = [...node.spans];
+  const sameLineChildren = node.children.filter(c => c.sourceStartLine === lineNum);
+  if (sameLineChildren.length > 0) {
+    spans.push({ text: '\n' });
+    for (let i = 0; i < sameLineChildren.length; i++) {
+      const child = sameLineChildren[i];
+      spans.push({ text: INDENT_UNIT.repeat(child.indent) });
+      spans.push(...collectStartLineSpans(child, lineNum));
+      if (i < sameLineChildren.length - 1) spans.push({ text: '\n' });
+    }
+    spans.push({ text: '\n' });
+    if (node.closeText && node.sourceStartLine === node.sourceEndLine) {
+      spans.push({ text: INDENT_UNIT.repeat(node.indent) });
+      spans.push({ text: node.closeText });
+    }
+  }
+  return spans;
 }
 
 function distributeNode(
@@ -52,105 +70,62 @@ function distributeNode(
   const startIdx = node.sourceStartLine - 1;
   const endIdx = node.sourceEndLine - 1;
 
-  if (!shouldBox(node)) {
-    if (startIdx === endIdx) {
-      const idx = startIdx;
-      if (idx >= 0 && idx < fragments.length && !fragments[idx].contentNode) {
-        fragments[idx].contentNode = node;
-      }
-    } else {
-      for (let i = startIdx; i <= endIdx; i++) {
-        if (i < 0 || i >= fragments.length) continue;
-        const isStart = i === startIdx;
-        const isEnd = i === endIdx;
-        const role: 'start' | 'continue' | 'end' | 'single' =
-          isStart && isEnd ? 'single'
-          : isStart ? 'start'
-          : isEnd ? 'end'
-          : 'continue';
-        fragments[i].layers.push({ depth, bucket: node.bucket, borderRole: role });
-      }
-      if (startIdx >= 0 && startIdx < fragments.length && !fragments[startIdx].contentNode) {
-        fragments[startIdx].contentNode = node;
-      }
+  if (node.nested) {
+    for (let i = startIdx; i <= endIdx; i++) {
+      if (i < 0 || i >= fragments.length) continue;
+      const isStart = i === startIdx;
+      const isEnd = i === endIdx;
+      const role: 'start' | 'continue' | 'end' | 'single' =
+        isStart && isEnd ? 'single'
+        : isStart ? 'start'
+        : isEnd ? 'end'
+        : 'continue';
+      fragments[i].layers.push({ depth, bucket: node.bucket, borderRole: role });
     }
-    return;
   }
 
-  for (let i = startIdx; i <= endIdx; i++) {
-    if (i < 0 || i >= fragments.length) continue;
-    const isStart = i === startIdx;
-    const isEnd = i === endIdx;
-    const role: 'start' | 'continue' | 'end' | 'single' =
-      isStart && isEnd ? 'single'
-      : isStart ? 'start'
-      : isEnd ? 'end'
-      : 'continue';
-
-    fragments[i].layers.push({ depth, bucket: node.bucket, borderRole: role });
-  }
-
-  const childrenByLine = new Map<number, DisplayNodeData[]>();
-  for (const child of node.children) {
-    const line = child.sourceStartLine;
-    if (!childrenByLine.has(line)) childrenByLine.set(line, []);
-    childrenByLine.get(line)!.push(child);
-  }
-
-  for (let i = startIdx; i <= endIdx; i++) {
-    if (i < 0 || i >= fragments.length) continue;
-    const lineNum = i + 1;
-    const childrenOnLine = childrenByLine.get(lineNum) || [];
-
-    if (childrenOnLine.length > 0 && endIdx > startIdx) {
-      if (i === startIdx) {
-        if (!fragments[i].contentNode) {
-          // Recursively collect spans from this node and all descendants
-          // that start on the same line, flattening them into one line.
-          function collectSpans(n: DisplayNodeData): DisplaySpan[] {
-            const result: DisplaySpan[] = [...n.spans];
-            for (const child of n.children) {
-              if (child.sourceStartLine === lineNum) {
-                result.push({ text: ' ' });
-                result.push(...collectSpans(child));
-              }
-            }
-            return result;
-          }
-          fragments[i].contentNode = {
-            ...node,
-            spans: collectSpans(node),
-            children: [],
-          };
-        }
-      }
-    } else if (childrenOnLine.length > 0 && endIdx === startIdx) {
-      if (!fragments[i].contentNode) {
-        // Recursively collect spans from this node and all descendants
-        // that start on the same line, flattening them together.
-        function collectSingleSpans(n: DisplayNodeData): DisplaySpan[] {
-          const result: DisplaySpan[] = [...n.spans];
-          for (const child of n.children) {
-            if (child.sourceStartLine === lineNum) {
-              result.push({ text: ' ' });
-              result.push(...collectSingleSpans(child));
-            }
-          }
-          return result;
-        }
-        fragments[i].contentNode = {
-          ...node,
-          spans: collectSingleSpans(node),
-          children: [],
-        };
-      }
-    } else if (i === startIdx && !fragments[i].contentNode) {
-      fragments[i].contentNode = node;
+  if (startIdx >= 0 && startIdx < fragments.length && !fragments[startIdx].contentNode) {
+    const lineNum = startIdx + 1;
+    const sameLineChildren = node.children.filter(c => c.sourceStartLine === lineNum);
+    if (sameLineChildren.length > 0) {
+      fragments[startIdx].contentNode = {
+        ...node,
+        spans: collectStartLineSpans(node, lineNum),
+        children: [],
+      };
+    } else if (startIdx === endIdx && node.closeText) {
+      fragments[startIdx].contentNode = {
+        ...node,
+        spans: [...node.spans, { text: '\n' }, { text: node.closeText }],
+        children: [],
+      };
+    } else {
+      fragments[startIdx].contentNode = node;
     }
   }
 
   for (const child of node.children) {
     distributeNode(child, fragments, depth + 1);
+  }
+
+  if (node.closeText && endIdx !== startIdx && endIdx >= 0 && endIdx < fragments.length) {
+    const existing = fragments[endIdx].contentNode;
+    if (existing) {
+      fragments[endIdx].contentNode = {
+        ...existing,
+        spans: [...existing.spans, { text: '\n' }, { text: node.closeText }],
+      };
+    } else {
+      fragments[endIdx].contentNode = {
+        indent: node.indent,
+        spans: [{ text: node.closeText }],
+        children: [],
+        sourceStartLine: node.sourceEndLine,
+        sourceEndLine: node.sourceEndLine,
+        bucket: node.bucket,
+        nested: false,
+      };
+    }
   }
 }
 
@@ -199,7 +174,7 @@ export function buildViewModel(
   nodes: SemanticNode[],
   sourceCode: string
 ): ViewModel {
-  const rootNodes = nodes.filter((n) => n.sourceStartLine > 0).map(toDisplayNode);
+  const rootNodes = nodes.filter((n) => n.sourceStartLine > 0).map(n => toDisplayNode(n));
   const sourceLines = sourceCode.split('\n');
   const totalLines = sourceLines.length;
 

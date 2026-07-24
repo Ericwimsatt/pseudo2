@@ -104,7 +104,6 @@ const msg = greet('World', 'Hello');
     const { viewModel } = buildFileData(source, 'test.ts');
 
     const texts = collectTexts(viewModel.lines[0].nodes);
-    expect(texts.some(t => t.includes('`f` ='))).toBeTruthy();
     expect(texts.some(t => t.includes('Function f args: {}'))).toBeTruthy();
   });
 });

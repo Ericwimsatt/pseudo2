@@ -38,7 +38,7 @@ describe('computeMatches', () => {
       sourceText: 'foo',
       boxFragment: {
         layers: [],
-        contentNode: { indent: 0, spans: [{ text: 'bar translation' }], children: [], sourceStartLine: 1, sourceEndLine: 1, bucket: 'standard' },
+        contentNode: { indent: 0, spans: [{ text: 'bar translation' }], children: [], sourceStartLine: 1, sourceEndLine: 1, bucket: 'standard', nested: false },
       },
     })];
     const matches = computeMatches(lines, 'translation');
@@ -51,7 +51,7 @@ describe('computeMatches', () => {
       sourceText: 'hello world',
       boxFragment: {
         layers: [],
-        contentNode: { indent: 0, spans: [{ text: 'hello again' }], children: [], sourceStartLine: 1, sourceEndLine: 1, bucket: 'standard' },
+        contentNode: { indent: 0, spans: [{ text: 'hello again' }], children: [], sourceStartLine: 1, sourceEndLine: 1, bucket: 'standard', nested: false },
       },
     })];
     const matches = computeMatches(lines, 'hello');

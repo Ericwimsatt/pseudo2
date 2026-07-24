@@ -20,9 +20,13 @@ export function BoxFragment({ fragment }: BoxFragmentProps) {
     return null;
   }
 
+  const maxDepth = fragment.layers.length > 0
+    ? Math.max(...fragment.layers.map(l => l.depth))
+    : 0;
+
   let content = fragment.contentNode
     ? (
-      <div className="whitespace-pre-wrap break-words font-mono text-sm px-2 py-0.5">
+      <div className="whitespace-pre-wrap break-words font-mono text-sm px-2 py-0.5" style={{ paddingLeft: maxDepth * 12 }}>
         <DisplayNode node={fragment.contentNode} />
       </div>
     )

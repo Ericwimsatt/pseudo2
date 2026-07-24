@@ -26,8 +26,8 @@ export function HoverPopover() {
 
   useEffect(() => {
     refs.setReference((hovered.trigger as ReferenceType | null) ?? null);
-    setOpen(!!hovered.hover && !!hovered.trigger);
-  }, [hovered.hover, hovered.trigger, refs]);
+    setOpen(!!(hovered.fallbackTitle || hovered.refPos !== undefined) && !!hovered.trigger);
+  }, [hovered.fallbackTitle, hovered.fallbackBody, hovered.refPos, hovered.trigger, refs]);
 
   useEffect(() => {
     const el = popRef.current;
@@ -43,7 +43,7 @@ export function HoverPopover() {
     onDismiss: scheduleHide,
   });
 
-  if (!open || !hovered.hover) return null;
+  if (!open) return null;
 
   return (
     <FloatingPortal>
@@ -57,7 +57,7 @@ export function HoverPopover() {
         onMouseEnter={cancelClear}
         onMouseLeave={scheduleHide}
       >
-        <ToolTip hover={hovered.hover} refPos={hovered.refPos} filePath={hovered.filePath} />
+        <ToolTip refPos={hovered.refPos} filePath={hovered.filePath} fallbackTitle={hovered.fallbackTitle} fallbackBody={hovered.fallbackBody} />
       </div>
     </FloatingPortal>
   );

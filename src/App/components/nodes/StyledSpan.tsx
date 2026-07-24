@@ -1,14 +1,13 @@
 import { useEffect, useRef, useContext } from 'react';
 import { cx } from './styleHelpers';
 import { useHover } from '../hover/useHover';
-import type { HoverContent } from '../../../main/translationService/renderable/types';
 import { SearchContext } from '../../lib/searchContext';
 import { FilePathContext } from '../../lib/filePathContext';
 
 interface Props {
   text: string;
   classes?: string[];
-  hover?: HoverContent;
+  tooltipFallback?: { title: string; body?: string };
   onClick?: (e: React.MouseEvent) => void;
   onHover?: () => void;
   refPos?: number;
@@ -52,7 +51,7 @@ function highlightText(text: string, term: string, isActive: boolean) {
 export function StyledSpan({
   text,
   classes,
-  hover,
+  tooltipFallback,
   onClick,
   onHover,
   refPos,
@@ -62,11 +61,11 @@ export function StyledSpan({
   const filePath = useContext(FilePathContext);
   const elRef = useRef<HTMLSpanElement>(null);
   const hoveredRef = useRef(false);
-  const hasTooltip = !!(hover || refPos !== undefined);
+  const hasTooltip = !!(tooltipFallback || refPos !== undefined);
 
   const handleEnter = () => {
     if (hasTooltip && elRef.current) {
-      setHovered({ hover: hover ?? { title: '' }, trigger: elRef.current, refPos, filePath });
+      setHovered({ trigger: elRef.current, refPos, filePath, fallbackTitle: tooltipFallback?.title, fallbackBody: tooltipFallback?.body });
       hoveredRef.current = true;
     }
     onHover?.();
@@ -74,9 +73,9 @@ export function StyledSpan({
 
   useEffect(() => {
     if (hoveredRef.current && hasTooltip && elRef.current) {
-      setHovered({ hover: hover ?? { title: '' }, trigger: elRef.current, refPos, filePath });
+      setHovered({ trigger: elRef.current, refPos, filePath, fallbackTitle: tooltipFallback?.title, fallbackBody: tooltipFallback?.body });
     }
-  }, [hover, refPos, setHovered, filePath, hasTooltip]);
+  }, [tooltipFallback, refPos, setHovered, filePath, hasTooltip]);
 
   const handleLeave = () => {
     hoveredRef.current = false;

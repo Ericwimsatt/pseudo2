@@ -1,13 +1,13 @@
 import type { SemanticNode } from '../makeSemanticGraph';
-import type { DisplayNodeData, DisplaySpan, HoverContent } from './types';
+import type { DisplayNodeData, DisplaySpan } from './types';
 import { bucketForNode } from './bucket';
-import { buildHover, getKeywordTooltip, getReactHookTooltip } from './hover';
 import { translateType } from './translateType';
 import phrasingRules from '../../../../config/phrasing-rules.json' with { type: 'json' };
 
 interface PhrasingRule {
   type: string;
   template: string;
+  children?: { open: string; close: string };
 }
 
 let RULES: PhrasingRule[] = phrasingRules;
@@ -29,33 +29,34 @@ function ts(
   type: string,
   vars: Record<string, string | undefined>,
   refPos?: number,
-  hoverMap?: Record<string, HoverContent | undefined>,
 ): DisplaySpan[] {
   const rule = RULES.find(r => r.type === type);
   if (!rule) return [span(`[${type}]`)];
 
   const spans: DisplaySpan[] = [];
-  const regex = /\{(\w+)@(ref|hover)\}/g;
+  const regex = /\{(\w+)@ref\}/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;
+
+  const resolveVars = (text: string): string =>
+    text.replace(/\{(\w+)(?:@\w+)?\}/g, (_, key: string) => vars[key] ?? `{${key}}`);
 
   while ((match = regex.exec(rule.template)) !== null) {
     const before = rule.template.slice(lastIndex, match.index);
     if (before) {
-      spans.push(span(before.replace(/\{(\w+)\}/g, (_, key) => vars[key] ?? `{${key}}`)));
+      spans.push(span(resolveVars(before)));
     }
 
     const varName = match[1];
     const value = vars[varName] ?? `{${varName}}`;
-    const hover = hoverMap?.[varName];
-    spans.push(span(value, hover, match[2] === 'ref' ? refPos : undefined));
+    spans.push(span(value, refPos));
 
     lastIndex = match.index + match[0].length;
   }
 
   const after = rule.template.slice(lastIndex);
   if (after) {
-    spans.push(span(after.replace(/\{(\w+)\}/g, (_, key) => vars[key] ?? `{${key}}`)));
+    spans.push(span(resolveVars(after)));
   }
 
   return spans;
@@ -63,9 +64,8 @@ function ts(
 
 type Phraser = (node: SemanticNode) => DisplaySpan[];
 
-function span(text: string, hover?: HoverContent, refPos?: number): DisplaySpan {
+function span(text: string, refPos?: number): DisplaySpan {
   const result: DisplaySpan = { text };
-  if (hover) result.hover = hover;
   if (refPos !== undefined) {
     result.refPos = refPos;
     result.hasHover = true;
@@ -75,14 +75,13 @@ function span(text: string, hover?: HoverContent, refPos?: number): DisplaySpan 
 
 function exportedPrefix(node: SemanticNode): DisplaySpan[] {
   if (!node.metadata.exported) return [];
-  const tooltip = getKeywordTooltip('export');
-  return [span('Export: ', tooltip ?? undefined)];
+  return [span('Export: ')];
 }
 
 function phraseImport(node: SemanticNode): DisplaySpan[] {
   const names = String(node.name ?? '');
   const module = String(node.metadata.module ?? '');
-  return ts('import', { names, module }, node.refPos, { module: buildHover('Module', module) });
+  return ts('import', { names, module }, node.refPos);
 }
 
 function phraseExport(node: SemanticNode): DisplaySpan[] {
@@ -90,7 +89,7 @@ function phraseExport(node: SemanticNode): DisplaySpan[] {
   const module = String(node.metadata.module ?? '');
   const verb = names.includes(',') ? 'are' : 'is';
   if (module) {
-    return ts('export-re-export', { names, verb, module }, node.refPos, { module: buildHover('Module', module) });
+    return ts('export-re-export', { names, verb, module }, node.refPos);
   }
   return ts('export', { names, verb }, node.refPos);
 }
@@ -138,20 +137,21 @@ function phraseProperty(node: SemanticNode): DisplaySpan[] {
 function phraseVariableAssignment(node: SemanticNode): DisplaySpan[] {
   const name = node.name ?? 'anonymous';
   const init = node.metadata.initializer as string | null;
+  if (node.type === 'variable-assignment-target') {
+    return [...exportedPrefix(node), ...ts('variable-assignment-target', { name }, node.refPos)];
+  }
   if (init) {
     return [...exportedPrefix(node), ...ts('variable-assignment', { name, initializer: init }, node.refPos)];
   }
-  if (node.children && node.children.length > 0) {
-    return [...exportedPrefix(node), ...ts('variable-assignment-target', { name }, node.refPos)];
-  }
-  return [...exportedPrefix(node), span(`\`${name}\``, undefined, node.refPos)];
+  return [...exportedPrefix(node), span(`\`${name}\``, node.refPos)];
 }
 
 function phraseReturn(node: SemanticNode): DisplaySpan[] {
-  if (node.metadata.hasJsx) return [span(t('return-jsx', {}))];
-  const value = node.metadata.value as string | null;
-  if (value) return [span(t('return-value', { value }))];
-  if (node.children.length > 0) return [span(t('return-target', {}))];
+  if (node.type === 'return-jsx') return [span(t('return-jsx', {}))];
+  if (node.type === 'return-value') {
+    return [span(t('return-value', { value: String(node.metadata.value ?? '') }))];
+  }
+  if (node.type === 'return-target') return [span(t('return-target', {}))];
   return [span(t('return', {}))];
 }
 
@@ -176,12 +176,10 @@ function phraseLoop(node: SemanticNode): DisplaySpan[] {
 
 function phraseCallFunction(node: SemanticNode): DisplaySpan[] {
   const fn = String(node.metadata.function ?? '');
-  const tooltip = getReactHookTooltip(fn) ?? undefined;
-  const hoverMap = tooltip ? { function: tooltip } : undefined;
   if (node.metadata.isNew) {
-    return ts('instantiate', { function: fn }, node.refPos, hoverMap);
+    return ts('instantiate', { function: fn }, node.refPos);
   }
-  return ts('call-function', { function: fn }, node.refPos, hoverMap);
+  return ts('call-function', { function: fn }, node.refPos);
 }
 
 interface EventItem {
@@ -196,21 +194,9 @@ function phraseJsxAttrs(node: SemanticNode): DisplaySpan[] {
   const spans: DisplaySpan[] = [];
 
   if (meta.className) {
-    spans.push(
-      span(' className='),
-      span(
-        `"${meta.className}"`,
-        buildHover('className', String(meta.classNameDescription ?? ''), { classes: meta.className }),
-      ),
-    );
+    spans.push(span(' className='), span(`"${meta.className}"`));
   } else if (meta.classNameDescription) {
-    spans.push(
-      span(' className='),
-      span(
-        `"${meta.classNameDescription}"`,
-        buildHover('className', String(meta.classNameDescription)),
-      ),
-    );
+    spans.push(span(' className='), span(`"${meta.classNameDescription}"`));
   }
 
   if (meta.props && typeof meta.props === 'object') {
@@ -227,7 +213,7 @@ function phraseJsxAttrs(node: SemanticNode): DisplaySpan[] {
     for (const ev of meta.events as EventItem[]) {
       spans.push(span(` ${ev.name}`), span('='));
       if (ev.handlerName && ev.handlerRefPos !== undefined) {
-        spans.push(span(`{${ev.handlerName}}`, undefined, ev.handlerRefPos));
+        spans.push(span(`{${ev.handlerName}}`, ev.handlerRefPos));
       } else {
         spans.push(span('{...}'));
       }
@@ -235,17 +221,11 @@ function phraseJsxAttrs(node: SemanticNode): DisplaySpan[] {
   }
 
   if (meta.href) {
-    spans.push(
-      span(' href='),
-      span(`"${meta.href}"`, buildHover('href', String(meta.href))),
-    );
+    spans.push(span(' href='), span(`"${meta.href}"`));
   }
 
   if (meta.src) {
-    spans.push(
-      span(' src='),
-      span(`"${meta.src}"`, buildHover('src', String(meta.src))),
-    );
+    spans.push(span(' src='), span(`"${meta.src}"`));
   }
 
   if (meta.alt) {
@@ -259,7 +239,7 @@ function phraseJsxElement(node: SemanticNode): DisplaySpan[] {
   const name = node.name!;
   const spans = [
     span('<'),
-    span(name, buildHover(name, String(node.metadata.tagDescription ?? '')), node.refPos),
+    span(name, node.refPos),
     ...phraseJsxAttrs(node),
   ];
   if (node.metadata.selfClosing) {
@@ -384,14 +364,22 @@ const PHRASERS: Record<string, Phraser> = {
   'object-literal-close': phraseObjectLiteralClose,
 };
 
-export function toDisplayNode(node: SemanticNode): DisplayNodeData {
+export function toDisplayNode(node: SemanticNode, depth = 0): DisplayNodeData {
   const phrase = PHRASERS[node.type] ?? phraseFallback;
+  const spans = phrase(node);
+  const rule = RULES.find(r => r.type === node.type);
+  const nested = !!rule?.children;
+  if (nested) {
+    spans.push({ text: rule!.children!.open });
+  }
   return {
-    indent: node.indent,
-    spans: phrase(node),
-    children: node.children.map(toDisplayNode),
+    indent: depth,
+    spans,
+    children: node.children.map(c => toDisplayNode(c, depth + 1)),
     sourceStartLine: node.sourceStartLine,
     sourceEndLine: node.sourceEndLine,
     bucket: bucketForNode(node),
+    nested,
+    closeText: nested ? rule!.children!.close : undefined,
   };
 }

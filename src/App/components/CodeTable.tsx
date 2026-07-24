@@ -14,6 +14,8 @@ interface CodeTableProps {
   targetVar?: string | null;
 }
 
+export type SelectionMode = 'source' | 'translation' | 'both';
+
 export interface SearchMatch {
   lineIndex: number;
   inSource: boolean;
@@ -49,6 +51,7 @@ function CodeTableInner({
   const [isResizing, setIsResizing] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectionMode, setSelectionMode] = useState<SelectionMode>('both');
   const [activeMatchIndex, setActiveMatchIndex] = useState(0);
   const lines = viewModel.lines;
 
@@ -113,6 +116,18 @@ function CodeTableInner({
         setSearchTerm('');
         setActiveMatchIndex(0);
       }
+      if (!isSearchOpen && !e.metaKey && !e.ctrlKey && !e.altKey && !e.shiftKey) {
+        if (e.key === 's') {
+          e.preventDefault();
+          setSelectionMode('source');
+        } else if (e.key === 't') {
+          e.preventDefault();
+          setSelectionMode('translation');
+        } else if (e.key === 'b') {
+          e.preventDefault();
+          setSelectionMode('both');
+        }
+      }
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
@@ -176,9 +191,26 @@ function CodeTableInner({
     <div ref={containerRef} className="flex-1 overflow-y-auto overflow-x-hidden bg-white">
       <div className="sticky top-0 z-10">
         <div className="bg-gray-50 border-b border-gray-200 px-4 py-2 flex items-center gap-3">
-          <h3 className="font-semibold text-sm text-gray-700 truncate flex-1">
+          <h3 className="font-semibold text-sm text-gray-700 truncate">
             {fileName}
           </h3>
+          <div className="flex items-center gap-1 text-xs ml-auto">
+            {(['source', 'translation', 'both'] as const).map((mode) => (
+              <button
+                key={mode}
+                onClick={() => setSelectionMode(mode)}
+                title={`Select ${mode} only (${mode[0]})`}
+                className={cx(
+                  'px-2 py-0.5 rounded border',
+                  selectionMode === mode
+                    ? 'bg-blue-100 border-blue-300 text-blue-700'
+                    : 'border-gray-300 text-gray-500 hover:bg-gray-200'
+                )}
+              >
+                {mode === 'source' ? 'Src' : mode === 'translation' ? 'Trans' : 'All'}
+              </button>
+            ))}
+          </div>
           {isSearchOpen && (
             <div className="flex items-center gap-2 text-xs">
               <input
@@ -255,6 +287,7 @@ function CodeTableInner({
             searchMatches={searchMatches}
             activeMatchIndex={activeMatchIndex}
             navVar={targetVar ?? undefined}
+            selectionMode={selectionMode}
           />
         ))}
       </div>

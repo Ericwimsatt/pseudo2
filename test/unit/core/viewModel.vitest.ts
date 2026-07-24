@@ -7,7 +7,6 @@ function makeNode(type: string, startLine: number, endLine: number, extra: Parti
     type,
     children: [],
     metadata: {},
-    indent: 0,
     sourceStartLine: startLine,
     sourceEndLine: endLine,
     ...extra,

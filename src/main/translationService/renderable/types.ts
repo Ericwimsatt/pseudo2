@@ -30,7 +30,6 @@ export interface DisplaySpan {
   variant?: NodeVariant;
   refPos?: number;
   hasHover?: boolean;
-  hover?: HoverContent;
 }
 
 export interface DisplayNodeData {
@@ -40,6 +39,8 @@ export interface DisplayNodeData {
   sourceStartLine: number;
   sourceEndLine: number;
   bucket: NodeBucket;
+  nested: boolean;
+  closeText?: string;
 }
 
 export interface BoxLayer {
@@ -69,11 +70,15 @@ export type TooltipSection =
   | { type: 'type'; text: string };
 
 export interface TooltipData {
+  title?: string;
+  body?: string;
+  metadata?: Record<string, unknown>;
   sections: TooltipSection[];
 }
 
 export interface EnrichQuery {
   refPos: number;
+  identifier?: string;
 }
 
 export type QueryAnswer = TooltipData;

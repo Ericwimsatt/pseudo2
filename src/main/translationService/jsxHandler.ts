@@ -758,7 +758,7 @@ function unwrapExpression(expr: Node): Node {
   return expr;
 }
 
-function processMapCall(call: CallExpression, indent: number): SemanticNode | null {
+function processMapCall(call: CallExpression): SemanticNode | null {
   const expr = call.getExpression();
   if (!Node.isPropertyAccessExpression(expr)) return null;
   if (expr.getName() !== 'map') return null;
@@ -793,7 +793,7 @@ function processMapCall(call: CallExpression, indent: number): SemanticNode | nu
 
   const children: SemanticNode[] = [];
   if (bodyExpr && isJsxNode(bodyExpr)) {
-    const child = processJsxNode(bodyExpr, indent + 1);
+    const child = processJsxNode(bodyExpr);
     if (child) children.push(child);
   }
 
@@ -807,13 +807,12 @@ function processMapCall(call: CallExpression, indent: number): SemanticNode | nu
       itemName,
       indexName,
     },
-    indent,
     sourceStartLine: lines.start,
     sourceEndLine: lines.end,
   };
 }
 
-function processFilterCall(call: CallExpression, indent: number): SemanticNode | null {
+function processFilterCall(call: CallExpression): SemanticNode | null {
   const expr = call.getExpression();
   if (!Node.isPropertyAccessExpression(expr)) return null;
   if (expr.getName() !== 'filter') return null;
@@ -835,13 +834,12 @@ function processFilterCall(call: CallExpression, indent: number): SemanticNode |
       collection,
       condition,
     },
-    indent,
     sourceStartLine: lines.start,
     sourceEndLine: lines.end,
   };
 }
 
-function processConditionalAnd(expr: BinaryExpression, indent: number): SemanticNode | null {
+function processConditionalAnd(expr: BinaryExpression): SemanticNode | null {
   if (expr.getOperatorToken().getKind() !== SyntaxKind.AmpersandAmpersandToken) return null;
 
   const condition = expr.getLeft().getText();
@@ -849,7 +847,7 @@ function processConditionalAnd(expr: BinaryExpression, indent: number): Semantic
 
   const right = unwrapExpression(expr.getRight());
   if (isJsxNode(right)) {
-    const child = processJsxNode(right, indent + 1);
+    const child = processJsxNode(right);
     if (child) children.push(child);
   }
 
@@ -861,13 +859,12 @@ function processConditionalAnd(expr: BinaryExpression, indent: number): Semantic
       condition,
       variant: 'and',
     },
-    indent,
     sourceStartLine: lines.start,
     sourceEndLine: lines.end,
   };
 }
 
-function processTernary(expr: ConditionalExpression, indent: number): SemanticNode {
+function processTernary(expr: ConditionalExpression): SemanticNode {
   const condition = expr.getCondition().getText();
   const trueChildren: SemanticNode[] = [];
   const falseChildren: SemanticNode[] = [];
@@ -876,7 +873,7 @@ function processTernary(expr: ConditionalExpression, indent: number): SemanticNo
   const falseExpr = unwrapExpression(expr.getWhenFalse());
 
   if (isJsxNode(trueExpr)) {
-    const child = processJsxNode(trueExpr, indent + 1);
+    const child = processJsxNode(trueExpr);
     if (child) trueChildren.push(child);
   } else if (Node.isStringLiteral(trueExpr)) {
     const childLines = getNodeLineRange(trueExpr);
@@ -884,7 +881,6 @@ function processTernary(expr: ConditionalExpression, indent: number): SemanticNo
       type: 'jsx-text',
       children: [],
       metadata: { text: trueExpr.getText() },
-      indent: indent + 1,
       sourceStartLine: childLines.start,
       sourceEndLine: childLines.end,
     });
@@ -894,14 +890,13 @@ function processTernary(expr: ConditionalExpression, indent: number): SemanticNo
       type: 'jsx-expression',
       children: [],
       metadata: { expression: trueExpr.getText() },
-      indent: indent + 1,
       sourceStartLine: childLines.start,
       sourceEndLine: childLines.end,
     });
   }
 
   if (isJsxNode(falseExpr)) {
-    const child = processJsxNode(falseExpr, indent + 1);
+    const child = processJsxNode(falseExpr);
     if (child) falseChildren.push(child);
   } else if (Node.isStringLiteral(falseExpr)) {
     const childLines = getNodeLineRange(falseExpr);
@@ -909,7 +904,6 @@ function processTernary(expr: ConditionalExpression, indent: number): SemanticNo
       type: 'jsx-text',
       children: [],
       metadata: { text: falseExpr.getText() },
-      indent: indent + 1,
       sourceStartLine: childLines.start,
       sourceEndLine: childLines.end,
     });
@@ -919,7 +913,6 @@ function processTernary(expr: ConditionalExpression, indent: number): SemanticNo
       type: 'jsx-expression',
       children: [],
       metadata: { expression: falseExpr.getText() },
-      indent: indent + 1,
       sourceStartLine: childLines.start,
       sourceEndLine: childLines.end,
     });
@@ -934,13 +927,12 @@ function processTernary(expr: ConditionalExpression, indent: number): SemanticNo
       variant: 'ternary',
       hasAlternate: falseChildren.length > 0,
     },
-    indent,
     sourceStartLine: lines.start,
     sourceEndLine: lines.end,
   };
 }
 
-function processJsxExpression(node: JsxExpression, indent: number): SemanticNode | null {
+function processJsxExpression(node: JsxExpression): SemanticNode | null {
   const expr = node.getExpression();
   if (!expr) return null;
 
@@ -950,10 +942,10 @@ function processJsxExpression(node: JsxExpression, indent: number): SemanticNode
     const propAccess = unwrapped.getExpression();
     if (Node.isPropertyAccessExpression(propAccess)) {
       if (propAccess.getName() === 'map') {
-        return processMapCall(unwrapped, indent);
+        return processMapCall(unwrapped);
       }
       if (propAccess.getName() === 'filter') {
-        const filterNode = processFilterCall(unwrapped, indent);
+        const filterNode = processFilterCall(unwrapped);
         if (filterNode) return filterNode;
       }
     }
@@ -962,19 +954,18 @@ function processJsxExpression(node: JsxExpression, indent: number): SemanticNode
       type: 'jsx-expression',
       children: [],
       metadata: { expression: unwrapped.getText() },
-      indent,
       sourceStartLine: lines.start,
       sourceEndLine: lines.end,
     };
   }
 
   if (Node.isBinaryExpression(unwrapped)) {
-    const conditional = processConditionalAnd(unwrapped, indent);
+    const conditional = processConditionalAnd(unwrapped);
     if (conditional) return conditional;
   }
 
   if (Node.isConditionalExpression(unwrapped)) {
-    return processTernary(unwrapped, indent);
+    return processTernary(unwrapped);
   }
 
   if (Node.isStringLiteral(unwrapped) || Node.isNumericLiteral(unwrapped)) {
@@ -983,7 +974,6 @@ function processJsxExpression(node: JsxExpression, indent: number): SemanticNode
       type: 'jsx-text',
       children: [],
       metadata: { text: unwrapped.getText() },
-      indent,
       sourceStartLine: lines.start,
       sourceEndLine: lines.end,
     };
@@ -995,7 +985,6 @@ function processJsxExpression(node: JsxExpression, indent: number): SemanticNode
       type: 'jsx-expression',
       children: [],
       metadata: { expression: unwrapped.getText(), isTemplate: true },
-      indent,
       sourceStartLine: lines.start,
       sourceEndLine: lines.end,
     };
@@ -1008,7 +997,6 @@ function processJsxExpression(node: JsxExpression, indent: number): SemanticNode
       refPos: unwrapped.getStart(),
       children: [],
       metadata: { expression: unwrapped.getText(), isSimpleIdentifier: true },
-      indent,
       sourceStartLine: lines.start,
       sourceEndLine: lines.end,
     };
@@ -1017,13 +1005,12 @@ function processJsxExpression(node: JsxExpression, indent: number): SemanticNode
     type: 'jsx-expression',
     children: [],
     metadata: { expression: unwrapped.getText() },
-    indent,
     sourceStartLine: lines.start,
     sourceEndLine: lines.end,
   };
 }
 
-function processJsxText(node: Node, indent: number): SemanticNode | null {
+function processJsxText(node: Node): SemanticNode | null {
   const text = node.getText().replace(/\s+/g, ' ').trim();
   if (!text) return null;
   const lines = getNodeLineRange(node);
@@ -1031,42 +1018,41 @@ function processJsxText(node: Node, indent: number): SemanticNode | null {
     type: 'jsx-text',
     children: [],
     metadata: { text },
-    indent,
     sourceStartLine: lines.start,
     sourceEndLine: lines.end,
   };
 }
 
-function processChildren(children: Node[], indent: number): SemanticNode[] {
+function processChildren(children: Node[]): SemanticNode[] {
   const result: SemanticNode[] = [];
 
   for (const child of children) {
     if (Node.isJsxText(child)) {
-      const node = processJsxText(child, indent);
+      const node = processJsxText(child);
       if (node) result.push(node);
     } else if (Node.isJsxElement(child)) {
-      result.push(processElement(child, indent));
+      result.push(processElement(child));
     } else if (Node.isJsxSelfClosingElement(child)) {
-      result.push(processSelfClosing(child, indent));
+      result.push(processSelfClosing(child));
     } else if (Node.isJsxExpression(child)) {
-      const node = processJsxExpression(child, indent);
+      const node = processJsxExpression(child);
       if (node) result.push(node);
     } else if (Node.isJsxFragment(child)) {
-      result.push(processFragment(child, indent));
+      result.push(processFragment(child));
     }
   }
 
   return result;
 }
 
-function processElement(node: JsxElement, indent: number): SemanticNode {
+function processElement(node: JsxElement): SemanticNode {
   const tagNameNode = node.getOpeningElement().getTagNameNode();
   const tagName = getTagName(tagNameNode);
   const tagDesc = describeTag(tagName);
   const isComp = isComponentTag(tagName);
   const refPos = isComp && Node.isIdentifier(tagNameNode) ? tagNameNode.getStart() : undefined;
   const { description: attrDesc, metadata: attrMeta } = processAttributes(node.getOpeningElement().getAttributes(), tagName);
-  const children = processChildren(node.getJsxChildren(), indent + 1);
+  const children = processChildren(node.getJsxChildren());
 
   const lines = getNodeLineRange(node);
   return {
@@ -1080,13 +1066,12 @@ function processElement(node: JsxElement, indent: number): SemanticNode {
       attributeDescription: attrDesc,
       ...attrMeta,
     },
-    indent,
     sourceStartLine: lines.start,
     sourceEndLine: lines.end,
   };
 }
 
-function processSelfClosing(node: JsxSelfClosingElement, indent: number): SemanticNode {
+function processSelfClosing(node: JsxSelfClosingElement): SemanticNode {
   const tagNameNode = node.getTagNameNode();
   const tagName = getTagName(tagNameNode);
   const tagDesc = describeTag(tagName);
@@ -1107,20 +1092,18 @@ function processSelfClosing(node: JsxSelfClosingElement, indent: number): Semant
       selfClosing: true,
       ...attrMeta,
     },
-    indent,
     sourceStartLine: lines.start,
     sourceEndLine: lines.end,
   };
 }
 
-function processFragment(node: JsxFragment, indent: number): SemanticNode {
-  const children = processChildren(node.getJsxChildren(), indent + 1);
+function processFragment(node: JsxFragment): SemanticNode {
+  const children = processChildren(node.getJsxChildren());
   const lines = getNodeLineRange(node);
   return {
     type: 'jsx-fragment',
     children,
     metadata: {},
-    indent,
     sourceStartLine: lines.start,
     sourceEndLine: lines.end,
   };
@@ -1130,10 +1113,10 @@ export function isJsxNode(node: Node): boolean {
   return Node.isJsxElement(node) || Node.isJsxSelfClosingElement(node) || Node.isJsxFragment(node);
 }
 
-export function processJsxNode(node: Node, indent: number): SemanticNode | null {
-  if (Node.isJsxElement(node)) return processElement(node, indent);
-  if (Node.isJsxSelfClosingElement(node)) return processSelfClosing(node, indent);
-  if (Node.isJsxFragment(node)) return processFragment(node, indent);
+export function processJsxNode(node: Node): SemanticNode | null {
+  if (Node.isJsxElement(node)) return processElement(node);
+  if (Node.isJsxSelfClosingElement(node)) return processSelfClosing(node);
+  if (Node.isJsxFragment(node)) return processFragment(node);
   return null;
 }
 

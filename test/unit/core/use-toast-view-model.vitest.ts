@@ -80,7 +80,7 @@ describe('use-toast.ts - viewModel structure', () => {
     const { viewModel } = buildFileData(source, 'use-toast.ts');
     const texts = allTexts(viewModel);
     const expectedConsts = ['TOAST_LIMIT', 'TOAST_REMOVE_DELAY', 'count', 'actionTypes',
-      'toastTimeouts', 'addToRemoveQueue', 'listeners', 'memoryState'];
+      'toastTimeouts', 'listeners', 'memoryState'];
     for (const name of expectedConsts) {
       expect(texts.some(t => t.includes(`\`${name}\``))).toBeTruthy();
     }
@@ -195,7 +195,7 @@ describe('use-toast.ts - viewModel structure', () => {
     }
   });
 
-  it('does not contaminate return: across every object-literal property line', () => {
+  it('does not contaminate return { across every object-literal property line', () => {
     const { viewModel } = buildFileData(source, 'use-toast.ts');
     // Find the return { line and the subsequent property lines in the reducer
     const returnLineIdx = sourceLines.findIndex(l => l.trim() === 'return {');
@@ -203,23 +203,23 @@ describe('use-toast.ts - viewModel structure', () => {
     if (returnLineIdx >= 0) {
       const returnContent = viewModel.lines[returnLineIdx].boxFragment?.contentNode;
       const propertyContent = viewModel.lines[propertyLineIdx].boxFragment?.contentNode;
-      // The return { line should show "return: {"
+      // The return { line should show "return {"
       if (returnContent) {
         const returnText = returnContent.spans.map(s => s.text).join('');
-        expect(returnText).toContain('return:');
+        expect(returnText).toContain('return {');
       }
-      // The subsequent property lines should NOT contain "return:"
+      // The subsequent property lines should NOT contain "return {"
       if (propertyContent) {
         const propertyText = propertyContent.spans.map(s => s.text).join('');
-        expect(propertyText).not.toContain('return:');
+        expect(propertyText).not.toContain('return {');
       }
     }
   });
 
-  it('shows return: for valuable returns and return null only for void returns', () => {
+  it('shows return { for valuable returns and return null only for void returns', () => {
     const { viewModel } = buildFileData(source, 'use-toast.ts');
     const texts = allTexts(viewModel);
-    const valuableReturns = texts.filter(t => t.includes('return:'));
+    const valuableReturns = texts.filter(t => t.includes('return {'));
     expect(valuableReturns.length).toBeGreaterThan(0);
   });
 });

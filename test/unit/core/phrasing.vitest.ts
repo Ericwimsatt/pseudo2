@@ -24,7 +24,6 @@ function makeNode(type: string, overrides: Partial<SemanticNode> = {}): Semantic
     name: undefined,
     children: [],
     metadata: {},
-    indent: 0,
     sourceStartLine: 1,
     sourceEndLine: 1,
     ...overrides,
@@ -115,7 +114,7 @@ const FIXTURES: Record<string, { node: Partial<SemanticNode>; expected: string[]
   // ── Returns ──────────────────────────────────────────────
   'return-jsx': {
     node: { metadata: { hasJsx: true } },
-    expected: ['Return Visual Elements:'],
+    expected: ['Return Visual Elements {'],
   },
   'return-value': {
     node: { metadata: { value: 'x', hasJsx: false } },
@@ -123,21 +122,21 @@ const FIXTURES: Record<string, { node: Partial<SemanticNode>; expected: string[]
   },
   'return': {
     node: { metadata: { value: null, hasJsx: false } },
-    expected: ['return'],
+    expected: ['return null'],
   },
   'return-target': {
     node: { metadata: { value: null, hasJsx: false }, children: [makeNode('call-function', { metadata: { function: 'foo' } })] },
-    expected: ['return:'],
+    expected: ['return {'],
   },
 
   // ── Conditionals ─────────────────────────────────────────
   'if': {
     node: { metadata: { condition: 'x > 0' } },
-    expected: ['If x > 0:'],
+    expected: ['If x > 0 {'],
   },
   'otherwise-if': {
     node: { metadata: { condition: 'y > 0' } },
-    expected: ['otherwise, If y > 0:'],
+    expected: ['otherwise, If y > 0: {'],
   },
   'otherwise': {
     node: {},
@@ -161,25 +160,25 @@ const FIXTURES: Record<string, { node: Partial<SemanticNode>; expected: string[]
   // ── Loops ────────────────────────────────────────────────
   'loop-for-of': {
     node: { metadata: { loopType: 'forOf' } },
-    expected: ['For each item:'],
+    expected: ['For each item: {'],
   },
   'loop-for-in': {
     node: { metadata: { loopType: 'forIn', collection: 'obj' } },
-    expected: ['For each item in obj:'],
+    expected: ['For each item in obj: {'],
   },
   'loop': {
     node: { metadata: { loopType: 'while' } },
-    expected: ['Loop:'],
+    expected: ['Loop: {'],
   },
 
   // ── Calls ────────────────────────────────────────────────
   'call-function': {
     node: { metadata: { function: 'foo' } },
-    expected: ['call foo'],
+    expected: ['call foo {'],
   },
   'instantiate': {
     node: { metadata: { function: 'Foo', isNew: true } },
-    expected: ['create a Foo'],
+    expected: ['create a Foo {'],
   },
 
   // ── JSX Elements ────────────────────────────────────────
@@ -253,7 +252,6 @@ const FIXTURES: Record<string, { node: Partial<SemanticNode>; expected: string[]
     node: { name: '...other', metadata: { value: '', isSpread: true } },
     expected: ['...other'],
   },
-
   // ── Export prefix ────────────────────────────────────────
   'class-exported': {
     node: { name: 'Foo', metadata: { exported: true } },
