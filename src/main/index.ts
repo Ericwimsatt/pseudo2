@@ -6,6 +6,7 @@ import { registerTranslationHandlers } from './translationService/translationCon
 import { registerTooltipHandlers } from './tooltip/tooltipController';
 import { registerProjectSelectHandlers } from './project/projectSelectController';
 import { registerStoreHandlers } from './store/storeController';
+import { registerFragmentHandlers } from './fragmentController';
 
 const isDev = !app.isPackaged;
 const DEV_PORT = process.env.DEV_PORT || '5173';
@@ -71,6 +72,7 @@ app.whenReady().then(() => {
   registerTooltipHandlers();
   registerProjectSelectHandlers();
   registerStoreHandlers();
+  registerFragmentHandlers();
   createWindow();
 
   app.on('activate', () => {

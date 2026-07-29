@@ -26,5 +26,8 @@ export function getRepoPath(): string {
 }
 
 export function setRepoPath(path: string): void {
+  if (repoPath !== path) {
+    clearCache();
+  }
   repoPath = path;
 }

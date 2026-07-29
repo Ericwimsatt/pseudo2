@@ -1,6 +1,8 @@
 import { ipcMain } from 'electron';
 import * as projectService from './projectService';
 
+// MIGRATION BOUNDARY: These handlers serve the React renderer.
+// After React removal, delete these and use getSidebarFragment / getLandingPageFragment.
 export function registerProjectHandlers(): void {
   ipcMain.handle('loadProject', async (_event, arg: { path: string }) => {
     return projectService.loadProject(arg.path);

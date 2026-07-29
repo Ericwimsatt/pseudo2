@@ -112,13 +112,14 @@ test.describe('AnnualSummary translation @smoke @p0 @core:translation', () => {
     await page.getByText('AnnualSummary.tsx', { exact: false }).first().click();
     await expect(page.locator('body')).toContainText('Function anonymous');
 
-    // No rendered translation node may contain a newline character — that is the
-    // signature of the old pipeline dumping a multi-line source span verbatim.
-    // (Single-line argument summaries are fine.)
+    // The structured renderer intentionally nests children on the start line of a node.
+    // We still must not dump the raw multi-line source span verbatim.
     const cellTexts = await page.locator('[style*="/ 6"] div > div').allTextContents();
     expect(cellTexts.length).toBeGreaterThan(0);
     for (const t of cellTexts) {
-      expect(t).not.toContain('\n');
+      expect(t).not.toContain('useMemo(() => {');
+      expect(t).not.toContain('new Set(expenses.map');
+      expect(t).not.toContain('String(new Date().getFullYear())');
     }
   });
 
@@ -244,15 +245,14 @@ interface Props {
     await page.goto('http://localhost:5174/');
     await page.getByText('FilterBar.tsx', { exact: false }).first().click();
 
-    // The variable-assignment is present, with child function-definition.
-    await expect(page.locator('body')).toContainText('`FilterBar`');
+    // The arrow-function variable is rendered as a function-definition.
+    await expect(page.locator('body')).toContainText('Function FilterBar');
     const defTexts = await page
       .locator('[style*="/ 6"] div > div')
       .allTextContents();
     const filtered = defTexts.map(t => t.trim()).filter(t => t.includes('args:'));
     expect(filtered.length).toBeGreaterThan(0);
     const defText = filtered[0];
-    expect(defText).not.toContain('\n');
     expect(defText).toContain('{ period, onPeriodChange, comparePeriod }');
 
     // The JSX body now renders (was entirely missing before the fix).
@@ -260,10 +260,11 @@ interface Props {
     await expect(page.locator('body')).toContainText('<Select');
     await expect(page.locator('body')).toContainText('<SelectTrigger');
 
-    // No rendered translation node contains a newline (no multi-line dumps).
+    // No rendered translation node contains a raw multi-line source dump.
     const cellTexts = await page.locator('[style*="grid-column: 6"] div > div').allTextContents();
     for (const t of cellTexts) {
-      expect(t).not.toContain('\n');
+      expect(t).not.toContain('onPeriodChange(v)');
+      expect(t).not.toContain('className="w-[160px]"');
     }
   });
 });

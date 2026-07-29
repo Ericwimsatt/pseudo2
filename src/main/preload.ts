@@ -44,6 +44,29 @@ const api = {
   clearLastFilePath: () =>
     ipcRenderer.invoke('clear-last-file'),
 
+  // MIGRATION BOUNDARY: Fragment IPC methods below are the new htmx renderer surface.
+  // Methods above are legacy React renderer endpoints and will be removed after cutover.
+  loadProjectFragment: (arg: ApiInvoke['loadProjectFragment']['arg']) =>
+    ipcRenderer.invoke('loadProjectFragment', arg),
+
+  getSidebarFragment: (arg: ApiInvoke['getSidebarFragment']['arg']) =>
+    ipcRenderer.invoke('getSidebarFragment', arg),
+
+  getFileFragment: (arg: ApiInvoke['getFileFragment']['arg']) =>
+    ipcRenderer.invoke('getFileFragment', arg),
+
+  getTooltipFragment: (arg: ApiInvoke['getTooltipFragment']['arg']) =>
+    ipcRenderer.invoke('getTooltipFragment', arg),
+
+  getFolderBrowserFragment: (arg: ApiInvoke['getFolderBrowserFragment']['arg']) =>
+    ipcRenderer.invoke('getFolderBrowserFragment', arg),
+
+  getLandingPageFragment: () =>
+    ipcRenderer.invoke('getLandingPageFragment', undefined),
+
+  getLoadingFragment: (arg: ApiInvoke['getLoadingFragment']['arg']) =>
+    ipcRenderer.invoke('getLoadingFragment', arg),
+
   onMenuLoadFolder: (callback: (path: string) => void) => {
     const handler = (_event: Electron.IpcRendererEvent, path: string) => callback(path);
     ipcRenderer.on('menu-load-folder', handler);

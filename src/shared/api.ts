@@ -18,6 +18,28 @@ export interface SourceLine {
   text: string;
 }
 
+export type FragmentKind =
+  | 'sidebar'
+  | 'file-table'
+  | 'folder-browser'
+  | 'landing-page'
+  | 'tooltip'
+  | 'loading'
+  | 'error';
+
+export interface FragmentMetadata {
+  kind: FragmentKind;
+  route?: string;
+  filePath?: string;
+  lineNumber?: number;
+  timestamp: number;
+}
+
+export interface HtmlFragmentResult {
+  html: string;
+  metadata: FragmentMetadata;
+}
+
 export interface ApiInvoke {
   loadProject: {
     arg: { path: string };
@@ -75,12 +97,48 @@ export interface ApiInvoke {
     arg: undefined;
     return: void;
   };
+  loadProjectFragment: {
+    arg: { path: string; selectedFile?: string | null; collapsed?: boolean };
+    return: HtmlFragmentResult;
+  };
+  getSidebarFragment: {
+    arg: { tree: FileNode[]; selectedFile: string | null; collapsed: boolean };
+    return: HtmlFragmentResult;
+  };
+  getFileFragment: {
+    arg: {
+      filePath: string;
+      targetSourceLine?: number | null;
+      targetTransLine?: number | null;
+      targetVar?: string | null;
+      sourcePct?: number;
+    };
+    return: HtmlFragmentResult;
+  };
+  getTooltipFragment: {
+    arg: { filePath: string; query: EnrichQuery & { identifier?: string } };
+    return: HtmlFragmentResult;
+  };
+  getFolderBrowserFragment: {
+    arg: { requestedPath?: string };
+    return: HtmlFragmentResult;
+  };
+  getLandingPageFragment: {
+    arg: undefined;
+    return: HtmlFragmentResult;
+  };
+  getLoadingFragment: {
+    arg: { message?: string };
+    return: HtmlFragmentResult;
+  };
 }
 
 export type ElectronAPI = {
-  [K in keyof ApiInvoke]: (
-    arg: ApiInvoke[K]['arg']
-  ) => Promise<ApiInvoke[K]['return']>;
+  [K in keyof ApiInvoke]: ApiInvoke[K]['arg'] extends undefined
+    ? () => Promise<ApiInvoke[K]['return']>
+    : (
+        arg: ApiInvoke[K]['arg']
+      ) => Promise<ApiInvoke[K]['return']>;
 } & {
   onMenuLoadFolder: (cb: (path: string) => void) => () => void;
 };

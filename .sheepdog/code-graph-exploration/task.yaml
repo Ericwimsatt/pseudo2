@@ -1,0 +1,147 @@
+name: code-graph-exploration
+description: "Standalone code graph exploration tool with min-cut module detection"
+version: 1
+
+phases:
+  - name: phase-1-graph-engine
+    description: "Build cross-file call/import graph engine using existing semantic graph"
+    dependsOn: []
+    runBeforeAll: []
+    runAfterAll: []
+    steps:
+      - name: extend-semantic-graph
+        description: "Extend makeSemanticGraph to track cross-file calls and imports"
+        files:
+          - src/main/translationService/makeSemanticGraph.ts
+          - src/main/translationService/translationService.ts
+        testFiles:
+          - test/unit/translation/makeSemanticGraph.test.ts
+      - name: graph-builder
+        description: "Create GraphBuilder that aggregates per-file graphs into project-wide CodeGraph"
+        files:
+          - src/main/graph/CodeGraph.ts
+          - src/main/graph/GraphBuilder.ts
+          - src/main/graph/types.ts
+        testFiles:
+          - test/unit/graph/CodeGraph.test.ts
+          - test/unit/graph/GraphBuilder.test.ts
+      - name: graph-algorithms
+        description: "Implement min-cut algorithms (Stoer-Wagner, Louvain, recursive bisection)"
+        files:
+          - src/main/graph/algorithms/minCut.ts
+          - src/main/graph/algorithms/louvain.ts
+          - src/main/graph/algorithms/recursiveBisection.ts
+        testFiles:
+          - test/unit/graph/algorithms/minCut.test.ts
+          - test/unit/graph/algorithms/louvain.test.ts
+
+  - name: phase-2-ipc-graph-service
+    description: "Expose graph engine via IPC for renderer and agent access"
+    dependsOn: [phase-1-graph-engine]
+    runBeforeAll: []
+    runAfterAll: []
+    steps:
+      - name: graph-service
+        description: "Create GraphService managing graph lifecycle and IPC handlers"
+        files:
+          - src/main/graph/GraphService.ts
+          - src/main/graph/ipcHandlers.ts
+        testFiles:
+          - test/unit/graph/GraphService.test.ts
+      - name: preload-api
+        description: "Add graph IPC channels to preload and shared API types"
+        files:
+          - src/main/preload.ts
+          - src/shared/api.ts
+        testFiles: []
+      - name: integration-test
+        description: "Integration test: spawn Electron, call IPC, verify responses"
+        files:
+          - test/integration/graph/ipc.test.ts
+        testFiles: []
+
+  - name: phase-3-ui-integration
+    description: "Add Code Graph tab with Cytoscape.js visualization"
+    dependsOn: [phase-2-ipc-graph-service]
+    runBeforeAll: []
+    runAfterAll: []
+    steps:
+      - name: graph-toolbar
+        description: "Add header button to open Code Graph tab"
+        files:
+          - src/App/components/GraphToolbar.tsx
+        testFiles: []
+      - name: graph-tab
+        description: "Create CodeGraphTab with Cytoscape.js canvas and sidebar"
+        files:
+          - src/App/components/CodeGraphTab.tsx
+          - src/App/components/GraphSidebar.tsx
+          - src/App/components/ModuleLegend.tsx
+        testFiles:
+          - test/unit/graph/CodeGraphTab.test.tsx
+      - name: app-integration
+        description: "Register graph tab in App layout and sidebar"
+        files:
+          - src/App/App.tsx
+          - src/App/components/Sidebar.tsx
+        testFiles: []
+
+  - name: phase-4-min-cut-visualization
+    description: "Interactive module boundary detection with min-cut algorithms"
+    dependsOn: [phase-3-ui-integration]
+    runBeforeAll: []
+    runAfterAll: []
+    steps:
+      - name: mincut-panel
+        description: "Add module boundary panel with algorithm selection and results"
+        files:
+          - src/App/components/MinCutPanel.tsx
+          - src/App/components/ExportDialog.tsx
+        testFiles: []
+      - name: partition-visualization
+        description: "Cytoscape styling for modules, cut edges, and module legend"
+        files:
+          - src/App/graph/partitionStyles.ts
+          - src/App/graph/partitionUtils.ts
+        testFiles:
+          - test/unit/graph/partitionStyles.test.ts
+      - name: export-formats
+        description: "Implement CSV, GraphML, DOT, Markdown, JSON export"
+        files:
+          - src/main/graph/export/partitionExport.ts
+        testFiles:
+          - test/unit/graph/export.test.ts
+
+  - name: phase-5-polish-agent-debug
+    description: "Production hardening, agent debugging support, documentation"
+    dependsOn: [phase-4-min-cut-visualization]
+    runBeforeAll: []
+    runAfterAll: []
+    steps:
+      - name: agent-debug-tests
+        description: "Comprehensive IPC test suite for agent debugging"
+        files:
+          - test/agent-debug/graph-ipc.test.ts
+          - test/agent-debug/graph-build.test.ts
+          - test/agent-debug/graph-query.test.ts
+          - test/agent-debug/graph-mincut.test.ts
+          - test/agent-debug/graph-export.test.ts
+          - test/agent-debug/helpers.ts
+        testFiles: []
+      - name: performance
+        description: "Incremental builds, query caching, WebGL renderer option"
+        files:
+          - src/main/graph/GraphBuilder.ts (incremental)
+          - src/main/graph/QueryCache.ts
+          - src/App/graph/WebGLRenderer.ts
+        testFiles: []
+      - name: documentation
+        description: "Agent debugging guide and API reference"
+        files:
+          - docs/agent-graph-debugging.md
+          - docs/graph-api-reference.md
+        testFiles: []
+      - name: final-verification
+        description: "Full test suite, build, smoke tests"
+        files: []
+        testFiles: []
