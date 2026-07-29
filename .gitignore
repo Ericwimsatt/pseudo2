@@ -27,3 +27,6 @@ dist-ssr
 # Playwright output
 test-results/
 playwright-report/
+
+# Cache
+.mincut-cache/
