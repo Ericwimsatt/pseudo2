@@ -17,7 +17,7 @@ This project uses a layered test approach:
 ### Available Scripts
 | Command | What it runs | Target time |
 |---------|-------------|-------------|
-| `npm run test:typecheck` | tsc --noEmit | <10s |
+| `npm run test:typecheck` | tsc --build --force | <10s |
 | `npm run test:lint` | oxlint | <5s |
 | `npm run test:unit` | all vitest unit tests | <10s |
 | `npm run test:integration` | vitest integration (DOM) | <30s |

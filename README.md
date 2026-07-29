@@ -30,3 +30,23 @@ If you are developing a production application, we recommend enabling type-aware
 ```
 
 See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+
+## Fragment Inspection
+
+An CLI tool for inspecting canonical HTML fragments without launching Electron:
+
+```bash
+npx tsx scripts/inspect-fragment.ts <project-path> <file-path> [--html] [--tooltip] [--sidebar]
+```
+
+Options:
+- `--html` — print raw HTML without metadata wrapper
+- `--tooltip` — render tooltip fragment for the given file instead of the file table
+- `--sidebar` — render sidebar fragment for the project tree
+
+The tool initializes the same services as production, renders the canonical fragment via the pure renderers, and prints the result. It accepts fixture repository paths and does not require a visible Electron window.
+
+Example:
+```bash
+npx tsx scripts/inspect-fragment.ts test/fixtures/repos/language-features Functions.tsx --html
+```

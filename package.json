@@ -12,7 +12,7 @@
     "lint": "npm run test:lint",
     "test": "npm run test:typecheck && npm run test:lint && npm run test:unit && npm run test:e2e -- --grep @smoke",
     "test:watch": "vitest",
-    "test:typecheck": "tsc --noEmit",
+    "test:typecheck": "tsc --build --force",
     "test:lint": "oxlint",
     "test:unit": "vitest run",
     "test:e2e": "playwright test",

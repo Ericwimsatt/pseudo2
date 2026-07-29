@@ -1,0 +1,44 @@
+{
+  "taskName": "code-graph-exploration",
+  "completedCalls": [
+    {
+      "id": "d70fefa596f3d9ac413b3ed63ff3580c16b76984ea141f4b1f36ef5a7ac9b445",
+      "name": "createSliceWorkspace",
+      "args": [
+        {
+          "name": "code-graph-exploration",
+          "seeds": {
+            "taskDescription": "Build a standalone code graph engine with ts-morph Project AST parsing, call/import graphs, min-cut partitioning, IPC graph service, and Cytoscape UI. Do not use makeSemanticGraph.",
+            "files": [
+              "src/main/preload.ts",
+              "src/main/index.ts",
+              "src/shared/api.ts",
+              "src/App/App.tsx",
+              "package.json"
+            ]
+          },
+          "alwaysInclude": [
+            ".sheepdog/code-graph-exploration/**",
+            "test/fixtures/**",
+            "src/main/preload.ts",
+            "src/main/index.ts",
+            "src/shared/api.ts",
+            "src/App/App.tsx",
+            "src/App/components/Sidebar.tsx"
+          ],
+          "budget": 20000
+        }
+      ],
+      "result": "/Users/ericwimsatt/git/pseudo2/.sheepdog/workspaces/code-graph-exploration",
+      "completedAt": "2026-07-25T01:29:51.301Z"
+    },
+    {
+      "id": "cae38070f4f7d696b64b81b0e89ec8f63763c80ee05839f78b4ba79ed5694903",
+      "name": "checkpoint",
+      "args": [
+        "phase-1-graph-engine"
+      ],
+      "completedAt": "2026-07-25T01:29:51.301Z"
+    }
+  ]
+}

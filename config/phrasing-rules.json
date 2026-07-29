@@ -13,7 +13,7 @@
   { "type": "property-with-init", "template": "`{name@ref}` = {initializer} " },
   { "type": "variable-assignment", "template": "`{name@ref}` = {initializer}" },
   { "type": "variable-assignment-target", "template": "`{name@ref}` = " },
-  { "type": "return-jsx", "template": "Return Visual Elements", "children": {"open": " {", "close": "}"} },
+  { "type": "return-jsx", "template": "Return Visual Elements:" },
   { "type": "return-value", "template": "return: `{value}`" },
   { "type": "return-target", "template": "return", "children": {"open": " {", "close": "}"} },
   { "type": "return", "template": "return null" },

@@ -1,4 +1,3 @@
-import { dialog } from 'electron';
 import { homedir } from 'os';
 import { join, resolve } from 'path';
 import { readdir, stat } from 'fs/promises';
@@ -29,6 +28,7 @@ export async function browseDirectory(requestedPath?: string): Promise<BrowseRes
 }
 
 export async function openDirectorySelector(): Promise<string | null> {
+  const { dialog } = await import('electron');
   const result = await dialog.showOpenDialog({
     properties: ['openDirectory'],
   });

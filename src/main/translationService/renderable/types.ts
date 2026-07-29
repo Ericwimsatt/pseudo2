@@ -54,6 +54,15 @@ export interface LineBoxFragment {
   contentNode: DisplayNodeData | null;
 }
 
+export interface LineRenderable {
+  lineNumber: number;
+  sourceText: string;
+  bucket: NodeBucket;
+  nodes: DisplayNodeData[];
+  spanningBuckets: NodeBucket[];
+  boxFragment: LineBoxFragment | null;
+}
+
 export interface ViewModel {
   lines: LineRenderable[];
 }

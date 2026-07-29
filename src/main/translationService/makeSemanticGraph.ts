@@ -116,7 +116,7 @@ function getIdentifierPos(node: Node, type: string): number | undefined {
 export function makeSemanticGraph(sourceFile: SourceFile): SemanticNode[] {
   const out: SemanticNode[] = [];
   for (const stmt of sourceFile.getStatements()) {
-    out.push(...processStatement(stmt, 0));
+    out.push(...processStatement(stmt));
   }
   return out;
 }

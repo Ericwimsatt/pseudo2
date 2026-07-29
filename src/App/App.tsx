@@ -69,7 +69,7 @@ function FileView({ tree, onFileSelect }: { tree: FileNode[]; onFileSelect: (pat
         <FilePathContext.Provider value={filePath ?? ''}>
           <CodeTable
             viewModel={viewModel}
-            fileName={filePath}
+            fileName={filePath ?? ''}
             targetSourceLine={targetSourceLine}
             targetTransLine={targetTransLine}
             targetVar={targetVar}
@@ -122,7 +122,7 @@ function App() {
   useEffect(() => {
     window.electronAPI.getLastProjectPath().then((savedPath) => {
       if (savedPath) {
-        loadRepo(savedPath);
+        loadRepoRef.current(savedPath);
       }
     });
   }, []);

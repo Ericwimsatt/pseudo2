@@ -28,6 +28,22 @@ await run_command({ command: 'npx vitest run' })
 ### Available API
 Check the exports in ../sandbox.d.ts for available API.
 
+### Deployed Functions
+The `deployed/functions/` directory contains utility functions that can be imported and called from any `main.ts`:
+
+- **`createWorkspace`** — Creates a git worktree for the task and runs `npm install`. Returns the path to the workspace.
+- **`cleanUpWorkspace`** — Removes a previously created workspace worktree.
+
+Example:
+```ts
+import { run_command } from '@sheepdog/sandbox'
+import { createWorkspace, cleanUpWorkspace } from './functions/createWorkspace.js'
+
+const ws = createWorkspace({ name: 'my-workspace' })
+await run_command({ command: 'npm test', cwd: ws })
+cleanUpWorkspace({ path: ws })
+```
+
 ### 3. Run
 
 ```bash
