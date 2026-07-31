@@ -1,6 +1,16 @@
 // @smoke @p0 @core:rendering
 import { test, expect, type Page } from '@playwright/test';
 import { buildFileData } from '../../src/main/translationService/buildFileData';
+import {
+  templatePrefix,
+  renderTemplate,
+} from '../fixtures/phrasingRules';
+
+// Derived from config/phrasing-rules.json so wording edits don't churn this smoke test.
+const TYPE_PREFIX = templatePrefix('interface').trim();
+const FN_PREFIX = templatePrefix('function-definition').trim();
+const CALL_PREFIX = templatePrefix('call-function').trim();
+const RETURN_JSX = renderTemplate('return-jsx', {});
 
 // Real-world file reported as crashing DisplayNode (node.spans undefined).
 const SOURCE = `import { createContext, useContext, useEffect, useState } from "react";
@@ -96,11 +106,11 @@ test.describe('AuthContext.tsx renders without crashing @smoke @p0 @core:renderi
     await page.getByText('AuthContext.tsx', { exact: false }).first().click();
 
     // Representative translations across the constructs in this file.
-    await expect(page.locator('body')).toContainText('Type AuthContextType');
-    await expect(page.locator('body')).toContainText('Function AuthProvider');
-    await expect(page.locator('body')).toContainText('call createContext');
-    await expect(page.locator('body')).toContainText('call useState');
-    await expect(page.locator('body')).toContainText('Return Visual Elements:');
+    await expect(page.locator('body')).toContainText(`${TYPE_PREFIX} AuthContextType`);
+    await expect(page.locator('body')).toContainText(`${FN_PREFIX} AuthProvider`);
+    await expect(page.locator('body')).toContainText(`${CALL_PREFIX} createContext`);
+    await expect(page.locator('body')).toContainText(`${CALL_PREFIX} useState`);
+    await expect(page.locator('body')).toContainText(RETURN_JSX);
 
     // No uncaught render errors (the reported TypeError would surface here).
     expect(pageErrors).toEqual([]);

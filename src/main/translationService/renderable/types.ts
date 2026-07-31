@@ -33,6 +33,7 @@ export interface DisplaySpan {
 }
 
 export interface DisplayNodeData {
+  type: string;
   indent: number;
   spans: DisplaySpan[];
   children: DisplayNodeData[];

@@ -46,18 +46,40 @@ function collectStartLineSpans(node: DisplayNodeData, lineNum: number): DisplayS
   const spans: DisplaySpan[] = [...node.spans];
   const sameLineChildren = node.children.filter(c => c.sourceStartLine === lineNum);
   if (sameLineChildren.length > 0) {
-    spans.push({ text: '\n' });
-    for (let i = 0; i < sameLineChildren.length; i++) {
-      const child = sameLineChildren[i];
-      spans.push({ text: INDENT_UNIT.repeat(child.indent) });
-      spans.push(...collectStartLineSpans(child, lineNum));
-      if (i < sameLineChildren.length - 1) spans.push({ text: '\n' });
+    if (node.type === 'variable-assignment-target') {
+      // The value of an assignment (`x = …`) starts on the same source line
+      // as the LHS. Inline it after the `= ` instead of pushing it onto a
+      // new, deeper-indented line — the latter produced a visual staircase
+      // (`x = \n  call y { \n    … }`) that misaligned the LHS and its
+      // value. The value's own nested children (inside a `{` block) still
+      // render on separate indented lines via the nested branch below.
+      for (const child of sameLineChildren) {
+        const lastText = spans.length > 0 ? spans[spans.length - 1].text : '';
+        if (lastText && !/\s$/.test(lastText)) spans.push({ text: ' ' });
+        spans.push(...collectStartLineSpans(child, lineNum));
+      }
+    } else {
+      // Block-structured child rendering: each child on its own line,
+      // indented one `INDENT_UNIT` past the parent's own column. INDENT is
+      // expressed relative to the parent's indent so the visual staircase
+      // (and the close-brace alignment) is consistent regardless of the
+      // absolute nesting depth of the surrounding box layers.
+      spans.push({ text: '\n' });
+      for (let i = 0; i < sameLineChildren.length; i++) {
+        spans.push({ text: INDENT_UNIT.repeat(Math.max(0, sameLineChildren[i].indent - node.indent)) });
+        spans.push(...collectStartLineSpans(sameLineChildren[i], lineNum));
+        if (i < sameLineChildren.length - 1) spans.push({ text: '\n' });
+      }
+      spans.push({ text: '\n' });
+      if (node.closeText && node.sourceStartLine === node.sourceEndLine) {
+        // Align the close brace with the opening keyword (the parent's own
+        // column), not with the absolute nesting depth — that previously
+        // pushed `}` further right than its ` {` opener.
+        spans.push({ text: node.closeText });
+      }
     }
-    spans.push({ text: '\n' });
-    if (node.closeText && node.sourceStartLine === node.sourceEndLine) {
-      spans.push({ text: INDENT_UNIT.repeat(node.indent) });
-      spans.push({ text: node.closeText });
-    }
+  } else if (node.closeText && node.sourceStartLine === node.sourceEndLine) {
+    spans.push({ text: node.closeText });
   }
   return spans;
 }
@@ -100,7 +122,14 @@ function distributeNode(
         children: [],
       };
     } else {
-      fragments[startIdx].contentNode = node;
+      // The node header lives on this line; its descendants start on later
+      // lines and get their own rows via the recursion below. Drop children
+      // so the renderer (which walks `node.children`) doesn't replay the
+      // entire subtree on every ancestor's start line.
+      fragments[startIdx].contentNode = {
+        ...node,
+        children: [],
+      };
     }
   }
 
@@ -117,6 +146,7 @@ function distributeNode(
       };
     } else {
       fragments[endIdx].contentNode = {
+        type: node.type,
         indent: node.indent,
         spans: [{ text: node.closeText }],
         children: [],

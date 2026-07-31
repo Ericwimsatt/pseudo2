@@ -373,6 +373,7 @@ export function toDisplayNode(node: SemanticNode, depth = 0): DisplayNodeData {
     spans.push({ text: rule!.children!.open });
   }
   return {
+    type: node.type,
     indent: depth,
     spans,
     children: node.children.map(c => toDisplayNode(c, depth + 1)),

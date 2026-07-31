@@ -27,6 +27,7 @@ export interface SidebarFragmentData {
   tree: FileNode[];
   selectedFile: string | null;
   collapsed: boolean;
+  expandedDirs?: string[];
 }
 
 export interface FileTableFragmentData {

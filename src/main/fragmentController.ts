@@ -4,12 +4,12 @@ import type { EnrichQuery } from './translationService/renderable/types';
 import * as fragmentService from './fragmentService';
 
 export function registerFragmentHandlers(): void {
-  ipcMain.handle('loadProjectFragment', async (_event, arg: { path: string; selectedFile?: string | null; collapsed?: boolean }) => {
-    return fragmentService.loadProjectAndRenderSidebar(arg.path, arg.selectedFile ?? null, arg.collapsed ?? false);
+  ipcMain.handle('loadProjectFragment', async (_event, arg: { path: string; selectedFile?: string | null; collapsed?: boolean; expandedDirs?: string[] }) => {
+    return fragmentService.loadProjectAndRenderSidebar(arg.path, arg.selectedFile ?? null, arg.collapsed ?? false, arg.expandedDirs ?? []);
   });
 
-  ipcMain.handle('getSidebarFragment', async (_event, arg: { tree: FileNode[]; selectedFile: string | null; collapsed: boolean }) => {
-    return fragmentService.renderSidebarFromTree(arg.tree, arg.selectedFile, arg.collapsed);
+  ipcMain.handle('getSidebarFragment', async (_event, arg: { tree: FileNode[]; selectedFile: string | null; collapsed: boolean; expandedDirs?: string[] }) => {
+    return fragmentService.renderSidebarFromTree(arg.tree, arg.selectedFile, arg.collapsed, arg.expandedDirs ?? []);
   });
 
   ipcMain.handle('getFileFragment', async (_event, arg: {

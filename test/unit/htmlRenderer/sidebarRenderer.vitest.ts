@@ -17,7 +17,7 @@ describe('sidebarRenderer', () => {
   ];
 
   it('renders expanded sidebar with files and directories', () => {
-    const result = renderSidebar({ tree: mockTree, selectedFile: 'src/index.ts', collapsed: false });
+    const result = renderSidebar({ tree: mockTree, selectedFile: 'src/index.ts', collapsed: false, expandedDirs: ['src'] });
 
     expect(result.html).toContain('data-role="sidebar"');
     expect(result.html).toContain('data-collapsed="false"');
@@ -28,6 +28,32 @@ describe('sidebarRenderer', () => {
     expect(result.html).toContain('README.md');
     expect(result.html).toContain('bg-blue-100');
     expect(result.metadata.kind).toBe('sidebar');
+  });
+
+  it('hides directory children when the directory is not expanded', () => {
+    const result = renderSidebar({ tree: mockTree, selectedFile: null, collapsed: false });
+
+    expect(result.html).toContain('data-path="src"');
+    expect(result.html).toContain('data-open="false"');
+    expect(result.html).toContain('src/index.ts');
+    expect(result.html).toContain('data-role="sidebar-children"');
+    expect(result.html).toContain('display: none');
+    expect(result.html).toContain('data-action="toggle-directory"');
+  });
+
+  it('shows directory children when the directory is expanded', () => {
+    const result = renderSidebar({ tree: mockTree, selectedFile: null, collapsed: false, expandedDirs: ['src'] });
+
+    expect(result.html).toContain('data-open="true"');
+    expect(result.html).toContain('data-role="sidebar-children"');
+    expect(result.html).not.toContain('display: none');
+  });
+
+  it('toggle-directory button uses data-action contract', () => {
+    const result = renderSidebar({ tree: mockTree, selectedFile: null, collapsed: false });
+
+    expect(result.html).toContain('data-action="toggle-directory"');
+    expect(result.html).toContain('data-action="collapse-sidebar"');
   });
 
   it('renders collapsed sidebar', () => {

@@ -37,11 +37,12 @@ export async function loadProjectAndRenderSidebar(
   projectPath: string,
   selectedFile: string | null = null,
   collapsed = false,
+  expandedDirs: string[] = [],
 ): Promise<HtmlFragment> {
   try {
     clearCache();
     const result = await projectService.loadProject(projectPath);
-    return renderSidebar({ tree: result.tree, selectedFile, collapsed });
+    return renderSidebar({ tree: result.tree, selectedFile, collapsed, expandedDirs });
   } catch (error) {
     return toFragmentError(error);
   }
@@ -51,8 +52,9 @@ export async function renderSidebarFromTree(
   tree: FileNode[],
   selectedFile: string | null,
   collapsed: boolean,
+  expandedDirs: string[] = [],
 ): Promise<HtmlFragment> {
-  return renderSidebar({ tree, selectedFile, collapsed });
+  return renderSidebar({ tree, selectedFile, collapsed, expandedDirs });
 }
 
 export async function renderFileFragment(

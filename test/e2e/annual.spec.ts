@@ -1,6 +1,20 @@
 // @smoke @p0 @core:translation
 import { test, expect, type Page } from '@playwright/test';
 import { buildFileData } from '../../src/main/translationService/buildFileData';
+import {
+  templatePrefix,
+  renderTemplate,
+  templateLiteralBetween,
+} from '../fixtures/phrasingRules';
+
+// Derived from config/phrasing-rules.json so wording edits don't churn
+// these tests.
+const FN_PREFIX = templatePrefix('function-definition').trim();
+const FN_ARROW = templatePrefix('function-definition').trim();
+const CALL_PREFIX = templatePrefix('call-function').trim();
+const RETURN_JSX = renderTemplate('return-jsx', {});
+const TYPE_PREFIX = templatePrefix('type-alias').trim();
+const ANON_FN = renderTemplate('function-definition-anonymous', {});
 
 const SOURCE = `function AnnualSummary() {
   const years = useMemo(() => {
@@ -71,38 +85,38 @@ test.describe('AnnualSummary translation @smoke @p0 @core:translation', () => {
     // Select the file in the sidebar.
     await page.getByText('AnnualSummary.tsx', { exact: false }).first().click();
     // Wait for the function-definition line to render.
-    await expect(page.locator('body')).toContainText('Function AnnualSummary');
+    await expect(page.locator('body')).toContainText(`${FN_PREFIX} AnnualSummary`);
 
     // Line 2 should hold the years/useMemo/anonymous-function nodes (nested, no duplication).
     const line2 = await translationTextsForLine(page, 2);
     expect(line2.some((t) => t.includes('years'))).toBeTruthy();
-    expect(line2.some((t) => t.includes('call') && t.includes('useMemo'))).toBeTruthy();
-    expect(line2.some((t) => t.includes('Function'))).toBeTruthy();
+    expect(line2.some((t) => t.includes(CALL_PREFIX) && t.includes('useMemo'))).toBeTruthy();
+    expect(line2.some((t) => t.includes(FN_PREFIX))).toBeTruthy();
     // No exact duplicate strings on line 2.
     const dupes = line2.filter((t, i) => line2.indexOf(t) !== i);
     expect(dupes).toEqual([]);
 
     // Line 3 has the arrow function inside .map().
     const line3 = await translationTextsForLine(page, 3);
-    expect(line3.some((t) => t.includes('Function anonymous'))).toBeTruthy();
+    expect(line3.some((t) => t.includes(`${FN_ARROW} anonymous`))).toBeTruthy();
     expect(line3.some((t) => t.includes('return'))).toBeTruthy();
 
     const line5 = await translationTextsForLine(page, 5);
-    expect(line5.some((t) => t.includes('If') && t.includes('arr.length'))).toBeTruthy();
+    expect(line5.some((t) => t.includes(templatePrefix('if').trim()) && t.includes('arr.length'))).toBeTruthy();
     // The previously-dropped if-body call is now captured.
-    expect(line5.some((t) => t.includes('call') && t.includes('arr.push'))).toBeTruthy();
+    expect(line5.some((t) => t.includes(CALL_PREFIX) && t.includes('arr.push'))).toBeTruthy();
 
     const line6 = await translationTextsForLine(page, 6);
-    expect(line6.some((t) => t.includes('return') && t.includes('arr'))).toBeTruthy();
+    expect(line6.some((t) => t.includes(templatePrefix('return-value').trim()) && t.includes('arr'))).toBeTruthy();
 
     // Line 8 return years appears exactly once (was duplicated before the fix).
     const line8 = await translationTextsForLine(page, 8);
-    const returnYears = line8.filter((t) => t.includes('return') && t.includes('years'));
+    const returnYears = line8.filter((t) => t.includes(templatePrefix('return-value').trim()) && t.includes('years'));
     expect(returnYears.length).toBe(1);
 
     // All nested content on line 2 is flattened into a single cell.
-    await expect(page.locator('body')).toContainText('call useMemo');
-    await expect(page.locator('body')).toContainText('Function args: {}');
+    await expect(page.locator('body')).toContainText(`${CALL_PREFIX} useMemo`);
+    await expect(page.locator('body')).toContainText(ANON_FN);
 
     await page.screenshot({ path: 'test/screenshots/annual-summary.png', fullPage: true });
   });
@@ -110,7 +124,7 @@ test.describe('AnnualSummary translation @smoke @p0 @core:translation', () => {
   test('does not dump multi-line source into a single translation cell', async ({ page }) => {
     await loadAppWithFile(page);
     await page.getByText('AnnualSummary.tsx', { exact: false }).first().click();
-    await expect(page.locator('body')).toContainText('Function anonymous');
+    await expect(page.locator('body')).toContainText(`${FN_ARROW} anonymous`);
 
     // The structured renderer intentionally nests children on the start line of a node.
     // We still must not dump the raw multi-line source span verbatim.
@@ -155,12 +169,12 @@ test.describe('AnnualSummary translation @smoke @p0 @core:translation', () => {
     }, { viewModel: fileData.viewModel, sourceLines: srcLines });
     await page.goto('http://localhost:5174/');
     await page.getByText('App.tsx', { exact: false }).first().click();
-    await expect(page.locator('body')).toContainText('Return Visual Elements:');
+    await expect(page.locator('body')).toContainText(RETURN_JSX);
 
     // The "Render" line and each JSX element should appear exactly once on their
     // source line (the old pipeline emitted the return subtree twice).
     const renderTexts = await translationTextsForLine(page, 2);
-    expect(renderTexts.filter((t) => t.includes('Return Visual Elements')).length).toBe(1);
+    expect(renderTexts.filter((t) => t.includes(RETURN_JSX)).length).toBe(1);
     const spanTexts = await translationTextsForLine(page, 4);
     expect(spanTexts.filter((t) => t.includes('<span>')).length).toBe(1);
   });
@@ -198,12 +212,12 @@ interface Props {
     await page.goto('http://localhost:5174/');
     await page.getByText('Props.tsx', { exact: false }).first().click();
 
-    await expect(page.locator('body')).toContainText('Type');
+    await expect(page.locator('body')).toContainText(TYPE_PREFIX);
 
     const allTexts = await page.locator('[style*="/ 6"] div > div').allTextContents();
     const joined = allTexts.join('\n');
 
-    expect(joined).toContain('Type Props');
+    expect(joined).toContain(`${TYPE_PREFIX} Props`);
     expect(joined).toContain('list of');
     expect(joined).toContain('a function that expects');
     expect(joined).toContain('returns nothing');
@@ -246,17 +260,21 @@ interface Props {
     await page.getByText('FilterBar.tsx', { exact: false }).first().click();
 
     // The arrow-function variable is rendered as a function-definition.
-    await expect(page.locator('body')).toContainText('Function FilterBar');
+    await expect(page.locator('body')).toContainText(`${FN_PREFIX} FilterBar`);
     const defTexts = await page
       .locator('[style*="/ 6"] div > div')
       .allTextContents();
-    const filtered = defTexts.map(t => t.trim()).filter(t => t.includes('args:'));
+    // Pull the literal segment of function-definition that sits between the
+    // name placeholder and the params placeholder ("args: {") from the JSON
+    // so editing the rule wording keeps this filter working.
+    const fnArgsFragment = templateLiteralBetween('function-definition', 'name', 'params').trim();
+    const filtered = defTexts.map(t => t.trim()).filter(t => t.includes(fnArgsFragment));
     expect(filtered.length).toBeGreaterThan(0);
     const defText = filtered[0];
     expect(defText).toContain('{ period, onPeriodChange, comparePeriod }');
 
     // The JSX body now renders (was entirely missing before the fix).
-    await expect(page.locator('body')).toContainText('Return Visual Elements:');
+    await expect(page.locator('body')).toContainText(RETURN_JSX);
     await expect(page.locator('body')).toContainText('<Select');
     await expect(page.locator('body')).toContainText('<SelectTrigger');
 

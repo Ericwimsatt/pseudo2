@@ -1,6 +1,14 @@
 // @critical @p1 @ui:search @ui:navigation
 import { test, expect, type Page } from '@playwright/test';
 import { buildFileData } from '../../src/main/translationService/buildFileData';
+import {
+  templatePrefix,
+  renderTemplate,
+} from '../fixtures/phrasingRules';
+
+// Derived from config/phrasing-rules.json so wording edits don't churn these tests.
+const FN_PREFIX = templatePrefix('function-definition').trim();
+const FILTERBAR_NAME = renderTemplate('variable-assignment-target', { name: 'FilterBar' }).trimEnd();
 
 const SOURCE = `import { useState } from 'react';
 import { formatCount } from './helper';
@@ -44,7 +52,7 @@ async function loadApp(page: Page, extraHash?: string) {
   if (!extraHash) {
     await page.getByText('Demo.tsx', { exact: false }).first().click();
   }
-  await expect(page.locator('body')).toContainText('Function Demo');
+  await expect(page.locator('body')).toContainText(`${FN_PREFIX} Demo`);
 }
 
 test.describe('Ctrl+F search @critical @p1 @ui:search @ui:navigation', () => {
@@ -175,7 +183,7 @@ test.describe('URL query param navigation', () => {
 test.describe('filepath URL navigation', () => {
   test('navigating to file URL loads the file', async ({ page }) => {
     await loadApp(page, '#/file/Demo.tsx');
-    await expect(page.locator('body')).toContainText('Function Demo');
+    await expect(page.locator('body')).toContainText(`${FN_PREFIX} Demo`);
   });
 });
 
@@ -224,7 +232,7 @@ test.describe('rowSpan dedup', () => {
     if (!extraHash) {
       await page.getByText('FilterBar.tsx', { exact: false }).first().click();
     }
-    await expect(page.locator('body')).toContainText('`FilterBar`');
+    await expect(page.locator('body')).toContainText(FILTERBAR_NAME);
   }
 
   test('search for param in multi-line function dedupes spanned source into parent match', async ({ page }) => {

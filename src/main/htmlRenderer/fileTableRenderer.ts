@@ -49,11 +49,7 @@ function renderDisplayNode(node: DisplayNodeData, searchTerm?: string, isActiveM
 function renderBoxFragment(fragment: LineBoxFragment | null, searchTerm?: string): string {
   if (!fragment || (!fragment.layers.length && !fragment.contentNode)) {
     if (fragment?.contentNode) {
-      return `
-        <div class="whitespace-pre-wrap break-words font-mono text-sm px-4 py-1" data-role="box-content">
-          ${renderDisplayNode(fragment.contentNode, searchTerm)}
-        </div>
-      `;
+      return `<div class="whitespace-pre-wrap break-words font-mono text-sm px-4 py-1" data-role="box-content">${renderDisplayNode(fragment.contentNode, searchTerm)}</div>`;
     }
     return '';
   }
@@ -63,11 +59,7 @@ function renderBoxFragment(fragment: LineBoxFragment | null, searchTerm?: string
     : 0;
 
   let content = fragment.contentNode
-    ? `
-      <div class="whitespace-pre-wrap break-words font-mono text-sm px-2 py-0.5" style="padding-left: ${maxDepth * 12}px" data-role="box-content">
-        ${renderDisplayNode(fragment.contentNode, searchTerm)}
-      </div>
-    `
+    ? `<div class="whitespace-pre-wrap break-words font-mono text-sm px-2 py-0.5" style="padding-left: ${maxDepth * 12}px" data-role="box-content">${renderDisplayNode(fragment.contentNode, searchTerm)}</div>`
     : `<div class="select-none min-h-[1.25rem]">&ensp;</div>`;
 
   for (let i = fragment.layers.length - 1; i >= 0; i--) {
@@ -84,25 +76,7 @@ function renderBoxFragment(fragment: LineBoxFragment | null, searchTerm?: string
 
     const marginLeft = layer.depth > 0 ? 16 : 0;
 
-    content = `
-      <div
-        style="
-          border-left: 2px solid ${color};
-          border-top: ${isStart ? `2px solid ${color}` : 'none'};
-          border-bottom: ${isEnd ? `2px solid ${color}` : 'none'};
-          border-right: none;
-          border-radius: ${borderRadius};
-          background: ${bg};
-          margin-left: ${marginLeft}px;
-        "
-        data-role="box-layer"
-        data-depth="${layer.depth}"
-        data-bucket="${layer.bucket}"
-        data-border-role="${layer.borderRole}"
-      >
-        ${content}
-      </div>
-    `;
+    content = `<div style="border-left: 2px solid ${color}; border-top: ${isStart ? `2px solid ${color}` : 'none'}; border-bottom: ${isEnd ? `2px solid ${color}` : 'none'}; border-right: none; border-radius: ${borderRadius}; background: ${bg}; margin-left: ${marginLeft}px;" data-role="box-layer" data-depth="${layer.depth}" data-bucket="${layer.bucket}" data-border-role="${layer.borderRole}">${content}</div>`;
   }
 
   return content;
@@ -165,13 +139,7 @@ function renderLineRow(line: LineRenderable, rowNum: number, searchTerm?: string
   if (showTranslation) {
     const translationClass = selectionMode === 'source' ? 'select-none' : '';
     const boxHtml = renderBoxFragment(line.boxFragment!, effectiveSearchTerm);
-    translationHtml = `
-      <div class="${translationClass}" style="grid-row: ${rowNum}; grid-column: 6" data-role="translation-cell">
-        <div data-role="translation-content" data-search-context='{"term": "${escapeAttribute(effectiveSearchTerm)}", "isActiveMatch": false}'>
-          ${boxHtml}
-        </div>
-      </div>
-    `;
+    translationHtml = `<div class="${translationClass}" style="grid-row: ${rowNum}; grid-column: 6" data-role="translation-cell"><div data-role="translation-content" data-search-context='{"term": "${escapeAttribute(effectiveSearchTerm)}", "isActiveMatch": false}'>${boxHtml}</div></div>`;
   }
 
   return `${bucketBorderHtml}${lineNumberHtml}${sourceCellHtml}${resizeHandleHtml}${spacerHtml}${translationHtml}`;

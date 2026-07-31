@@ -2,6 +2,10 @@
 import { test, expect, type Page } from '@playwright/test';
 import { loadFixtureRepo, injectFixture } from '../fixtures/base';
 import type { FixtureData } from '../fixtures/loadFixture';
+import { templatePrefix } from '../fixtures/phrasingRules';
+
+// Derived from config/phrasing-rules.json so wording edits don't churn this smoke test.
+const CALL_PREFIX = templatePrefix('call-function').trim();
 
 let fixture: FixtureData;
 
@@ -13,7 +17,7 @@ async function loadApp(page: Page) {
   await injectFixture(page, fixture, 'Hooks.tsx');
   await page.goto('/');
   await page.getByText('Hooks.tsx', { exact: false }).first().click();
-  await expect(page.locator('body')).toContainText('call useState', { timeout: 5000 });
+  await expect(page.locator('body')).toContainText(`${CALL_PREFIX} useState`, { timeout: 5000 });
 }
 
 // The hoverable spans are the ones StyledSpan marks with cursor-help.

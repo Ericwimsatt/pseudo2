@@ -2,6 +2,10 @@
 import { test, expect } from '@playwright/test';
 import { buildFileData } from '../../src/main/translationService/buildFileData';
 import type { TooltipData } from '../../src/lib/renderable/types';
+import { renderTemplate } from '../fixtures/phrasingRules';
+
+// Derived from config/phrasing-rules.json so wording edits don't churn this regression test.
+const COUNT_NAME = renderTemplate('variable-assignment-target', { name: 'count' }).trimEnd();
 
 const SOURCE = `import { useState } from 'react';
 
@@ -65,7 +69,7 @@ test.describe('enrichment hover @regression @p2 @ui:hover', () => {
     await page.goto('http://localhost:5174/#/file/Demo.tsx');
 
     // Wait for the variable declaration to render
-    await expect(page.locator('body')).toContainText('`count`');
+    await expect(page.locator('body')).toContainText(COUNT_NAME);
 
     // The span with "count" in the translation should have cursor-help if hasHover is set
     const countSpan = page.locator('span.cursor-help').filter({ hasText: 'count' }).first();

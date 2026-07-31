@@ -18,35 +18,40 @@ function renderFileNode(node: FileNode, selectedFile: string | null, depth: numb
   return `<button ${dataAttrs} class="${baseClass} ${selectedClass}" style="padding-left: ${paddingLeft}px" title="${escapeAttribute(node.path)}">${escapeHtml(node.name)}</button>`;
 }
 
-function renderDirectoryNode(node: FileNode, selectedFile: string | null, depth: number): string {
-  const isOpen = node.children && node.children.length > 0;
+function renderDirectoryNode(node: FileNode, selectedFile: string | null, depth: number, expandedDirs: string[]): string {
+  const isOpen = expandedDirs.includes(node.path);
   const paddingLeft = depth * 12 + 8;
   const toggleIcon = isOpen ? FOLDER_TOGGLE_OPEN : FOLDER_TOGGLE_CLOSED;
   const dataAttrs = `data-path="${escapeAttribute(node.path)}" data-role="sidebar-directory" data-depth="${depth}" data-open="${isOpen}"`;
 
   let childrenHtml = '';
-  if (isOpen && node.children) {
+  if (node.children) {
     childrenHtml = node.children.map(child => {
       if (child.type === 'directory') {
-        return renderDirectoryNode(child, selectedFile, depth + 1);
+        return renderDirectoryNode(child, selectedFile, depth + 1, expandedDirs);
       }
       return renderFileNode(child, selectedFile, depth + 1);
     }).join('');
   }
 
+  const childrenContainer = childrenHtml
+    ? `<div data-role="sidebar-children"${isOpen ? '' : ' style="display: none"'}>${childrenHtml}</div>`
+    : '';
+
   return `
     <div ${dataAttrs} style="padding-left: ${paddingLeft}px">
       <button class="w-full text-left px-2 py-1 hover:bg-gray-100 flex items-center gap-1 text-sm transition-colors" data-action="toggle-directory">
-        <span class="text-xs">${toggleIcon}</span>
+        <span class="text-xs" data-role="sidebar-toggle-icon">${toggleIcon}</span>
         <span class="font-medium">${escapeHtml(node.name)}</span>
       </button>
-      ${childrenHtml ? `<div>${childrenHtml}</div>` : ''}
+      ${childrenContainer}
     </div>
   `;
 }
 
 export function renderSidebar(data: SidebarFragmentData): HtmlFragment {
   const { tree, selectedFile, collapsed } = data;
+  const expandedDirs = data.expandedDirs ?? [];
 
   if (collapsed) {
     const metadata = createMetadata('sidebar' as FragmentKind, { route: '#/' });
@@ -62,7 +67,7 @@ export function renderSidebar(data: SidebarFragmentData): HtmlFragment {
 
   const itemsHtml = tree.map(node => {
     if (node.type === 'directory') {
-      return renderDirectoryNode(node, selectedFile, 0);
+      return renderDirectoryNode(node, selectedFile, 0, expandedDirs);
     }
     return renderFileNode(node, selectedFile, 0);
   }).join('');

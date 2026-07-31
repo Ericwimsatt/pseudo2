@@ -98,11 +98,11 @@ export interface ApiInvoke {
     return: void;
   };
   loadProjectFragment: {
-    arg: { path: string; selectedFile?: string | null; collapsed?: boolean };
+    arg: { path: string; selectedFile?: string | null; collapsed?: boolean; expandedDirs?: string[] };
     return: HtmlFragmentResult;
   };
   getSidebarFragment: {
-    arg: { tree: FileNode[]; selectedFile: string | null; collapsed: boolean };
+    arg: { tree: FileNode[]; selectedFile: string | null; collapsed: boolean; expandedDirs?: string[] };
     return: HtmlFragmentResult;
   };
   getFileFragment: {

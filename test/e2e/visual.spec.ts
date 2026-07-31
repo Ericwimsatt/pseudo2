@@ -1,6 +1,13 @@
 import { test, expect } from '@playwright/test';
 import { loadFixtureRepo, injectFixture } from '../fixtures/base';
 import type { FixtureData } from '../fixtures/loadFixture';
+import { templatePrefix } from '../fixtures/phrasingRules';
+
+// Derived from config/phrasing-rules.json so wording edits don't churn these regression tests.
+const FN_PREFIX = templatePrefix('function-definition').trim();
+const TYPE_PREFIX = templatePrefix('interface').trim();
+const IF_PREFIX = templatePrefix('if').trim();
+const CLASS_PREFIX = templatePrefix('class').trim();
 
 let fixture: FixtureData;
 
@@ -18,7 +25,7 @@ test.describe('visual regression @visual @regression', () => {
 
   test('Functions.tsx @visual @smoke', async ({ page }) => {
     await loadFile(page, 'Functions.tsx');
-    await expect(page.locator('body')).toContainText('Function');
+    await expect(page.locator('body')).toContainText(FN_PREFIX);
     await expect(page).toHaveScreenshot('functions.png', {
       fullPage: true,
       animations: 'disabled',
@@ -36,7 +43,7 @@ test.describe('visual regression @visual @regression', () => {
 
   test('Interfaces.ts @visual @critical', async ({ page }) => {
     await loadFile(page, 'Interfaces.ts');
-    await expect(page.locator('body')).toContainText('Type');
+    await expect(page.locator('body')).toContainText(TYPE_PREFIX);
     await expect(page).toHaveScreenshot('interfaces.png', {
       fullPage: true,
       animations: 'disabled',
@@ -45,7 +52,7 @@ test.describe('visual regression @visual @regression', () => {
 
   test('ControlFlow.tsx @visual @regression', async ({ page }) => {
     await loadFile(page, 'ControlFlow.tsx');
-    await expect(page.locator('body')).toContainText('If');
+    await expect(page.locator('body')).toContainText(IF_PREFIX);
     await expect(page).toHaveScreenshot('control-flow.png', {
       fullPage: true,
       animations: 'disabled',
@@ -54,7 +61,7 @@ test.describe('visual regression @visual @regression', () => {
 
   test('Classes.ts @visual @regression', async ({ page }) => {
     await loadFile(page, 'Classes.ts');
-    await expect(page.locator('body')).toContainText('Class');
+    await expect(page.locator('body')).toContainText(CLASS_PREFIX);
     await expect(page).toHaveScreenshot('classes.png', {
       fullPage: true,
       animations: 'disabled',
