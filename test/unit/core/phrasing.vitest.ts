@@ -168,6 +168,42 @@ describe('phrasing rules application (mocked rules)', () => {
     });
   });
 
+  describe('jsx-element HTML-style nesting', () => {
+    // phraseJsxElement builds spans directly (not via the rule template), so
+    // we assert against the rendered output. MOCK_RULES has no 'jsx-element'
+    // rule entry — which is also the production case (jsx-element has no
+    // `children` block in phrasing-rules.json); the per-node override in
+    // toDisplayNode drives the close-tag + box-nesting behavior.
+    it('a jsx-element with children is nested and closes with </tag>', () => {
+      const node = toDisplayNode(makeNode('jsx-element', {
+        name: 'div',
+        children: [makeNode('jsx-text', { metadata: { text: 'hi' } })],
+        metadata: {},
+      }));
+      expect(node.nested).toBe(true);
+      expect(node.closeText).toBe('</div>');
+    });
+
+    it('a self-closing jsx-element stays a one-liner (not nested)', () => {
+      const node = toDisplayNode(makeNode('jsx-element', {
+        name: 'input',
+        metadata: { selfClosing: true },
+      }));
+      expect(node.nested).toBe(false);
+      expect(node.closeText).toBeUndefined();
+    });
+
+    it('an empty jsx-element (no children) stays a one-liner', () => {
+      const node = toDisplayNode(makeNode('jsx-element', {
+        name: 'div',
+        children: [],
+        metadata: {},
+      }));
+      expect(node.nested).toBe(false);
+      expect(node.closeText).toBeUndefined();
+    });
+  });
+
   describe('unknown rule', () => {
     it('falls back to a [type] marker when no rule is registered', () => {
       expect(render(makeNode('no-such-type', {}))).toBe('[no-such-type]');

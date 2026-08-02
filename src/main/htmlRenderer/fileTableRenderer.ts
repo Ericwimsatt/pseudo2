@@ -58,8 +58,21 @@ function renderBoxFragment(fragment: LineBoxFragment | null, searchTerm?: string
     ? Math.max(...fragment.layers.map(l => l.depth))
     : 0;
 
+  // Visual indent step (px) shared by box-layer margins and content padding so
+  // siblings line up regardless of whether the line introduces its own box.
+  // Box-layer margins move the wrapping box one step per nesting depth, and
+  // the content padding carries any EXTRA indent past the deepest wrapping
+  // box (a child line whose own non-nested wrapper — e.g. `return expr` or
+  // `x = value` — keeps the deepest box layer but logically sits deeper in
+  // the tree). With both expressed in the same STEP, each indent level lands
+  // exactly one column past its parent's header, giving a uniform visual
+  // staircase without flattening siblings onto the parent's own column.
+  const INDENT_STEP = 12;
+  const contentIndent = fragment.contentNode?.indent ?? maxDepth;
+  const paddingLeft = Math.max(0, contentIndent - maxDepth) * INDENT_STEP;
+
   let content = fragment.contentNode
-    ? `<div class="whitespace-pre-wrap break-words font-mono text-sm px-2 py-0.5" style="padding-left: ${maxDepth * 12}px" data-role="box-content">${renderDisplayNode(fragment.contentNode, searchTerm)}</div>`
+    ? `<div class="whitespace-pre-wrap break-words font-mono text-sm px-2 py-0.5" style="padding-left: ${paddingLeft}px" data-role="box-content">${renderDisplayNode(fragment.contentNode, searchTerm)}</div>`
     : `<div class="select-none min-h-[1.25rem]">&ensp;</div>`;
 
   for (let i = fragment.layers.length - 1; i >= 0; i--) {
@@ -74,7 +87,7 @@ function renderBoxFragment(fragment: LineBoxFragment | null, searchTerm?: string
     else if (isStart) borderRadius = '2px 2px 0 0';
     else if (isEnd) borderRadius = '0 0 2px 2px';
 
-    const marginLeft = layer.depth > 0 ? 16 : 0;
+    const marginLeft = layer.depth > 0 ? INDENT_STEP : 0;
 
     content = `<div style="border-left: 2px solid ${color}; border-top: ${isStart ? `2px solid ${color}` : 'none'}; border-bottom: ${isEnd ? `2px solid ${color}` : 'none'}; border-right: none; border-radius: ${borderRadius}; background: ${bg}; margin-left: ${marginLeft}px;" data-role="box-layer" data-depth="${layer.depth}" data-bucket="${layer.bucket}" data-border-role="${layer.borderRole}">${content}</div>`;
   }

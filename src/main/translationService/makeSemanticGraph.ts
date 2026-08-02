@@ -318,8 +318,33 @@ function processInterface(node: InterfaceDeclaration): SemanticNode {
 }
 
 function processTypeAlias(node: TypeAliasDeclaration): SemanticNode {
+  const typeNode = node.getTypeNode();
+  // Multi-line type bodies: split the body into one per-line child so the
+  // translation mirrors the source row-by-row. Without this, the entire
+  // RHS (incl. discriminated unions like `type Action = | {...} | {...}`)
+  // gets stuffed onto the LHS row while L_onward go empty -> visual
+  // misalignment. Single-line type aliases keep the existing `{type}` blob.
+  if (typeNode && typeNode.getEndLineNumber() > typeNode.getStartLineNumber()) {
+    const sf = typeNode.getSourceFile();
+    const fullText = sf.getFullText();
+    const sourceLines = fullText.split('\n');
+    const typeStart = typeNode.getStartLineNumber();
+    const typeEnd = typeNode.getEndLineNumber();
+    const children: SemanticNode[] = [];
+    for (let line = typeStart; line <= typeEnd; line++) {
+      const raw = sourceLines[line - 1] ?? '';
+      const text = truncate(raw);
+      if (!text) continue;
+      children.push(makeNodeOnLine('type-alias-line', undefined, line, { value: text }));
+    }
+    return makeNodeFromAst('typeAlias', node.getName(), node, {
+      type: '',
+      multiline: true,
+      exported: node.hasExportKeyword(),
+    }, children, getIdentifierPos(node, 'typeAlias'));
+  }
   return makeNodeFromAst('typeAlias', node.getName(), node, {
-    type: node.getTypeNode()?.getText() ?? node.getType().getText(),
+    type: typeNode?.getText() ?? node.getType().getText(),
     exported: node.hasExportKeyword(),
   }, [], getIdentifierPos(node, 'typeAlias'));
 }
@@ -564,6 +589,23 @@ function processExpression(expr: Node): SemanticNode[] {
   if (isJsxNode(unwrapped)) {
     const result = processJsxNode(unwrapped);
     return result ? [result] : [];
+  }
+  if (Node.isAsExpression(unwrapped)) {
+    // `x as T` (incl. `as const`): translate the inner expression and append
+    // the ` as T` suffix to the literal's trailing close node. Without this
+    // branch, `AsExpression` matched nothing below and the whole initializer
+    // fell back to a single-line `truncate(initializer.getText())`, which
+    // collapsed multi-line object literals (e.g. `actionTypes`) onto one
+    // translated row while the source stayed on many → misalignment.
+    const inner = unwrapExpression(unwrapped.getExpression()!);
+    const typeText = unwrapped.getTypeNode()?.getText();
+    const asSuffix = typeText ? ` as ${typeText}` : '';
+    const nodes = processExpression(inner);
+    const close = nodes.find(n => n.type === 'object-literal-close');
+    if (close) {
+      close.metadata.asSuffix = (close.metadata.asSuffix ?? '') + asSuffix;
+    }
+    return nodes;
   }
   if (Node.isCallExpression(unwrapped) || Node.isNewExpression(unwrapped)) {
     return processCallFunction(unwrapped);

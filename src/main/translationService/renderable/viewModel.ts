@@ -46,13 +46,17 @@ function collectStartLineSpans(node: DisplayNodeData, lineNum: number): DisplayS
   const spans: DisplaySpan[] = [...node.spans];
   const sameLineChildren = node.children.filter(c => c.sourceStartLine === lineNum);
   if (sameLineChildren.length > 0) {
-    if (node.type === 'variable-assignment-target') {
-      // The value of an assignment (`x = …`) starts on the same source line
-      // as the LHS. Inline it after the `= ` instead of pushing it onto a
-      // new, deeper-indented line — the latter produced a visual staircase
-      // (`x = \n  call y { \n    … }`) that misaligned the LHS and its
-      // value. The value's own nested children (inside a `{` block) still
-      // render on separate indented lines via the nested branch below.
+    if (node.type === 'variable-assignment-target' || node.type === 'return-target') {
+      // The value of an assignment (`x = …`) or a return's expression
+      // (`return <expr>`) starts on the same source line as the LHS / the
+      // `return` keyword. Inline it after the `= ` / `return ` instead of
+      // pushing it onto a new, deeper-indented line — the latter produced a
+      // visual staircase (`x = \n  call y { \n    … }`) that misaligned the
+      // LHS and its value. The same staircase affected `return <call>()`,
+      // which additionally stacked two single-line nesting boxes (the
+      // return's own block plus the call's block) around one statement. The
+      // value's own nested children (inside a `{` block) still render on
+      // separate indented lines via the nested branch below.
       for (const child of sameLineChildren) {
         const lastText = spans.length > 0 ? spans[spans.length - 1].text : '';
         if (lastText && !/\s$/.test(lastText)) spans.push({ text: ' ' });
@@ -133,8 +137,18 @@ function distributeNode(
     }
   }
 
+  // Inline-wrappers (`variable-assignment-target`, `return-target`) hold the
+  // LHS / `return` keyword and inline their value after `=` / `return`. They
+  // are non-nested (no box of their own), so passing depth+1 to their value
+  // would consume a depth level for nothing — pushing the value one box
+  // deeper than it should be (`const x = foo()` ended up a box deeper than a
+  // sibling `foo()` statement, and `setTimeout(() => { ... })` double-stacked
+  // the call box on top of the arrow-argument's box). Pass the wrapper's own
+  // depth to its value so the value renders at the wrapper's column.
+  const isInlineWrapper =
+    node.type === 'variable-assignment-target' || node.type === 'return-target';
   for (const child of node.children) {
-    distributeNode(child, fragments, depth + 1);
+    distributeNode(child, fragments, isInlineWrapper ? depth : depth + 1);
   }
 
   if (node.closeText && endIdx !== startIdx && endIdx >= 0 && endIdx < fragments.length) {

@@ -124,6 +124,10 @@ function phraseTypeAlias(node: SemanticNode): DisplaySpan[] {
   return [...exportedPrefix(node), ...ts('type-alias', { name: node.name ?? 'anonymous', type: String(node.metadata.type ?? '') }, node.refPos)];
 }
 
+function phraseTypeAliasLine(node: SemanticNode): DisplaySpan[] {
+  return [span(t('type-alias-line', { value: String(node.metadata.value ?? '') }))];
+}
+
 function phraseProperty(node: SemanticNode): DisplaySpan[] {
   const name = node.name ?? 'anonymous';
   const type = String(node.metadata.type ?? 'any');
@@ -306,8 +310,8 @@ function phraseObjectProperty(node: SemanticNode): DisplaySpan[] {
   return [span(t('object-property', { name, value: '' }))];
 }
 
-function phraseObjectLiteralClose(): DisplaySpan[] {
-  return [span(t('object-literal-close', {}))];
+function phraseObjectLiteralClose(node: SemanticNode): DisplaySpan[] {
+  return [span(t('object-literal-close', { asSuffix: String(node.metadata.asSuffix ?? '') }))];
 }
 
 function phraseFallback(node: SemanticNode): DisplaySpan[] {
@@ -326,6 +330,7 @@ const PHRASERS: Record<string, Phraser> = {
   interface: phraseInterface,
   typeAlias: phraseTypeAlias,
   'type-alias': phraseTypeAlias,
+  'type-alias-line': phraseTypeAliasLine,
   property: phraseProperty,
   'property-with-init': phraseProperty,
   'variable-assignment': phraseVariableAssignment,
@@ -372,6 +377,21 @@ export function toDisplayNode(node: SemanticNode, depth = 0): DisplayNodeData {
   if (nested) {
     spans.push({ text: rule!.children!.open });
   }
+  // JSX elements with children render HTML-style closing tags (`</div>`) on
+  // their own line and draw nesting-box borders around the children region —
+  // giving the visual hierarchy the previously-flat JSX output lacked.
+  // Self-closing (`<x />`) and fragment (`<>…</>`) nodes keep their one-liner
+  // rendering, so they are NOT treated as nested here.
+  const isNestableJsxElement =
+    node.type === 'jsx-element' &&
+    !node.metadata.selfClosing &&
+    node.children.length > 0;
+  const finalNested = nested || isNestableJsxElement;
+  const closeText = finalNested
+    ? isNestableJsxElement
+      ? `</${node.name}>`
+      : rule!.children!.close
+    : undefined;
   return {
     type: node.type,
     indent: depth,
@@ -380,7 +400,7 @@ export function toDisplayNode(node: SemanticNode, depth = 0): DisplayNodeData {
     sourceStartLine: node.sourceStartLine,
     sourceEndLine: node.sourceEndLine,
     bucket: bucketForNode(node),
-    nested,
-    closeText: nested ? rule!.children!.close : undefined,
+    nested: finalNested,
+    closeText,
   };
 }

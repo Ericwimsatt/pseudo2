@@ -6,6 +6,7 @@ export const TYPE_TO_BUCKET: Record<string, NodeBucket> = {
   export: 'import',
   interface: 'interface',
   typeAlias: 'interface',
+  'type-alias-line': 'interface',
   'function-definition': 'function',
   class: 'function',
   'jsx-element': 'jsx',
