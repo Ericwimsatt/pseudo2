@@ -33,6 +33,7 @@ export interface DisplaySpan {
   variant?: NodeVariant;
   refPos?: number;
   hasHover?: boolean;
+  hoverKind?: 'module';
 }
 
 export interface DisplayNodeData {
@@ -93,6 +94,7 @@ export interface TooltipData {
 export interface EnrichQuery {
   refPos: number;
   identifier?: string;
+  kind?: 'module';
 }
 
 export type QueryAnswer = TooltipData;

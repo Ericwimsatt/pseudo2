@@ -4,6 +4,8 @@ interface HoverState {
   trigger: HTMLElement | null;
   refPos?: number;
   filePath?: string;
+  identifier?: string;
+  kind?: 'module';
 }
 
 let hoverState: HoverState = { trigger: null };
@@ -31,14 +33,16 @@ export function initHover(): void {
       hideTimeout = null;
     }
 
-    const currentId = `${filePath}:${refPos}`;
+    const identifier = span.getAttribute('data-hover-identifier') || undefined;
+    const kind = span.getAttribute('data-hover-kind') === 'module' ? 'module' : undefined;
+    const currentId = `${filePath}:${refPos}:${identifier ?? ''}:${kind ?? ''}`;
     const prevId = hoverState.filePath && hoverState.refPos !== undefined
-      ? `${hoverState.filePath}:${hoverState.refPos}`
+      ? `${hoverState.filePath}:${hoverState.refPos}:${hoverState.identifier ?? ''}:${hoverState.kind ?? ''}`
       : null;
 
     if (currentId === prevId) return;
 
-    hoverState = { trigger: span as HTMLElement, refPos, filePath };
+    hoverState = { trigger: span as HTMLElement, refPos, filePath, identifier, kind };
     showTooltip(span as HTMLElement);
   });
 
@@ -76,22 +80,30 @@ function showTooltip(trigger: HTMLElement): void {
     if (!ft) return;
     container = document.createElement('div');
     container.setAttribute('data-role', 'tooltip-container');
-    container.className = 'absolute z-50';
-    container.style.position = 'fixed';
-    container.style.pointerEvents = 'auto';
     ft.appendChild(container);
   }
 
+  configureTooltipContainer(container);
   container.classList.remove('hidden');
+  popupEl = container;
+  trigger.setAttribute('aria-describedby', 'pseudo-tooltip');
 
   loadFragment({
     method: 'getTooltipFragment',
-    args: { filePath, query: { refPos } },
+    args: {
+      filePath,
+      query: {
+        refPos,
+        ...(hoverState.identifier ? { identifier: hoverState.identifier } : {}),
+        ...(hoverState.kind ? { kind: hoverState.kind } : {}),
+      },
+    },
     target: container,
     swapStyle: 'innerHTML',
     onError: () => {
       container.innerHTML = '<div class="p-2 text-red-500 text-sm">Failed to load</div>';
     },
+    onSuccess: () => positionTooltip(trigger, container),
   });
 
   positionTooltip(trigger, container);
@@ -123,20 +135,47 @@ function hideTooltip(): void {
   if (container) {
     container.classList.add('hidden');
   }
+  hoverState.trigger?.removeAttribute('aria-describedby');
+  hoverState = { trigger: null };
+  hideTimeout = null;
   popupEl = null;
 }
 
+function configureTooltipContainer(container: HTMLElement): void {
+  container.id = 'pseudo-tooltip';
+  container.setAttribute('role', 'tooltip');
+  container.classList.add(
+    'fixed',
+    'z-50',
+    'max-w-md',
+    'max-h-80',
+    'overflow-y-auto',
+    'bg-white',
+    'border',
+    'border-gray-300',
+    'rounded-lg',
+    'shadow-lg',
+    'p-3',
+    'text-sm',
+  );
+  container.style.position = 'fixed';
+  container.style.pointerEvents = 'auto';
+}
+
 export function afterFileSwapHover(): void {
+  if (hideTimeout) clearTimeout(hideTimeout);
+  hideTimeout = null;
+  hoverState = { trigger: null };
+  popupEl = null;
+
   const ft = document.querySelector('[data-role="file-table"]');
   if (!ft) return;
   let container = ft.querySelector('[data-role="tooltip-container"]') as HTMLElement;
   if (!container) {
     container = document.createElement('div');
     container.setAttribute('data-role', 'tooltip-container');
-    container.className = 'hidden absolute z-50';
-    container.style.position = 'fixed';
-    container.style.pointerEvents = 'auto';
     ft.appendChild(container);
   }
+  configureTooltipContainer(container);
   container.classList.add('hidden');
 }

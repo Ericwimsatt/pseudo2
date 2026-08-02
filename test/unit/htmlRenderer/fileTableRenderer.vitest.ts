@@ -394,6 +394,7 @@ describe('fileTableRenderer', () => {
 
     expect(result.html).toContain('class="syntax-token syntax-identifier cursor-help');
     expect(result.html).toContain('data-refpos="42"');
+    expect(result.html).toContain('data-hover-identifier="count"');
     expect(result.html).toMatch(/data-refpos="42"[^>]*><mark[^>]*>count<\/mark><\/span>/);
   });
 

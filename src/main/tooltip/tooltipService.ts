@@ -19,7 +19,11 @@ function extractSnippet(lines: { lineNumber: number; sourceText: string; nodes: 
 }
 
 export function getNodeDetail(arg: { filePath: string; query: EnrichQuery }): QueryAnswer {
-  const { identifier } = arg.query;
+  const { identifier, kind } = arg.query;
+
+  if (kind === 'module' && identifier) {
+    return { title: 'Module', body: identifier, sections: [] };
+  }
 
   // Static fallback: React hooks, keywords
   if (identifier) {

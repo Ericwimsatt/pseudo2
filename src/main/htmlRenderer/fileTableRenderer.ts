@@ -57,7 +57,9 @@ function renderSpans(spans: DisplaySpan[], searchTerm?: string, isActiveMatch = 
       isHoverable ? 'cursor-help underline decoration-dotted underline-offset-2' : undefined,
     ].filter(Boolean).join(' ');
     const refPosAttribute = isHoverable ? ` data-refpos="${span.refPos}"` : '';
-    return `<span class="${classes}"${refPosAttribute}>${content}</span>`;
+    const identifierAttribute = isHoverable ? ` data-hover-identifier="${escapeAttribute(span.text)}"` : '';
+    const hoverKindAttribute = span.hoverKind ? ` data-hover-kind="${escapeAttribute(span.hoverKind)}"` : '';
+    return `<span class="${classes}"${refPosAttribute}${identifierAttribute}${hoverKindAttribute}>${content}</span>`;
   }).join('');
 }
 

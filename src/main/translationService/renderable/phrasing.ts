@@ -44,10 +44,12 @@ function ts(
 
     const varName = match[1];
     const value = vars[varName] ?? `{${varName}}`;
+    const marker = match[2];
     const placeholder = styledSpan(
       value,
       variantForTemplateVariable(varName),
-      match[2] === 'ref' ? refPos : undefined,
+      marker ? refPos : undefined,
+      marker === 'hover' && varName === 'module' ? 'module' : undefined,
     );
     spans.push(placeholder);
 
@@ -71,8 +73,13 @@ function span(text: string, refPos?: number): DisplaySpan {
   return result;
 }
 
-function styledSpan(text: string, variant: DisplaySpan['variant'], refPos?: number): DisplaySpan {
-  return { ...span(text, refPos), variant };
+function styledSpan(
+  text: string,
+  variant: DisplaySpan['variant'],
+  refPos?: number,
+  hoverKind?: DisplaySpan['hoverKind'],
+): DisplaySpan {
+  return { ...span(text, refPos), variant, ...(hoverKind ? { hoverKind } : {}) };
 }
 
 function exportedPrefix(node: SemanticNode): DisplaySpan[] {

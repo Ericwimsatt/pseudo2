@@ -126,6 +126,7 @@ function inheritMetadata(span: DisplaySpan, text: string, variant?: NodeVariant)
   if (variant) result.variant = variant;
   if (span.refPos !== undefined) result.refPos = span.refPos;
   if (span.hasHover) result.hasHover = true;
+  if (span.hoverKind) result.hoverKind = span.hoverKind;
   return result;
 }
 

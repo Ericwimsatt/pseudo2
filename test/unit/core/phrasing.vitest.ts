@@ -35,7 +35,7 @@ interface PhrasingRule {
 
 const MOCK_RULES: PhrasingRule[] = [
   { type: 'export', template: 'SEND-OUT {names}' },
-  { type: 'import', template: 'BRING-IN {names} FROM {module}' },
+  { type: 'import', template: 'BRING-IN {names} FROM {module@hover}' },
   {
     type: 'function-definition',
     template: 'DEFN {name@ref} ({params})',
@@ -103,11 +103,16 @@ describe('phrasing rules application (mocked rules)', () => {
 
   describe('mixed plain/@ref vars in one template', () => {
     it('import: substitutes both {names} and {module} and preserves order', () => {
-      const out = render(makeNode('import', {
+      const semanticNode = makeNode('import', {
         name: 'useState',
         metadata: { module: 'react' },
-      }));
+        refPos: 17,
+      });
+      const out = render(semanticNode);
       expect(out).toBe('BRING-IN useState FROM react');
+
+      const moduleSpan = toDisplayNode(semanticNode).spans.find((span) => span.text === 'react');
+      expect(moduleSpan).toMatchObject({ refPos: 17, hasHover: true, hoverKind: 'module' });
     });
   });
 
