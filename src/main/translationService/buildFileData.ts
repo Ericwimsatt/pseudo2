@@ -18,6 +18,6 @@ export function buildFileData(sourceCode: string, filePath: string): BuildFileRe
   });
   const semanticGraph = makeSemanticGraph(sourceFile);
   const astCache = new AstCache(sourceFile);
-  const viewModel = buildViewModel(semanticGraph, sourceCode);
+  const viewModel = buildViewModel(semanticGraph, sourceCode, filePath);
   return { viewModel, path: filePath, astCache };
 }

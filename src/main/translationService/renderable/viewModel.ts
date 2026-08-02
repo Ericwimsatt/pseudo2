@@ -10,6 +10,7 @@ import type {
 } from './types';
 import { pickLineBucket } from './bucket';
 import { toDisplayNode } from './phrasing';
+import { highlightSourceLines, highlightTranslationSpans } from './syntaxHighlight';
 
 function collectTreeBuckets(nodes: DisplayNodeData[]): NodeBucket[] {
   const set = new Set<NodeBucket>();
@@ -79,7 +80,7 @@ function collectStartLineSpans(node: DisplayNodeData, lineNum: number): DisplayS
         // Align the close brace with the opening keyword (the parent's own
         // column), not with the absolute nesting depth — that previously
         // pushed `}` further right than its ` {` opener.
-        spans.push({ text: node.closeText });
+        spans.push(...highlightTranslationSpans([{ text: node.closeText }]));
       }
     }
   } else if (node.closeText && node.sourceStartLine === node.sourceEndLine) {
@@ -156,13 +157,17 @@ function distributeNode(
     if (existing) {
       fragments[endIdx].contentNode = {
         ...existing,
-        spans: [...existing.spans, { text: '\n' }, { text: node.closeText }],
+        spans: [
+          ...existing.spans,
+          { text: '\n' },
+          ...highlightTranslationSpans([{ text: node.closeText }]),
+        ],
       };
     } else {
       fragments[endIdx].contentNode = {
         type: node.type,
         indent: node.indent,
-        spans: [{ text: node.closeText }],
+        spans: highlightTranslationSpans([{ text: node.closeText }]),
         children: [],
         sourceStartLine: node.sourceEndLine,
         sourceEndLine: node.sourceEndLine,
@@ -198,6 +203,7 @@ function buildBoxFragments(
 function buildLineRenderable(
   lineNumber: number,
   sourceText: string,
+  sourceSpans: DisplaySpan[],
   rootNodes: DisplayNodeData[],
   spanning: Set<NodeBucket>,
   boxFragment: LineBoxFragment | null,
@@ -205,6 +211,7 @@ function buildLineRenderable(
   return {
     lineNumber,
     sourceText,
+    sourceSpans,
     bucket: rootNodes.length > 0
       ? pickLineBucket(collectTreeBuckets(rootNodes))
       : pickLineBucket([...spanning]),
@@ -216,10 +223,12 @@ function buildLineRenderable(
 
 export function buildViewModel(
   nodes: SemanticNode[],
-  sourceCode: string
+  sourceCode: string,
+  filePath = 'file.ts',
 ): ViewModel {
   const rootNodes = nodes.filter((n) => n.sourceStartLine > 0).map(n => toDisplayNode(n));
   const sourceLines = sourceCode.split('\n');
+  const highlightedSourceLines = highlightSourceLines(sourceCode, filePath);
   const totalLines = sourceLines.length;
 
   const boxFragments = buildBoxFragments(totalLines, rootNodes);
@@ -228,7 +237,14 @@ export function buildViewModel(
     const lineNumber = i + 1;
     const starting = rootNodes.filter((r) => r.sourceStartLine === lineNumber);
     const spanning = collectActiveBuckets(rootNodes, lineNumber);
-    return buildLineRenderable(lineNumber, text, starting, spanning, boxFragments[i]);
+    return buildLineRenderable(
+      lineNumber,
+      text,
+      highlightedSourceLines[i] ?? [{ text }],
+      starting,
+      spanning,
+      boxFragments[i],
+    );
   });
 
   return { lines };

@@ -346,4 +346,73 @@ describe('fileTableRenderer', () => {
     expect(result.html).toContain('data-role="tooltip-container"');
     expect(result.html).toContain('data-testid="tooltip-container"');
   });
+
+  it('renders the shared syntax classes in the source and translation columns', () => {
+    const syntaxNode = {
+      ...mockDisplayNode,
+      spans: [{ text: 'Function', variant: 'kw' as const }],
+    };
+    const syntaxLine = {
+      ...mockLineRenderable,
+      sourceSpans: [
+        { text: 'const', variant: 'kw' as const },
+        { text: ' value' },
+      ],
+      boxFragment: { layers: [], contentNode: syntaxNode },
+    };
+
+    const result = renderFileTable({
+      viewModel: { lines: [syntaxLine] },
+      fileName: 'test.ts',
+      filePath: 'test.ts',
+    });
+
+    expect(result.html.match(/syntax-keyword/g)).toHaveLength(2);
+  });
+
+  it('restores hover attributes without losing nested search highlighting', () => {
+    const hoverNode = {
+      ...mockDisplayNode,
+      spans: [{
+        text: 'count',
+        variant: 'ident' as const,
+        refPos: 42,
+        hasHover: true,
+      }],
+    };
+    const hoverLine = {
+      ...mockLineRenderable,
+      boxFragment: { layers: [], contentNode: hoverNode },
+    };
+
+    const result = renderFileTable({
+      viewModel: { lines: [hoverLine] },
+      fileName: 'test.ts',
+      filePath: 'test.ts',
+      targetVar: 'count',
+    });
+
+    expect(result.html).toContain('class="syntax-token syntax-identifier cursor-help');
+    expect(result.html).toContain('data-refpos="42"');
+    expect(result.html).toMatch(/data-refpos="42"[^>]*><mark[^>]*>count<\/mark><\/span>/);
+  });
+
+  it('does not expose a hover target when hasHover is false', () => {
+    const plainNode = {
+      ...mockDisplayNode,
+      spans: [{ text: 'count', variant: 'ident' as const, refPos: 42 }],
+    };
+    const plainLine = {
+      ...mockLineRenderable,
+      boxFragment: { layers: [], contentNode: plainNode },
+    };
+
+    const result = renderFileTable({
+      viewModel: { lines: [plainLine] },
+      fileName: 'test.ts',
+      filePath: 'test.ts',
+    });
+
+    expect(result.html).not.toContain('data-refpos="42"');
+  });
 });

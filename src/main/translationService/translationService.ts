@@ -22,6 +22,6 @@ export async function loadFileTranslation(arg: { path: string }): Promise<{ path
     return { path: result.path, viewModel: result.viewModel };
   }
 
-  const viewModel = buildViewModel([], sourceCode);
+  const viewModel = buildViewModel([], sourceCode, arg.path);
   return { path: arg.path, viewModel };
 }

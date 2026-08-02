@@ -13,6 +13,9 @@ export type NodeVariant =
   | 'attr-name'
   | 'attr-value'
   | 'string'
+  | 'number'
+  | 'comment'
+  | 'operator'
   | 'punct'
   | 'param'
   | 'fn-name';
@@ -58,6 +61,7 @@ export interface LineBoxFragment {
 export interface LineRenderable {
   lineNumber: number;
   sourceText: string;
+  sourceSpans?: DisplaySpan[];
   bucket: NodeBucket;
   nodes: DisplayNodeData[];
   spanningBuckets: NodeBucket[];

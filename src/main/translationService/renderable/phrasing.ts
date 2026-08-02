@@ -3,6 +3,7 @@ import type { DisplayNodeData, DisplaySpan } from './types';
 import { bucketForNode } from './bucket';
 import { translateType } from './translateType';
 import phrasingRules from '../../../../config/phrasing-rules.json' with { type: 'json' };
+import { highlightTranslationSpans } from './syntaxHighlight';
 
 interface PhrasingRule {
   type: string;
@@ -16,13 +17,12 @@ export function loadPhrasingRules(rules: PhrasingRule[]) {
   RULES = rules;
 }
 
-function t(type: string, vars: Record<string, string | undefined>): string {
-  const rule = RULES.find(r => r.type === type);
-  if (!rule) return `[${type}]`;
-  return rule.template.replace(/\{(\w+)(?:@(?:ref|hover))?\}/g, (_, key) => {
-    if (key in vars) return String(vars[key]);
-    return `{${key}}`;
-  });
+function variantForTemplateVariable(name: string): DisplaySpan['variant'] {
+  if (name === 'function') return 'fn-name';
+  if (name === 'params') return 'param';
+  if (name === 'module' || name === 'text') return 'string';
+  if (name === 'verb') return undefined;
+  return 'ident';
 }
 
 function ts(
@@ -34,30 +34,28 @@ function ts(
   if (!rule) return [span(`[${type}]`)];
 
   const spans: DisplaySpan[] = [];
-  const regex = /\{(\w+)@ref\}/g;
+  const regex = /\{(\w+)(?:@(ref|hover))?\}/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
-  const resolveVars = (text: string): string =>
-    text.replace(/\{(\w+)(?:@\w+)?\}/g, (_, key: string) => vars[key] ?? `{${key}}`);
-
   while ((match = regex.exec(rule.template)) !== null) {
     const before = rule.template.slice(lastIndex, match.index);
-    if (before) {
-      spans.push(span(resolveVars(before)));
-    }
+    if (before) spans.push(span(before));
 
     const varName = match[1];
     const value = vars[varName] ?? `{${varName}}`;
-    spans.push(span(value, refPos));
+    const placeholder = styledSpan(
+      value,
+      variantForTemplateVariable(varName),
+      match[2] === 'ref' ? refPos : undefined,
+    );
+    spans.push(placeholder);
 
     lastIndex = match.index + match[0].length;
   }
 
   const after = rule.template.slice(lastIndex);
-  if (after) {
-    spans.push(span(resolveVars(after)));
-  }
+  if (after) spans.push(span(after));
 
   return spans;
 }
@@ -71,6 +69,10 @@ function span(text: string, refPos?: number): DisplaySpan {
     result.hasHover = true;
   }
   return result;
+}
+
+function styledSpan(text: string, variant: DisplaySpan['variant'], refPos?: number): DisplaySpan {
+  return { ...span(text, refPos), variant };
 }
 
 function exportedPrefix(node: SemanticNode): DisplaySpan[] {
@@ -105,7 +107,7 @@ function phraseFunctionDefinition(node: SemanticNode): DisplaySpan[] {
   if (node.name) {
     return [...exportedPrefix(node), ...ts('function-definition-no-params', { name: node.name }, node.refPos)];
   }
-  return [...exportedPrefix(node), span(t('function-definition-anonymous', {}))];
+  return [...exportedPrefix(node), ...ts('function-definition-anonymous', {})];
 }
 
 function phraseClass(node: SemanticNode): DisplaySpan[] {
@@ -125,7 +127,7 @@ function phraseTypeAlias(node: SemanticNode): DisplaySpan[] {
 }
 
 function phraseTypeAliasLine(node: SemanticNode): DisplaySpan[] {
-  return [span(t('type-alias-line', { value: String(node.metadata.value ?? '') }))];
+  return ts('type-alias-line', { value: String(node.metadata.value ?? '') });
 }
 
 function phraseProperty(node: SemanticNode): DisplaySpan[] {
@@ -151,31 +153,31 @@ function phraseVariableAssignment(node: SemanticNode): DisplaySpan[] {
 }
 
 function phraseReturn(node: SemanticNode): DisplaySpan[] {
-  if (node.type === 'return-jsx') return [span(t('return-jsx', {}))];
+  if (node.type === 'return-jsx') return ts('return-jsx', {});
   if (node.type === 'return-value') {
-    return [span(t('return-value', { value: String(node.metadata.value ?? '') }))];
+    return ts('return-value', { value: String(node.metadata.value ?? '') });
   }
-  if (node.type === 'return-target') return [span(t('return-target', {}))];
-  return [span(t('return', {}))];
+  if (node.type === 'return-target') return ts('return-target', {});
+  return ts('return', {});
 }
 
 function phraseIf(node: SemanticNode): DisplaySpan[] {
-  return [span(t('if', { condition: String(node.metadata.condition) }))];
+  return ts('if', { condition: String(node.metadata.condition) });
 }
 
 function phraseOtherwiseIf(node: SemanticNode): DisplaySpan[] {
-  return [span(t('otherwise-if', { condition: String(node.metadata.condition) }))];
+  return ts('otherwise-if', { condition: String(node.metadata.condition) });
 }
 
 function phraseOtherwise(): DisplaySpan[] {
-  return [span(t('otherwise', {}))];
+  return ts('otherwise', {});
 }
 
 function phraseLoop(node: SemanticNode): DisplaySpan[] {
   const loopType = node.metadata.loopType as string;
-  if (loopType === 'forOf') return [span(t('loop-for-of', {}))];
-  if (loopType === 'forIn') return [span(t('loop-for-in', { collection: String(node.metadata.collection ?? '') }))];
-  return [span(t('loop', {}))];
+  if (loopType === 'forOf') return ts('loop-for-of', {});
+  if (loopType === 'forIn') return ts('loop-for-in', { collection: String(node.metadata.collection ?? '') });
+  return ts('loop', {});
 }
 
 function phraseCallFunction(node: SemanticNode): DisplaySpan[] {
@@ -198,24 +200,39 @@ function phraseJsxAttrs(node: SemanticNode): DisplaySpan[] {
   const spans: DisplaySpan[] = [];
 
   if (meta.className) {
-    spans.push(span(' className='), span(`"${meta.className}"`));
+    spans.push(
+      span(' '),
+      styledSpan('className', 'attr-name'),
+      styledSpan('=', 'operator'),
+      styledSpan(`"${meta.className}"`, 'attr-value'),
+    );
   } else if (meta.classNameDescription) {
-    spans.push(span(' className='), span(`"${meta.classNameDescription}"`));
+    spans.push(
+      span(' '),
+      styledSpan('className', 'attr-name'),
+      styledSpan('=', 'operator'),
+      styledSpan(`"${meta.classNameDescription}"`, 'attr-value'),
+    );
   }
 
   if (meta.props && typeof meta.props === 'object') {
     for (const [name, value] of Object.entries(meta.props as Record<string, unknown>)) {
       if (value === true) {
-        spans.push(span(` ${name}`));
+        spans.push(span(' '), styledSpan(name, 'attr-name'));
       } else {
-        spans.push(span(` ${name}`), span('='), span(`"${value}"`));
+        spans.push(
+          span(' '),
+          styledSpan(name, 'attr-name'),
+          styledSpan('=', 'operator'),
+          styledSpan(`"${value}"`, 'attr-value'),
+        );
       }
     }
   }
 
   if (Array.isArray(meta.events)) {
     for (const ev of meta.events as EventItem[]) {
-      spans.push(span(` ${ev.name}`), span('='));
+      spans.push(span(' '), styledSpan(ev.name, 'attr-name'), styledSpan('=', 'operator'));
       if (ev.handlerName && ev.handlerRefPos !== undefined) {
         spans.push(span(`{${ev.handlerName}}`, ev.handlerRefPos));
       } else {
@@ -225,15 +242,15 @@ function phraseJsxAttrs(node: SemanticNode): DisplaySpan[] {
   }
 
   if (meta.href) {
-    spans.push(span(' href='), span(`"${meta.href}"`));
+    spans.push(span(' '), styledSpan('href', 'attr-name'), styledSpan('=', 'operator'), styledSpan(`"${meta.href}"`, 'attr-value'));
   }
 
   if (meta.src) {
-    spans.push(span(' src='), span(`"${meta.src}"`));
+    spans.push(span(' '), styledSpan('src', 'attr-name'), styledSpan('=', 'operator'), styledSpan(`"${meta.src}"`, 'attr-value'));
   }
 
   if (meta.alt) {
-    spans.push(span(' alt='), span(`"${meta.alt}"`));
+    spans.push(span(' '), styledSpan('alt', 'attr-name'), styledSpan('=', 'operator'), styledSpan(`"${meta.alt}"`, 'attr-value'));
   }
 
   return spans;
@@ -242,76 +259,76 @@ function phraseJsxAttrs(node: SemanticNode): DisplaySpan[] {
 function phraseJsxElement(node: SemanticNode): DisplaySpan[] {
   const name = node.name!;
   const spans = [
-    span('<'),
-    span(name, node.refPos),
+    styledSpan('<', 'punct'),
+    styledSpan(name, 'tag-name', node.refPos),
     ...phraseJsxAttrs(node),
   ];
   if (node.metadata.selfClosing) {
-    spans.push(span(' '), span('/>'));
+    spans.push(span(' '), styledSpan('/>', 'punct'));
   } else {
-    spans.push(span('>'));
+    spans.push(styledSpan('>', 'punct'));
   }
   return spans;
 }
 
 function phraseJsxFragment(): DisplaySpan[] {
-  return [span(t('jsx-fragment', {}))];
+  return ts('jsx-fragment', {});
 }
 
 function phraseJsxList(node: SemanticNode): DisplaySpan[] {
-  return [span(t('jsx-list', { itemName: String(node.metadata.itemName), collection: String(node.metadata.collection) }))];
+  return ts('jsx-list', { itemName: String(node.metadata.itemName), collection: String(node.metadata.collection) });
 }
 
 function phraseJsxFilter(node: SemanticNode): DisplaySpan[] {
-  return [span(t('jsx-filter', { collection: String(node.metadata.collection), condition: String(node.metadata.condition) }))];
+  return ts('jsx-filter', { collection: String(node.metadata.collection), condition: String(node.metadata.condition) });
 }
 
 function phraseJsxConditional(node: SemanticNode): DisplaySpan[] {
-  if (node.type === 'jsx-conditional-alt') return [span(t('jsx-conditional-alt', {}))];
-  if (node.metadata.variant === 'ternary') return [span(t('jsx-conditional-ternary', { condition: String(node.metadata.condition) }))];
-  return [span(t('jsx-conditional', { condition: String(node.metadata.condition) }))];
+  if (node.type === 'jsx-conditional-alt') return ts('jsx-conditional-alt', {});
+  if (node.metadata.variant === 'ternary') return ts('jsx-conditional-ternary', { condition: String(node.metadata.condition) });
+  return ts('jsx-conditional', { condition: String(node.metadata.condition) });
 }
 
 function phraseJsxText(node: SemanticNode): DisplaySpan[] {
-  return [span(t('jsx-text', { text: String(node.metadata.text) }))];
+  return ts('jsx-text', { text: String(node.metadata.text) });
 }
 
 function phraseJsxExpression(node: SemanticNode): DisplaySpan[] {
   const expr = String(node.metadata.expression);
-  if (node.metadata.isTemplate) return [span(t('jsx-expression-template', { expression: expr }))];
+  if (node.metadata.isTemplate) return ts('jsx-expression-template', { expression: expr });
   if (node.metadata.isSimpleIdentifier && node.refPos !== undefined) {
     return ts('jsx-expression-identifier', { expression: expr }, node.refPos);
   }
-  return [span(t('jsx-expression', { expression: expr }))];
+  return ts('jsx-expression', { expression: expr });
 }
 
 function phraseTernaryCondition(node: SemanticNode): DisplaySpan[] {
-  return [span(t('ternary-condition', { condition: String(node.metadata.condition) }))];
+  return ts('ternary-condition', { condition: String(node.metadata.condition) });
 }
 
 function phraseTernaryOtherwise(): DisplaySpan[] {
-  return [span(t('ternary-otherwise', {}))];
+  return ts('ternary-otherwise', {});
 }
 
 function phraseTernaryValue(node: SemanticNode): DisplaySpan[] {
-  return [span(t('ternary-value', { value: String(node.metadata.value) }))];
+  return ts('ternary-value', { value: String(node.metadata.value) });
 }
 
 function phraseObjectLiteral(): DisplaySpan[] {
-  return [span(t('object-literal', {}))];
+  return ts('object-literal', {});
 }
 
 function phraseObjectProperty(node: SemanticNode): DisplaySpan[] {
   const name = node.name ?? '';
-  if (node.metadata.isSpread) return [span(t('object-property-spread', { name }))];
-  if (node.metadata.isMethod) return [span(t('object-property-method', { name }))];
+  if (node.metadata.isSpread) return ts('object-property-spread', { name });
+  if (node.metadata.isMethod) return ts('object-property-method', { name });
   const value = node.metadata.value as string;
-  if (value) return [span(t('object-property', { name, value }))];
-  return [span(t('object-property', { name, value: '' }))];
+  if (value) return ts('object-property', { name, value });
+  return ts('object-property', { name, value: '' });
 }
 
 function phraseObjectLiteralClose(node: SemanticNode): DisplaySpan[] {
-  return [span(t('object-literal-close', { asSuffix: String(node.metadata.asSuffix ?? '') }))];
+  return ts('object-literal-close', { asSuffix: String(node.metadata.asSuffix ?? '') });
 }
 
 function phraseFallback(node: SemanticNode): DisplaySpan[] {
@@ -371,11 +388,11 @@ const PHRASERS: Record<string, Phraser> = {
 
 export function toDisplayNode(node: SemanticNode, depth = 0): DisplayNodeData {
   const phrase = PHRASERS[node.type] ?? phraseFallback;
-  const spans = phrase(node);
+  const spans = highlightTranslationSpans(phrase(node));
   const rule = RULES.find(r => r.type === node.type);
   const nested = !!rule?.children;
   if (nested) {
-    spans.push({ text: rule!.children!.open });
+    spans.push(...highlightTranslationSpans([{ text: rule!.children!.open }]));
   }
   // JSX elements with children render HTML-style closing tags (`</div>`) on
   // their own line and draw nesting-box borders around the children region —

@@ -4,40 +4,61 @@ import { escapeHtml, escapeAttribute } from './escaping';
 import { createFragment, createMetadata } from './types';
 import { BUCKET_LABELS } from '../translationService/renderable/bucket';
 
-const BORDER_COLORS = ['#93c5fd', '#86efac', '#fde68a'];
-const BG_COLORS = ['#f0f9ff', '#f0fdf4', '#fffbeb'];
+const BORDER_COLORS = ['#93c5fd', '#86efac', '#fde68a', '#c4b5fd', '#f9a8d4', '#5eead4'];
+const BG_COLORS = ['#f0f9ff', '#f0fdf4', '#fffbeb', '#faf5ff', '#fdf2f8', '#f0fdfa'];
 
-function renderSpans(spans: DisplaySpan[], searchTerm?: string, isActiveMatch = false): string {
-  if (!searchTerm) {
-    return spans.map(s => escapeHtml(s.text)).join('');
-  }
+const VARIANT_CLASSES: Partial<Record<NonNullable<DisplaySpan['variant']>, string>> = {
+  kw: 'syntax-keyword',
+  ident: 'syntax-identifier',
+  'tag-name': 'syntax-tag',
+  'attr-name': 'syntax-attribute',
+  'attr-value': 'syntax-string',
+  string: 'syntax-string',
+  number: 'syntax-number',
+  comment: 'syntax-comment',
+  operator: 'syntax-operator',
+  punct: 'syntax-punctuation',
+  param: 'syntax-parameter',
+  'fn-name': 'syntax-function',
+};
+
+function renderSpanText(text: string, searchTerm?: string, isActiveMatch = false): string {
+  if (!searchTerm) return escapeHtml(text);
 
   const termLower = searchTerm.toLowerCase();
+  const lower = text.toLowerCase();
   let result = '';
+  let lastIndex = 0;
+  let index = lower.indexOf(termLower);
 
-  for (const span of spans) {
-    const text = span.text;
-    const lower = text.toLowerCase();
-    let lastIndex = 0;
-    let index = lower.indexOf(termLower);
-
-    while (index !== -1) {
-      if (index > lastIndex) {
-        result += escapeHtml(text.slice(lastIndex, index));
-      }
-      const matchText = text.slice(index, index + searchTerm.length);
-      const markClass = isActiveMatch ? 'bg-yellow-300 text-black' : 'bg-yellow-100 text-black';
-      result += `<mark class="rounded-sm ${markClass}">${escapeHtml(matchText)}</mark>`;
-      lastIndex = index + searchTerm.length;
-      index = lower.indexOf(termLower, lastIndex);
-    }
-
-    if (lastIndex < text.length) {
-      result += escapeHtml(text.slice(lastIndex));
-    }
+  while (index !== -1) {
+    if (index > lastIndex) result += escapeHtml(text.slice(lastIndex, index));
+    const matchText = text.slice(index, index + searchTerm.length);
+    const markClass = isActiveMatch ? 'bg-yellow-300 text-black' : 'bg-yellow-100 text-black';
+    result += `<mark class="rounded-sm ${markClass}">${escapeHtml(matchText)}</mark>`;
+    lastIndex = index + searchTerm.length;
+    index = lower.indexOf(termLower, lastIndex);
   }
 
+  if (lastIndex < text.length) result += escapeHtml(text.slice(lastIndex));
   return result;
+}
+
+function renderSpans(spans: DisplaySpan[], searchTerm?: string, isActiveMatch = false): string {
+  return spans.map((span) => {
+    const content = renderSpanText(span.text, searchTerm, isActiveMatch);
+    const variantClass = span.variant ? VARIANT_CLASSES[span.variant] : undefined;
+    const isHoverable = span.hasHover && span.refPos !== undefined;
+    if (!variantClass && !isHoverable) return content;
+
+    const classes = [
+      'syntax-token',
+      variantClass,
+      isHoverable ? 'cursor-help underline decoration-dotted underline-offset-2' : undefined,
+    ].filter(Boolean).join(' ');
+    const refPosAttribute = isHoverable ? ` data-refpos="${span.refPos}"` : '';
+    return `<span class="${classes}"${refPosAttribute}>${content}</span>`;
+  }).join('');
 }
 
 function renderDisplayNode(node: DisplayNodeData, searchTerm?: string, isActiveMatch = false): string {
@@ -116,12 +137,12 @@ function renderLineRow(line: LineRenderable, rowNum: number, searchTerm?: string
   let sourceHtml = '';
   if (sourceHasTerm && effectiveSearchTerm) {
     sourceHtml = renderSpans(
-      [{ text: line.sourceText }],
+      line.sourceSpans ?? [{ text: line.sourceText }],
       effectiveSearchTerm,
       false
     );
   } else {
-    sourceHtml = line.sourceText ? escapeHtml(line.sourceText) : '&nbsp;';
+    sourceHtml = line.sourceText ? renderSpans(line.sourceSpans ?? [{ text: line.sourceText }]) : '&nbsp;';
   }
 
   const sourceCellClass = `py-1 border-r border-gray-200 hover:bg-gray-50/40 transition-colors ${selectionMode === 'translation' ? 'select-none' : ''}`;
