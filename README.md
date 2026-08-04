@@ -2,6 +2,10 @@
 
 Source code translation visualization tool built with Electron, Vite, and htmx.
 
+## Product Design
+
+- [Code Understanding Interface Vision](docs/code-understanding-interface-vision.md) — hover, anchored inspection, deeper exploration, navigation, and complexity modes
+
 ## Architecture
 
 The renderer uses **main-process-generated HTML fragments** delivered through typed IPC and swapped into the DOM via htmx. There is no React, JSX, or virtual DOM.

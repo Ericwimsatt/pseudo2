@@ -3,8 +3,8 @@ import type { SidebarFragmentData, HtmlFragment, FragmentKind } from './types';
 import { escapeHtml, escapeAttribute } from './escaping';
 import { createFragment, createMetadata } from './types';
 
-const FOLDER_TOGGLE_OPEN = '▼';
-const FOLDER_TOGGLE_CLOSED = '▶';
+const FOLDER_TOGGLE_OPEN = '▾';
+const FOLDER_TOGGLE_CLOSED = '▸';
 const COLLAPSE_SVG = `<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M10 4l-4 4 4 4V4z" /></svg>`;
 const EXPAND_SVG = `<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M6 4l4 4-4 4V4z" /></svg>`;
 
@@ -40,8 +40,8 @@ function renderDirectoryNode(node: FileNode, selectedFile: string | null, depth:
 
   return `
     <div ${dataAttrs} style="padding-left: ${paddingLeft}px">
-      <button class="w-full text-left px-2 py-1 hover:bg-gray-100 flex items-center gap-1 text-sm transition-colors" data-action="toggle-directory">
-        <span class="text-xs" data-role="sidebar-toggle-icon">${toggleIcon}</span>
+      <button class="w-full text-left px-2 py-1 hover:bg-gray-100 flex items-center gap-1 text-sm transition-colors" data-action="toggle-directory" aria-expanded="${isOpen}">
+        <span class="sidebar-chevron ${isOpen ? 'is-open' : ''}" data-role="sidebar-toggle-icon" aria-hidden="true">${toggleIcon}</span>
         <span class="font-medium">${escapeHtml(node.name)}</span>
       </button>
       ${childrenContainer}

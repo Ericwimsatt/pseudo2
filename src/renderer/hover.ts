@@ -18,7 +18,7 @@ export function getHoverState(): HoverState {
 
 export function initHover(): void {
   document.addEventListener('mouseover', (e) => {
-    const span = (e.target as HTMLElement).closest('[data-refpos]') as HTMLElement | null;
+    const span = (e.target as HTMLElement).closest('[data-refpos], [data-hover-kind]') as HTMLElement | null;
     if (!span) return;
 
     const fileTable = span.closest('[data-role="file-table"]');
@@ -36,7 +36,7 @@ export function initHover(): void {
     const identifier = span.getAttribute('data-hover-identifier') || undefined;
     const kind = span.getAttribute('data-hover-kind') === 'module' ? 'module' : undefined;
     const currentId = `${filePath}:${refPos}:${identifier ?? ''}:${kind ?? ''}`;
-    const prevId = hoverState.filePath && hoverState.refPos !== undefined
+    const prevId = hoverState.trigger
       ? `${hoverState.filePath}:${hoverState.refPos}:${hoverState.identifier ?? ''}:${hoverState.kind ?? ''}`
       : null;
 
@@ -72,7 +72,7 @@ function showTooltip(trigger: HTMLElement): void {
 
   const refPos = hoverState.refPos;
   const filePath = hoverState.filePath;
-  if (refPos === undefined || !filePath) return;
+  if (!filePath || (refPos === undefined && !(hoverState.kind && hoverState.identifier))) return;
 
   let container = document.querySelector('[data-role="tooltip-container"]') as HTMLElement;
   if (!container) {
@@ -93,7 +93,7 @@ function showTooltip(trigger: HTMLElement): void {
     args: {
       filePath,
       query: {
-        refPos,
+        ...(refPos !== undefined ? { refPos } : {}),
         ...(hoverState.identifier ? { identifier: hoverState.identifier } : {}),
         ...(hoverState.kind ? { kind: hoverState.kind } : {}),
       },

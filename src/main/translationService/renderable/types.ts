@@ -92,7 +92,7 @@ export interface TooltipData {
 }
 
 export interface EnrichQuery {
-  refPos: number;
+  refPos?: number;
   identifier?: string;
   kind?: 'module';
 }

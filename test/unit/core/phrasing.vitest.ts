@@ -112,7 +112,8 @@ describe('phrasing rules application (mocked rules)', () => {
       expect(out).toBe('BRING-IN useState FROM react');
 
       const moduleSpan = toDisplayNode(semanticNode).spans.find((span) => span.text === 'react');
-      expect(moduleSpan).toMatchObject({ refPos: 17, hasHover: true, hoverKind: 'module' });
+      expect(moduleSpan).toMatchObject({ hasHover: true, hoverKind: 'module' });
+      expect(moduleSpan?.refPos).toBeUndefined();
     });
   });
 

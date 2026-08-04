@@ -97,6 +97,14 @@ export interface ApiInvoke {
     arg: undefined;
     return: void;
   };
+  getTheme: {
+    arg: undefined;
+    return: string;
+  };
+  setTheme: {
+    arg: string;
+    return: void;
+  };
   loadProjectFragment: {
     arg: { path: string; selectedFile?: string | null; collapsed?: boolean; expandedDirs?: string[] };
     return: HtmlFragmentResult;
@@ -141,4 +149,5 @@ export type ElectronAPI = {
       ) => Promise<ApiInvoke[K]['return']>;
 } & {
   onMenuLoadFolder: (cb: (path: string) => void) => () => void;
+  onMenuSetTheme: (cb: (theme: string) => void) => () => void;
 };

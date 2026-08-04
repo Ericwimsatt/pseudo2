@@ -6,7 +6,10 @@ import {
   getLastFilePath,
   setLastFilePath,
   clearLastFilePath,
+  getThemeId,
+  setThemeId,
 } from './appStore';
+import { isThemeId } from '../themes';
 
 export function registerStoreHandlers(): void {
   ipcMain.handle('get-last-project', () => {
@@ -31,5 +34,15 @@ export function registerStoreHandlers(): void {
 
   ipcMain.handle('clear-last-file', () => {
     clearLastFilePath();
+  });
+
+  ipcMain.handle('get-theme', () => {
+    return getThemeId();
+  });
+
+  ipcMain.handle('set-theme', (_event, value: string) => {
+    if (isThemeId(value)) {
+      setThemeId(value);
+    }
   });
 }

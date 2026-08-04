@@ -17,21 +17,21 @@ describe('hover fragment interaction', () => {
     (window as unknown as Record<string, unknown>).electronAPI = { getTooltipFragment };
     document.body.innerHTML = `
       <div data-role="file-table" data-file-path="Imports.ts">
-        <span data-refpos="7" data-hover-identifier="react" data-hover-kind="module">react</span>
+        <span data-hover-identifier="react" data-hover-kind="module">react</span>
         <div class="hidden" data-role="tooltip-container"></div>
       </div>
     `;
 
     afterFileSwapHover();
     initHover();
-    const trigger = document.querySelector('[data-refpos]') as HTMLElement;
+    const trigger = document.querySelector('[data-hover-kind="module"]') as HTMLElement;
     const container = document.querySelector('[data-role="tooltip-container"]') as HTMLElement;
     trigger.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
     await vi.runAllTimersAsync();
 
     expect(getTooltipFragment).toHaveBeenCalledWith({
       filePath: 'Imports.ts',
-      query: { refPos: 7, identifier: 'react', kind: 'module' },
+      query: { identifier: 'react', kind: 'module' },
     });
     expect(container.classList.contains('fixed')).toBe(true);
     expect(container.classList.contains('z-50')).toBe(true);

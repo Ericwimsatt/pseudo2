@@ -46,6 +46,10 @@ export function getNodeDetail(arg: { filePath: string; query: EnrichQuery }): Qu
   const sections: TooltipSection[] = [];
   const allLines = viewModel.lines;
 
+  if (refPos === undefined) {
+    return { sections };
+  }
+
   // Definition
   const def = astCache.getDefinition(refPos);
   if (def) {

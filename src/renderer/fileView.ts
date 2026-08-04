@@ -120,6 +120,7 @@ function setSelectionMode(mode: 'source' | 'translation' | 'both'): void {
 
   ft.querySelectorAll('[data-role="selection-mode-button"]').forEach(btn => {
     const btnMode = btn.getAttribute('data-mode');
+    btn.setAttribute('aria-pressed', String(btnMode === mode));
     btn.classList.toggle('bg-blue-100', btnMode === mode);
     btn.classList.toggle('border-blue-300', btnMode === mode);
     btn.classList.toggle('text-blue-700', btnMode === mode);

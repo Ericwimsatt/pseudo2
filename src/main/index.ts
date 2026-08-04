@@ -7,6 +7,8 @@ import { registerTooltipHandlers } from './tooltip/tooltipController';
 import { registerProjectSelectHandlers } from './project/projectSelectController';
 import { registerStoreHandlers } from './store/storeController';
 import { registerFragmentHandlers } from './fragmentController';
+import { getThemeId, setThemeId } from './store/appStore';
+import { THEME_IDS, THEME_LABELS } from './themes';
 
 const isDev = !app.isPackaged;
 const DEV_PORT = process.env.DEV_PORT || '5173';
@@ -14,6 +16,7 @@ const DEV_URL = `http://localhost:${DEV_PORT}`;
 
 function setupMenu() {
   const isMac = process.platform === 'darwin';
+  const currentTheme = getThemeId();
 
   const template: Electron.MenuItemConstructorOptions[] = [
     ...(isMac ? [{ role: 'appMenu' as const }] : []),
@@ -32,6 +35,27 @@ function setupMenu() {
               browserWindow.webContents.send('menu-load-folder', result.filePaths[0]);
             }
           },
+        },
+        { type: 'separator' },
+        {
+          label: 'Settings',
+          submenu: [
+            {
+              label: 'Theme',
+              submenu: THEME_IDS.map((id) => ({
+                label: THEME_LABELS[id],
+                type: 'radio' as const,
+                checked: id === currentTheme,
+                click: () => {
+                  setThemeId(id);
+                  for (const win of BrowserWindow.getAllWindows()) {
+                    win.webContents.send('menu-set-theme', id);
+                  }
+                  setupMenu();
+                },
+              })),
+            },
+          ],
         },
         ...(isMac ? [{ role: 'close' as const }] : [{ role: 'quit' as const }]),
       ],

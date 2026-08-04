@@ -238,6 +238,9 @@ export async function bootstrapApp(): Promise<void> {
     return;
   }
 
+  const savedTheme = await window.electronAPI.getTheme();
+  document.documentElement.dataset.theme = savedTheme;
+
   const savedPath = await window.electronAPI.getLastProjectPath();
   if (savedPath) {
     await loadProject(savedPath);
@@ -253,6 +256,10 @@ export async function bootstrapApp(): Promise<void> {
 
   window.electronAPI.onMenuLoadFolder(async (path: string) => {
     await loadProject(path);
+  });
+
+  window.electronAPI.onMenuSetTheme((theme: string) => {
+    document.documentElement.dataset.theme = theme;
   });
 }
 

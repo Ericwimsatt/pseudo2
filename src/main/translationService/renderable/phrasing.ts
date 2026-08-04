@@ -48,9 +48,10 @@ function ts(
     const placeholder = styledSpan(
       value,
       variantForTemplateVariable(varName),
-      marker ? refPos : undefined,
+      marker === 'ref' ? refPos : undefined,
       marker === 'hover' && varName === 'module' ? 'module' : undefined,
     );
+    if (marker === 'hover') placeholder.hasHover = true;
     spans.push(placeholder);
 
     lastIndex = match.index + match[0].length;

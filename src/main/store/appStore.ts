@@ -1,8 +1,10 @@
 import Store from 'electron-store';
+import { DEFAULT_THEME, isThemeId, type ThemeId } from '../themes';
 
 interface StoreSchema {
   lastProjectPath: string;
   lastFilePath: string;
+  theme: string;
 }
 
 const store = new Store<StoreSchema>({
@@ -10,6 +12,7 @@ const store = new Store<StoreSchema>({
   defaults: {
     lastProjectPath: '',
     lastFilePath: '',
+    theme: DEFAULT_THEME,
   },
 });
 
@@ -35,4 +38,13 @@ export function setLastFilePath(path: string): void {
 
 export function clearLastFilePath(): void {
   store.delete('lastFilePath');
+}
+
+export function getThemeId(): ThemeId {
+  const raw = store.get('theme');
+  return isThemeId(raw) ? raw : DEFAULT_THEME;
+}
+
+export function setThemeId(theme: ThemeId): void {
+  store.set('theme', theme);
 }

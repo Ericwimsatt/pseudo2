@@ -44,6 +44,12 @@ const api = {
   clearLastFilePath: () =>
     ipcRenderer.invoke('clear-last-file'),
 
+  getTheme: () =>
+    ipcRenderer.invoke('get-theme'),
+
+  setTheme: (theme: string) =>
+    ipcRenderer.invoke('set-theme', theme),
+
   // MIGRATION BOUNDARY: Fragment IPC methods below are the new htmx renderer surface.
   // Methods above are legacy React renderer endpoints and will be removed after cutover.
   loadProjectFragment: (arg: ApiInvoke['loadProjectFragment']['arg']) =>
@@ -71,6 +77,12 @@ const api = {
     const handler = (_event: Electron.IpcRendererEvent, path: string) => callback(path);
     ipcRenderer.on('menu-load-folder', handler);
     return () => ipcRenderer.removeListener('menu-load-folder', handler);
+  },
+
+  onMenuSetTheme: (callback: (theme: string) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, theme: string) => callback(theme);
+    ipcRenderer.on('menu-set-theme', handler);
+    return () => ipcRenderer.removeListener('menu-set-theme', handler);
   },
 };
 

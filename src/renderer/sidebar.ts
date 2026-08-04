@@ -77,10 +77,15 @@ function toggleDirectoryInDom(path: string): void {
   if (!dir) return;
   const isOpen = !!sidebarCache[path];
   dir.setAttribute('data-open', String(isOpen));
+  const toggle = dir.querySelector('[data-action="toggle-directory"]');
+  if (toggle) toggle.setAttribute('aria-expanded', String(isOpen));
   const children = dir.querySelector(':scope > [data-role="sidebar-children"]') as HTMLElement | null;
   if (children) children.style.display = isOpen ? '' : 'none';
   const icon = dir.querySelector('[data-role="sidebar-toggle-icon"]');
-  if (icon) icon.textContent = isOpen ? FOLDER_TOGGLE_OPEN : FOLDER_TOGGLE_CLOSED;
+  if (icon) {
+    icon.textContent = isOpen ? FOLDER_TOGGLE_OPEN : FOLDER_TOGGLE_CLOSED;
+    icon.classList.toggle('is-open', isOpen);
+  }
 }
 
 export async function refreshSidebar(): Promise<void> {

@@ -416,4 +416,31 @@ describe('fileTableRenderer', () => {
 
     expect(result.html).not.toContain('data-refpos="42"');
   });
+
+  it('renders static module hover targets without an AST reference position', () => {
+    const moduleNode = {
+      ...mockDisplayNode,
+      spans: [{
+        text: 'react',
+        variant: 'string' as const,
+        hasHover: true,
+        hoverKind: 'module' as const,
+      }],
+    };
+    const result = renderFileTable({
+      viewModel: {
+        lines: [{
+          ...mockLineRenderable,
+          boxFragment: { layers: [], contentNode: moduleNode },
+        }],
+      },
+      fileName: 'Imports.ts',
+      filePath: 'Imports.ts',
+    });
+
+    expect(result.html).toContain('cursor-help');
+    expect(result.html).toContain('data-hover-identifier="react"');
+    expect(result.html).toContain('data-hover-kind="module"');
+    expect(result.html).not.toContain('data-refpos=');
+  });
 });

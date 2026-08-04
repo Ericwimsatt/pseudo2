@@ -4,8 +4,7 @@ import { escapeHtml, escapeAttribute } from './escaping';
 import { createFragment, createMetadata } from './types';
 import { BUCKET_LABELS } from '../translationService/renderable/bucket';
 
-const BORDER_COLORS = ['#93c5fd', '#86efac', '#fde68a', '#c4b5fd', '#f9a8d4', '#5eead4'];
-const BG_COLORS = ['#f0f9ff', '#f0fdf4', '#fffbeb', '#faf5ff', '#fdf2f8', '#f0fdfa'];
+const NEST_PALETTE_SIZE = 6;
 
 const VARIANT_CLASSES: Partial<Record<NonNullable<DisplaySpan['variant']>, string>> = {
   kw: 'syntax-keyword',
@@ -48,7 +47,7 @@ function renderSpans(spans: DisplaySpan[], searchTerm?: string, isActiveMatch = 
   return spans.map((span) => {
     const content = renderSpanText(span.text, searchTerm, isActiveMatch);
     const variantClass = span.variant ? VARIANT_CLASSES[span.variant] : undefined;
-    const isHoverable = span.hasHover && span.refPos !== undefined;
+    const isHoverable = !!span.hasHover && (span.refPos !== undefined || span.hoverKind !== undefined);
     if (!variantClass && !isHoverable) return content;
 
     const classes = [
@@ -56,7 +55,7 @@ function renderSpans(spans: DisplaySpan[], searchTerm?: string, isActiveMatch = 
       variantClass,
       isHoverable ? 'cursor-help underline decoration-dotted underline-offset-2' : undefined,
     ].filter(Boolean).join(' ');
-    const refPosAttribute = isHoverable ? ` data-refpos="${span.refPos}"` : '';
+    const refPosAttribute = isHoverable && span.refPos !== undefined ? ` data-refpos="${span.refPos}"` : '';
     const identifierAttribute = isHoverable ? ` data-hover-identifier="${escapeAttribute(span.text)}"` : '';
     const hoverKindAttribute = span.hoverKind ? ` data-hover-kind="${escapeAttribute(span.hoverKind)}"` : '';
     return `<span class="${classes}"${refPosAttribute}${identifierAttribute}${hoverKindAttribute}>${content}</span>`;
@@ -100,8 +99,9 @@ function renderBoxFragment(fragment: LineBoxFragment | null, searchTerm?: string
 
   for (let i = fragment.layers.length - 1; i >= 0; i--) {
     const layer = fragment.layers[i];
-    const color = BORDER_COLORS[layer.depth % BORDER_COLORS.length];
-    const bg = BG_COLORS[layer.depth % BG_COLORS.length];
+    const nestIndex = layer.depth % NEST_PALETTE_SIZE;
+    const color = `var(--nest-border-${nestIndex})`;
+    const bg = `var(--nest-bg-${nestIndex})`;
     const isStart = layer.borderRole === 'start' || layer.borderRole === 'single';
     const isEnd = layer.borderRole === 'end' || layer.borderRole === 'single';
 
@@ -131,7 +131,7 @@ function renderLineRow(line: LineRenderable, rowNum: number, searchTerm?: string
   `;
 
   const lineNumberHtml = `
-    <div class="text-right pr-3 py-1 text-gray-400 select-none border-r border-gray-200 bg-gray-50 align-top font-mono text-xs" style="grid-row: ${rowNum}; grid-column: 2" data-role="line-number">
+    <div class="theme-linenum text-right pr-3 py-1 select-none border-r align-top font-mono text-xs" style="grid-row: ${rowNum}; grid-column: 2" data-role="line-number">
       ${line.lineNumber}
     </div>
   `;
@@ -147,7 +147,7 @@ function renderLineRow(line: LineRenderable, rowNum: number, searchTerm?: string
     sourceHtml = line.sourceText ? renderSpans(line.sourceSpans ?? [{ text: line.sourceText }]) : '&nbsp;';
   }
 
-  const sourceCellClass = `py-1 border-r border-gray-200 hover:bg-gray-50/40 transition-colors ${selectionMode === 'translation' ? 'select-none' : ''}`;
+  const sourceCellClass = `theme-source-cell py-1 border-r transition-colors ${selectionMode === 'translation' ? 'select-none' : ''}`;
   const sourceCellHtml = `
     <div
       class="${sourceCellClass}"
@@ -162,7 +162,7 @@ function renderLineRow(line: LineRenderable, rowNum: number, searchTerm?: string
 
   const resizeHandleHtml = `
     <div
-      class="cursor-col-resize bg-gray-100 hover:bg-blue-300 active:bg-blue-400 p-0 border-r border-gray-200"
+      class="theme-resize cursor-col-resize hover:bg-blue-300 active:bg-blue-400 p-0 border-r"
       style="grid-row: ${rowNum}; grid-column: 4"
       data-role="resize-handle"
       data-row="${rowNum}"
@@ -199,10 +199,10 @@ export function renderFileTable(data: FileTableFragmentData): HtmlFragment {
   });
 
   const html = `
-    <div class="flex-1 overflow-y-auto overflow-x-hidden bg-white" data-role="file-table" data-file-path="${escapeAttribute(filePath)}" data-source-pct="${sourcePct}">
+    <div class="flex-1 overflow-y-auto overflow-x-hidden theme-surface" data-role="file-table" data-file-path="${escapeAttribute(filePath)}" data-source-pct="${sourcePct}">
       <div class="sticky top-0 z-10">
-        <div class="bg-gray-50 border-b border-gray-200 px-4 py-2 flex items-center gap-3">
-          <h3 class="font-semibold text-sm text-gray-700 truncate">
+        <div class="theme-header border-b px-4 py-2 flex items-center gap-3">
+          <h3 class="font-semibold text-sm truncate">
             ${escapeHtml(fileName || filePath)}
           </h3>
           <div class="flex items-center gap-1 text-xs ml-auto" data-role="selection-mode-controls">
@@ -210,6 +210,7 @@ export function renderFileTable(data: FileTableFragmentData): HtmlFragment {
               class="px-2 py-0.5 rounded border bg-blue-100 border-blue-300 text-blue-700"
               data-role="selection-mode-button"
               data-mode="source"
+              aria-pressed="true"
               title="Select source only (s)"
             >
               Src
@@ -218,6 +219,7 @@ export function renderFileTable(data: FileTableFragmentData): HtmlFragment {
               class="px-2 py-0.5 rounded border border-gray-300 text-gray-500 hover:bg-gray-200"
               data-role="selection-mode-button"
               data-mode="translation"
+              aria-pressed="false"
               title="Select translation only (t)"
             >
               Trans
@@ -226,6 +228,7 @@ export function renderFileTable(data: FileTableFragmentData): HtmlFragment {
               class="px-2 py-0.5 rounded border border-gray-300 text-gray-500 hover:bg-gray-200"
               data-role="selection-mode-button"
               data-mode="both"
+              aria-pressed="false"
               title="Select both (b)"
             >
               All
@@ -236,7 +239,7 @@ export function renderFileTable(data: FileTableFragmentData): HtmlFragment {
               type="text"
               value=""
               placeholder="Find in file..."
-              class="w-48 px-2 py-1 border border-gray-300 rounded text-sm font-mono focus:outline-none focus:border-blue-400"
+              class="theme-input w-48 px-2 py-1 border rounded text-sm font-mono focus:outline-none focus:border-blue-400"
               data-role="search-input"
               data-testid="search-input"
             />
